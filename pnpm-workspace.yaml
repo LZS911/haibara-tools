@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - '@ffmpeg-installer/darwin-arm64'
+  - '@ffprobe-installer/darwin-arm64'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - puppeteer
+  - sharp

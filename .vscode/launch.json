@@ -1,0 +1,77 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "调试 Node.js 服务器 (推荐)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "runtimeArgs": ["watch", "--inspect=9229"],
+      "program": "${workspaceFolder}/src/server/server.ts",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMaps": true,
+      "stopOnEntry": false
+    },
+    {
+      "name": "调试 Node.js 服务器 (简单模式)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/server/server.ts",
+      "args": [],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMaps": true,
+      "runtimeArgs": ["--import", "tsx/esm"]
+    },
+    {
+      "name": "调试 Node.js 服务器 (pnpm脚本)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:debug"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": false,
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true
+    },
+    {
+      "name": "附加到运行中的服务器",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMaps": true
+    }
+  ]
+}
