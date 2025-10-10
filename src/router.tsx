@@ -1,6 +1,11 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import {
+  createTRPCClient,
+  httpBatchLink,
+  httpSubscriptionLink,
+  splitLink
+} from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 
 // Import the generated route tree
@@ -14,11 +19,17 @@ export const queryClient = new QueryClient();
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: createTRPCClient({
     links: [
-      httpBatchLink({
-        // since we are using Vite, the server is running on the same port,
-        // this means in dev the url is `http://localhost:3000/trpc`
-        // and since its from the same origin, we don't need to explicitly set the full URL
-        url: '/trpc'
+      splitLink({
+        // 根据操作类型选择不同的 link
+        condition: (op) => op.type === 'subscription',
+        // subscription 使用 SSE
+        true: httpSubscriptionLink({
+          url: '/trpc'
+        }),
+        // query 和 mutation 使用 HTTP batch
+        false: httpBatchLink({
+          url: '/trpc'
+        })
       })
     ]
   }),

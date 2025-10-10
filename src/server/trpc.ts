@@ -11,8 +11,11 @@ export const createTRPContext = ({
 
 const t = initTRPC.context<TRPCContext>().create();
 
+import { mediaToDocsRouter } from './media-to-docs';
+
 export const appRouter = t.router({
-  convert: convertRouter
+  convert: convertRouter,
+  mediaToDoc: mediaToDocsRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({

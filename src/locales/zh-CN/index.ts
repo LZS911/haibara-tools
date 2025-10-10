@@ -23,6 +23,7 @@ export default {
   tab_image: '图片图像',
   tab_audio: '音频声音',
   tab_video: '视频影像',
+  ai_convert_title: 'AI 视频转文档',
 
   select_convert_type: '选择转换类型',
   select_convert_type_desc: '从下方选择您需要的文件转换类型',

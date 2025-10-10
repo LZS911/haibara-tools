@@ -132,3 +132,20 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+/* 时间轴样式 */
+.timeline-line {
+  @apply absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-500 via-blue-500 to-pink-500;
+}
+
+.timeline-dot {
+  @apply w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow-lg;
+}
+
+.timeline-card {
+  @apply bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100;
+}
+
+.keyframe-image {
+  @apply rounded-lg w-full h-auto object-cover shadow-md max-h-96;
+}

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import path from 'node:path';
 import url from 'node:url';
 import * as fs from 'node:fs';
@@ -29,6 +30,15 @@ export const createServer = async (
 
   // Use convert routes
   app.use(convertRoutes);
+
+  // Serve media files (audio, video, keyframes) for media-to-docs service
+  app.use(
+    '/media-files',
+    express.static(path.join(process.cwd(), 'tmp/media-to-docs-jobs'))
+  );
+
+  // Use media-to-docs routes
+  // app.use('/api/media-to-docs', mediaToDocsRoutes);
 
   if (!isProd) {
     const vite = await import('vite');
