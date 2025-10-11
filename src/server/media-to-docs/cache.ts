@@ -2,7 +2,15 @@ import fs from 'fs/promises';
 import path from 'path';
 
 // 媒体文件缓存根目录
-export const MEDIA_ROOT = path.join(process.cwd(), 'tmp/media-to-docs-jobs');
+// 在 Electron 环境下使用 userData 目录，否则使用 process.cwd()
+// 使用函数而不是常量，确保每次都能获取最新的环境变量
+function getBaseDir(): string {
+  return process.env.USER_DATA_PATH || process.cwd();
+}
+
+export function getMediaRoot(): string {
+  return path.join(getBaseDir(), 'tmp/media-to-docs-jobs');
+}
 
 /**
  * 检查指定 BV 号的视频是否已经下载并缓存
@@ -13,7 +21,7 @@ export async function checkDownloadCache(bvId: string): Promise<{
   title: string | null;
 }> {
   try {
-    const bvDir = path.join(MEDIA_ROOT, bvId);
+    const bvDir = path.join(getMediaRoot(), bvId);
 
     // 检查目录是否存在
     try {
@@ -90,14 +98,15 @@ export async function listAllCaches(): Promise<
     hasTranscript: boolean;
   }>
 > {
+  const mediaRoot = getMediaRoot();
   try {
-    await fs.access(MEDIA_ROOT);
+    await fs.access(mediaRoot);
   } catch {
     // 目录不存在，返回空数组
     return [];
   }
 
-  const entries = await fs.readdir(MEDIA_ROOT, { withFileTypes: true });
+  const entries = await fs.readdir(mediaRoot, { withFileTypes: true });
   const caches: Array<{
     bvId: string;
     path: string;
@@ -108,7 +117,7 @@ export async function listAllCaches(): Promise<
 
   for (const entry of entries) {
     if (entry.isDirectory() && entry.name.startsWith('BV')) {
-      const cachePath = path.join(MEDIA_ROOT, entry.name);
+      const cachePath = path.join(mediaRoot, entry.name);
       try {
         const stats = await fs.stat(cachePath);
         const size = await getDirectorySize(cachePath);
@@ -170,7 +179,7 @@ async function getDirectorySize(dir: string): Promise<number> {
  */
 export async function deleteCache(bvId: string): Promise<boolean> {
   try {
-    const cachePath = path.join(MEDIA_ROOT, bvId);
+    const cachePath = path.join(getMediaRoot(), bvId);
     await fs.rm(cachePath, { recursive: true, force: true });
     return true;
   } catch (error) {

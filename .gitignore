@@ -14,3 +14,11 @@ docs
 temp
 test
 tmp
+
+# Electron 构建产物
+release
+*.dmg
+*.zip
+*.exe
+*.AppImage
+*.deb

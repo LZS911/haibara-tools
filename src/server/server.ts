@@ -32,10 +32,12 @@ export const createServer = async (
   app.use(convertRoutes);
 
   // Serve media files (audio, video, keyframes) for media-to-docs service
-  app.use(
-    '/media-files',
-    express.static(path.join(process.cwd(), 'tmp/media-to-docs-jobs'))
-  );
+  // 动态获取路径，确保在运行时使用正确的 userData 路径
+  app.use('/media-files', (req, res, next) => {
+    const baseDir = process.env.USER_DATA_PATH || process.cwd();
+    const mediaPath = path.join(baseDir, 'tmp/media-to-docs-jobs');
+    express.static(mediaPath)(req, res, next);
+  });
 
   // Use media-to-docs routes
   // app.use('/api/media-to-docs', mediaToDocsRoutes);

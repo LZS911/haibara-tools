@@ -14,7 +14,7 @@ ffmpeg.setFfprobePath(ffprobeInstaller.path);
 export async function convertAudioFormat(
   inputPath: string,
   outputPath: string,
-  fromFormat: AudioFormat,
+  _fromFormat: AudioFormat,
   toFormat: AudioFormat,
   onProgress?: (percent: number) => void
 ): Promise<void> {

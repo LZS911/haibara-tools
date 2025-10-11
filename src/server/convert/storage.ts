@@ -9,7 +9,15 @@ import {
   sanitizeFileName
 } from './types';
 
-const JOB_ROOT_DIR = path.resolve(process.cwd(), 'tmp', 'convert-jobs');
+// 在 Electron 环境下使用 userData 目录，否则使用 process.cwd()
+// 使用函数而不是常量，确保每次都能获取最新的环境变量
+function getBaseDir(): string {
+  return process.env.USER_DATA_PATH || process.cwd();
+}
+
+function getJobRootDir(): string {
+  return path.resolve(getBaseDir(), 'tmp', 'convert-jobs');
+}
 
 function ensureDirSync(dir: string): void {
   if (!fs.existsSync(dir)) {
@@ -18,7 +26,7 @@ function ensureDirSync(dir: string): void {
 }
 
 export function getJobDir(jobId: string): string {
-  const dir = path.join(JOB_ROOT_DIR, jobId);
+  const dir = path.join(getJobRootDir(), jobId);
   return dir;
 }
 
@@ -27,7 +35,7 @@ export function createJobMeta(
   from: FileFormat,
   to: FileFormat
 ): ConvertJobMeta {
-  ensureDirSync(JOB_ROOT_DIR);
+  ensureDirSync(getJobRootDir());
   const id = randomUUID();
   const now = Date.now();
   const meta: ConvertJobMeta = {

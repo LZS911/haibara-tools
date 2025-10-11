@@ -26,10 +26,44 @@ const serverBuildConfig: BuildEnvironmentOptions = {
   rollupOptions: {
     input: path.resolve(__dirname, 'src/server/server.ts'),
     output: {
-      entryFileNames: '[name].js',
-      chunkFileNames: 'assets/[name]-[hash].js',
+      entryFileNames: '[name].cjs', // 使用 .cjs 扩展名，与 Electron main.cjs 保持一致
+      format: 'cjs', // 使用 CommonJS 格式
+      chunkFileNames: 'assets/[name]-[hash].cjs',
       assetFileNames: 'assets/[name]-[hash][extname]'
     }
+  }
+};
+
+// Electron Build Configuration
+const electronBuildConfig: BuildEnvironmentOptions = {
+  ssr: true,
+  outDir: 'dist/electron',
+  copyPublicDir: false,
+  emptyOutDir: true,
+  rollupOptions: {
+    input: {
+      main: path.resolve(__dirname, 'electron/main.ts'),
+      preload: path.resolve(__dirname, 'electron/preload.ts')
+    },
+    output: {
+      // 所有 Electron 文件使用 .cjs 扩展名（CommonJS 格式）
+      // 因为 package.json 有 "type": "module"，.js 文件会被当作 ES 模块
+      entryFileNames: '[name].cjs',
+      format: 'cjs',
+      chunkFileNames: 'assets/[name]-[hash].cjs',
+      assetFileNames: 'assets/[name]-[hash][extname]'
+    },
+    external: [
+      'electron',
+      'electron-updater',
+      // Node.js 内置模块
+      'node:path',
+      'node:url',
+      'node:fs',
+      'node:net',
+      // 服务端依赖（已打包在 dist/server）
+      /^\.\.\/dist\/server/
+    ]
   }
 };
 
@@ -51,8 +85,19 @@ export default defineConfig((configEnv) => {
     },
 
     server: {
-      host: true
+      host: true,
+      proxy: {
+        '/trpc': {
+          target: 'http://localhost:3000',
+          changeOrigin: true
+        }
+      }
     },
-    build: configEnv.mode === 'server' ? serverBuildConfig : clientBuildConfig
+    build:
+      configEnv.mode === 'server'
+        ? serverBuildConfig
+        : configEnv.mode === 'electron'
+          ? electronBuildConfig
+          : clientBuildConfig
   };
 });

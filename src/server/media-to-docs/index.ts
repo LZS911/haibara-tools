@@ -20,7 +20,7 @@ import {
   getCompletionWithImages
 } from './pipelines/llm';
 import {
-  MEDIA_ROOT,
+  getMediaRoot,
   checkDownloadCache,
   listAllCaches,
   deleteCache,
@@ -78,7 +78,7 @@ export const mediaToDocsRouter = t.router({
       // 如果没有缓存，执行下载
       console.log(`No cache found for ${bvId}, downloading...`);
       const videoUrl = `https://www.bilibili.com/video/${bvId}`;
-      const outputDir = path.join(MEDIA_ROOT, bvId);
+      const outputDir = path.join(getMediaRoot(), bvId);
 
       const settings: SettingData = {
         downloadPath: outputDir,
