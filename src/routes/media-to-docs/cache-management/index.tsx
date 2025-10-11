@@ -1,17 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/routes/-components/ui/card';
+import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
-import { useTranslation } from 'react-i18next';
 import { trpc } from '@/router';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Spinner } from '@/routes/-components/spinner';
 import { useState } from 'react';
+import {
+  Database,
+  Trash2,
+  RefreshCw,
+  Clock,
+  HardDrive,
+  FileCheck
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/media-to-docs/cache-management/')({
   component: CacheManagement
@@ -39,7 +40,7 @@ function CacheManagement() {
   );
 
   const handleDelete = async (bvId: string) => {
-    if (!confirm(`确定要删除 ${bvId} 的缓存吗？`)) return;
+    if (!confirm(t('cache_management_delete_confirm', { bvId }))) return;
 
     deleteMutation.mutate(
       { bvId },
@@ -48,24 +49,32 @@ function CacheManagement() {
           refetch();
         },
         onError: (error) => {
-          alert(`删除失败: ${error.message}`);
+          alert(t('cache_management_delete_fail', { error: error.message }));
         }
       }
     );
   };
 
   const handleClearExpired = async () => {
-    if (!confirm('确定要清理超过 7 天的缓存吗？')) return;
+    if (!confirm(t('cache_management_clear_expired_confirm'))) return;
 
     clearExpiredMutation.mutate(
       { maxAgeDays: 7 },
       {
         onSuccess: (data) => {
-          alert(`成功清理了 ${data.deletedCount} 个过期缓存`);
+          alert(
+            t('cache_management_clear_expired_success', {
+              count: data.deletedCount
+            })
+          );
           refetch();
         },
         onError: (error) => {
-          alert(`清理失败: ${error.message}`);
+          alert(
+            t('cache_management_clear_expired_fail', {
+              error: error.message
+            })
+          );
         }
       }
     );
@@ -89,117 +98,166 @@ function CacheManagement() {
     });
   };
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* 页面标题 */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-          {t('cache_management', '缓存管理')}
-        </h1>
-        <p className="text-lg text-gray-600">
-          {t('cache_management_desc', '管理视频下载和转录的缓存数据')}
-        </p>
-      </div>
+  const totalSize = caches?.reduce((sum, c) => sum + c.size, 0) || 0;
+  const transcribedCount = caches?.filter((c) => c.hasTranscript).length || 0;
 
-      {/* 操作按钮 */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Link to="/media-to-docs">返回</Link>
-          </Button>
-          <div className="text-sm text-gray-600">
-            {caches && `共 ${caches.length} 个缓存项`}
-          </div>
+  return (
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t('cache_management_title', '缓存管理')}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('cache_management_desc', '管理视频下载和转录的缓存数据')}
+          </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            onClick={() => refetch()}
-            variant="outline"
-            disabled={isLoading}
-          >
+        <div className="flex gap-2">
+          <Button onClick={() => refetch()} size="sm" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Spinner className="w-4 h-4 mr-2" />
-                刷新中...
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {t('cache_management_refreshing', '刷新中')}
               </>
             ) : (
-              '刷新列表'
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {t('cache_management_refresh', '刷新')}
+              </>
             )}
           </Button>
           <Button
             onClick={handleClearExpired}
-            variant="outline"
+            size="sm"
             disabled={clearExpiredMutation.isPending}
-            className="text-orange-600 hover:text-orange-700"
           >
             {clearExpiredMutation.isPending ? (
               <>
-                <Spinner className="w-4 h-4 mr-2" />
-                清理中...
+                <Trash2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('cache_management_clearing', '清理中')}
               </>
             ) : (
-              '清理过期缓存'
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('cache_management_clear_expired', '清理过期')}
+              </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* 缓存列表 */}
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Spinner className="w-12 h-12 text-blue-600" />
-        </div>
-      ) : !caches || caches.length === 0 ? (
-        <Card>
-          <CardContent className="py-20 text-center text-gray-500">
-            <p className="text-lg">暂无缓存数据</p>
-            <p className="text-sm mt-2">下载视频后，缓存会自动保存在这里</p>
-          </CardContent>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">
+                {t('cache_management_total_count', '总缓存数')}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-slate-900">
+                {caches?.length || 0}
+              </p>
+            </div>
+            <Database className="h-8 w-8 text-blue-500 opacity-20" />
+          </div>
         </Card>
-      ) : (
-        <div className="grid gap-4">
-          {caches.map((cache) => (
-            <Card
-              key={cache.bvId}
-              className={`transition-all ${
-                selectedBvId === cache.bvId
-                  ? 'border-2 border-blue-500'
-                  : 'hover:border-gray-300'
-              }`}
-              onClick={() => setSelectedBvId(cache.bvId)}
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start">
+
+        <Card className="border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">
+                {t('cache_management_transcribed_count', '已转录')}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-green-600">
+                {transcribedCount}
+              </p>
+            </div>
+            <FileCheck className="h-8 w-8 text-green-500 opacity-20" />
+          </div>
+        </Card>
+
+        <Card className="border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">
+                {t('cache_management_total_size', '占用空间')}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-purple-600">
+                {formatBytes(totalSize)}
+              </p>
+            </div>
+            <HardDrive className="h-8 w-8 text-purple-500 opacity-20" />
+          </div>
+        </Card>
+      </div>
+
+      {/* 缓存列表 */}
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-slate-700">
+          {t('cache_management_list_title', '缓存列表')}
+        </h2>
+
+        {isLoading ? (
+          <Card className="border-slate-200 bg-white p-12">
+            <div className="flex flex-col items-center justify-center text-slate-400">
+              <RefreshCw className="h-12 w-12 animate-spin" />
+              <p className="mt-4">
+                {t('cache_management_loading', '加载中...')}
+              </p>
+            </div>
+          </Card>
+        ) : !caches || caches.length === 0 ? (
+          <Card className="border-slate-200 bg-white p-12">
+            <div className="flex flex-col items-center justify-center text-slate-400">
+              <Database className="h-12 w-12 opacity-20" />
+              <p className="mt-4 text-lg font-medium">
+                {t('cache_management_no_data', '暂无缓存数据')}
+              </p>
+              <p className="mt-2 text-sm">
+                {t('cache_management_no_data_desc')}
+              </p>
+              <Link to="/media-to-docs">
+                <Button variant="outline" size="sm" className="mt-4">
+                  {t('cache_management_go_to_media_to_docs')}
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {caches.map((cache) => (
+              <Card
+                key={cache.bvId}
+                className={`cursor-pointer border-slate-200 bg-white transition-all ${
+                  selectedBvId === cache.bvId
+                    ? 'border-blue-500 shadow-sm'
+                    : 'hover:border-slate-300'
+                }`}
+                onClick={() => setSelectedBvId(cache.bvId)}
+              >
+                <div className="flex items-center justify-between p-4">
                   <div className="flex-1">
-                    <CardTitle className="text-xl font-semibold text-gray-800">
-                      {cache.bvId}
-                    </CardTitle>
-                    <CardDescription className="mt-2 space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500">大小:</span>
-                        <span className="font-medium">
-                          {formatBytes(cache.size)}
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-medium text-slate-900">
+                        {cache.bvId}
+                      </h3>
+                      {cache.hasTranscript && (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          {t('cache_management_transcribed', '已转录')}
                         </span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <HardDrive className="h-3.5 w-3.5" />
+                        <span>{formatBytes(cache.size)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500">创建时间:</span>
-                        <span className="font-medium">
-                          {formatDate(cache.createdAt)}
-                        </span>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{formatDate(cache.createdAt)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500">转录状态:</span>
-                        {cache.hasTranscript ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            ✓ 已转录
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                            未转录
-                          </span>
-                        )}
-                      </div>
-                    </CardDescription>
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -209,55 +267,27 @@ function CacheManagement() {
                       handleDelete(cache.bvId);
                     }}
                     disabled={deleteMutation.isPending}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
                     {deleteMutation.isPending &&
                     deleteMutation.variables?.bvId === cache.bvId ? (
                       <>
-                        <Spinner className="w-3 h-3 mr-1" />
-                        删除中...
+                        <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+                        {t('cache_management_deleting', '删除中')}
                       </>
                     ) : (
-                      '删除'
+                      <>
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        {t('cache_management_delete', '删除')}
+                      </>
                     )}
                   </Button>
                 </div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* 统计信息 */}
-      {caches && caches.length > 0 && (
-        <Card className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50">
-          <CardHeader>
-            <CardTitle className="text-lg">统计信息</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-blue-600">
-                  {caches.length}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">总缓存数</div>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-green-600">
-                  {caches.filter((c) => c.hasTranscript).length}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">已转录</div>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
-                  {formatBytes(caches.reduce((sum, c) => sum + c.size, 0))}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">总占用空间</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

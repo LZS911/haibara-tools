@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import updater from 'electron-updater';
 import dotenv from 'dotenv';
 import fs from 'node:fs';
+import { AppConfig } from '../src/electron.d';
 
 const { autoUpdater } = updater;
 
@@ -132,7 +133,9 @@ async function createWindow() {
       nodeIntegration: false,
       webSecurity: true
     },
-    title: 'Haibara Tools'
+    title: 'Haibara Tools',
+    titleBarStyle: 'hiddenInset',
+    frame: process.platform === 'darwin' ? false : true
   });
 
   // 开发模式：加载 Vite 开发服务器
@@ -165,11 +168,119 @@ function setupAutoUpdater() {
     return;
   }
 
-  // TODO: 暂时禁用自动更新，直到正式发布到 GitHub Release
-  console.log(
-    '[Electron] Auto-updater temporarily disabled - no releases published yet'
-  );
-  return;
+  // 配置自动更新
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  // 监听更新事件
+  autoUpdater.on('update-available', (info) => {
+    console.log('[Electron] Update available:', info.version);
+    mainWindow?.webContents.send('update-available', { version: info.version });
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('[Electron] Update not available:', info.version);
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    console.log(`[Electron] Download progress: ${progress.percent}%`);
+    mainWindow?.webContents.send('update-download-progress', {
+      percent: progress.percent
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[Electron] Update downloaded:', info.version);
+    mainWindow?.webContents.send('update-downloaded', {
+      version: info.version
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    console.error('[Electron] Auto-updater error:', error);
+    mainWindow?.webContents.send('update-error', error.message);
+  });
+
+  // 启动时检查更新
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((error) => {
+      console.error('[Electron] Failed to check for updates:', error);
+    });
+  }, 3000);
+}
+
+// 配置管理
+
+// 获取配置文件路径
+function getConfigPath(): string {
+  const userDataPath = app.getPath('userData');
+  return path.join(userDataPath, 'config.json');
+}
+
+// 加载配置
+function loadConfig(): AppConfig {
+  const configPath = getConfigPath();
+
+  // 开发环境：从 process.env 读取（已经通过 dotenv 加载）
+  if (isDev) {
+    return {
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
+      DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+      DEEPSEEK_MODEL_NAME: process.env.DEEPSEEK_MODEL_NAME,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      GEMINI_MODEL_NAME: process.env.GEMINI_MODEL_NAME,
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      ANTHROPIC_MODEL_NAME: process.env.ANTHROPIC_MODEL_NAME,
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+      OPENROUTER_MODEL_NAME: process.env.OPENROUTER_MODEL_NAME,
+      GROQ_API_KEY: process.env.GROQ_API_KEY,
+      GROQ_MODEL_NAME: process.env.GROQ_MODEL_NAME,
+      COHERE_API_KEY: process.env.COHERE_API_KEY,
+      COHERE_MODEL_NAME: process.env.COHERE_MODEL_NAME,
+      VOLC_APP_ID: process.env.VOLC_APP_ID,
+      VOLC_ACCESS_TOKEN: process.env.VOLC_ACCESS_TOKEN,
+      PORT: process.env.PORT,
+      NODE_ENV: process.env.NODE_ENV
+    };
+  }
+
+  // 生产环境：从 config.json 读取
+  try {
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch (error) {
+    console.error('[Electron] Failed to load config:', error);
+  }
+
+  return {};
+}
+
+// 保存配置
+function saveConfig(config: AppConfig): void {
+  const configPath = getConfigPath();
+
+  try {
+    const userDataPath = app.getPath('userData');
+    if (!fs.existsSync(userDataPath)) {
+      fs.mkdirSync(userDataPath, { recursive: true });
+    }
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+    console.log('[Electron] Config saved to:', configPath);
+
+    // 更新 process.env
+    Object.entries(config).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        process.env[key] = value;
+      }
+    });
+  } catch (error) {
+    console.error('[Electron] Failed to save config:', error);
+    throw error;
+  }
 }
 
 // IPC 通信处理
@@ -182,6 +293,26 @@ function setupIPC() {
   // 获取应用版本
   ipcMain.handle('get-app-version', () => {
     return app.getVersion();
+  });
+
+  // 获取配置
+  ipcMain.handle('get-config', () => {
+    return loadConfig();
+  });
+
+  // 保存配置
+  ipcMain.handle('save-config', (_event, config: AppConfig) => {
+    try {
+      saveConfig(config);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  // 获取 userData 路径
+  ipcMain.handle('get-user-data-path', () => {
+    return app.getPath('userData');
   });
 
   // 检查更新
@@ -229,6 +360,14 @@ function setupIPC() {
 // 应用启动
 app.whenReady().then(async () => {
   try {
+    // 加载配置并注入到 process.env
+    const config = loadConfig();
+    Object.entries(config).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        process.env[key] = value;
+      }
+    });
+
     // 启动 Express 服务器（开发和生产模式都需要）
     if (!isDev) {
       await startServer();

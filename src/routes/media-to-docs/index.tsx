@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Card,
   CardContent,
@@ -8,7 +8,6 @@ import {
 } from '@/routes/-components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { AIConvertIcon } from '@/routes/-components/svg/ai-convert-icon';
 import { StepIcon } from '@/routes/convert/-components';
 import { BvInput } from './-components/BvInput';
 import { OptionsSelector } from './-components/OptionsSelector';
@@ -74,7 +73,7 @@ function AiConvert() {
             setVideoPath(data.videoPath || null);
             setCurrentStep('select-style');
           } else {
-            setErrorMessage('下载失败，请检查BV号是否正确');
+            setErrorMessage(t('download_failed_check_bv'));
           }
         },
         onError: (error) => {
@@ -139,69 +138,43 @@ function AiConvert() {
   };
 
   const getTitleForStyle = (style: string | null) => {
-    if (!style) return t('generated_content_title', 'AI 生成内容');
+    if (!style) return t('generated_content_title');
     const key = `style_${style}`;
     // Assuming you have translations like style_note, style_summary, etc.
     return t(key, style.charAt(0).toUpperCase() + style.slice(1));
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mb-6">
-          <AIConvertIcon className="w-8 h-8 text-white" />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t('ai_convert_title')}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('ai_convert_desc')}
+          </p>
         </div>
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-          {t('ai_convert_title')}
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          {t(
-            'ai_convert_desc',
-            '输入B站视频BV号，AI为你生成内容纪要、文章、笔记等多种格式的文档'
-          )}
-        </p>
       </div>
 
-      {/* 快捷链接 */}
-      <div className="mb-6 flex justify-center gap-3">
-        <Link to="/media-to-docs/cache-management">
-          <Button variant="outline" size="sm">
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-              />
-            </svg>
-            缓存管理
-          </Button>
-        </Link>
-      </div>
-
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* 步骤 1: 输入 BV 号 */}
         {currentStep === 'input-bv-id' && (
-          <Card className="border-2 border-purple-100 shadow-xl bg-gradient-to-br from-white to-purple-50">
-            <CardHeader className="rounded-t-lg">
-              <CardTitle className="text-2xl flex items-center gap-3">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
-                  step="uploadFile" // 复用现有图标
-                  className="text-purple-600"
-                  size={24}
+                  step="uploadFile"
+                  className="text-slate-700"
+                  size={20}
                 />
-                {t('step1_input_bv_id', '第一步：输入B站视频BV号')}
+                {t('step1_input_bv_id')}
               </CardTitle>
-              <CardDescription className="text-lg">
-                {t('input_bv_id_desc', '我们将自动下载视频并进行处理')}
+              <CardDescription className="text-sm">
+                {t('input_bv_id_desc')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <BvInput
                 value={bvId}
                 onChange={setBvId}
@@ -209,7 +182,7 @@ function AiConvert() {
                 disabled={downloadMutation.isPending}
               />
               {downloadMutation.isPending && (
-                <div className="mt-6">
+                <div className="mt-4">
                   {subscribeProgress.data?.stage === 'downloading' ? (
                     <ProcessingSteps
                       stage="downloading"
@@ -217,9 +190,11 @@ function AiConvert() {
                       message={subscribeProgress.data?.message}
                     />
                   ) : (
-                    <div className="flex items-center justify-center text-gray-600">
-                      <Spinner className="w-6 h-6 mr-2" />
-                      <span>{t('downloading_video', '下载中，请稍候...')}</span>
+                    <div className="flex items-center justify-center text-slate-600">
+                      <Spinner className="w-5 h-5 mr-2" />
+                      <span className="text-sm">
+                        {t('downloading_video')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -230,21 +205,21 @@ function AiConvert() {
 
         {/* 步骤 2: 选择风格 */}
         {currentStep === 'select-style' && (
-          <Card className="border-2 border-blue-100 shadow-xl bg-gradient-to-br from-white to-blue-50">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-3">
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
-                  step="selectType" // 复用现有图标
-                  className="text-blue-600"
-                  size={24}
+                  step="selectType"
+                  className="text-slate-700"
+                  size={20}
                 />
-                {t('step2_select_style', '第二步：选择输出选项')}
+                {t('step2_select_style')}
               </CardTitle>
-              <CardDescription className="text-lg">
-                {t('select_style_desc', '选择你希望AI生成的文档风格和驱动模型')}
+              <CardDescription className="text-sm">
+                {t('select_style_desc')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <OptionsSelector
                 onStart={handleStartProcessing}
                 disabled={summarizeMutation.isPending}
@@ -256,21 +231,21 @@ function AiConvert() {
 
         {/* 步骤 3: 处理中 */}
         {currentStep === 'processing' && (
-          <Card className="border-2 border-yellow-100 shadow-xl bg-gradient-to-br from-white to-yellow-50">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-3">
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
-                  step="converting" // 复用现有图标
-                  className="text-yellow-600"
-                  size={24}
+                  step="converting"
+                  className="text-slate-700"
+                  size={20}
                 />
-                {t('step3_processing', '第三步：处理中')}
+                {t('step3_processing')}
               </CardTitle>
-              <CardDescription className="text-lg">
-                {t('processing_desc', 'AI正在努力工作中，请稍候...')}
+              <CardDescription className="text-sm">
+                {t('processing_desc')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <ProcessingSteps
                 stage={subscribeProgress.data?.stage || 'downloading'}
                 progress={subscribeProgress.data?.progress || 0}
@@ -282,21 +257,21 @@ function AiConvert() {
 
         {/* 步骤 4: 完成 */}
         {currentStep === 'completed' && (
-          <Card className="border-2 border-emerald-100 shadow-xl bg-gradient-to-br from-white to-emerald-50">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
+              <div className="flex justify-between items-start">
+                <div className="flex items-start gap-2">
                   <StepIcon
                     step="completed"
-                    className="text-emerald-600"
-                    size={24}
+                    className="text-green-600"
+                    size={20}
                   />
                   <div>
-                    <CardTitle className="text-2xl">
-                      {t('step4_completed', '第四步：转换完成')}
+                    <CardTitle className="text-base font-medium text-slate-900">
+                      {t('step4_completed')}
                     </CardTitle>
-                    <CardDescription className="text-lg">
-                      {t('completed_desc', '你的文档已生成，快来查看吧！')}
+                    <CardDescription className="text-sm">
+                      {t('completed_desc')}
                     </CardDescription>
                   </div>
                 </div>
@@ -310,7 +285,7 @@ function AiConvert() {
                       size="sm"
                       onClick={() => setDisplayMode('timeline')}
                     >
-                      📅 时间轴
+                      {t('timeline_view')}
                     </Button>
                     <Button
                       variant={
@@ -319,13 +294,13 @@ function AiConvert() {
                       size="sm"
                       onClick={() => setDisplayMode('markdown')}
                     >
-                      📝 文档
+                      {t('document_view')}
                     </Button>
                   </div>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               {displayMode === 'timeline' && keyframes.length > 0 ? (
                 <TimelineView
                   items={parseTimelineContent(
@@ -349,14 +324,14 @@ function AiConvert() {
         {(subscribeProgress.data?.stage === 'error' ||
           downloadMutation.isError ||
           summarizeMutation.isError) && (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-3 text-red-700">
-              <StepIcon step="error" className="text-red-600" size={24} />
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-700">
+              <StepIcon step="error" className="text-red-600" size={20} />
               <div>
-                <div className="font-semibold">
-                  {t('conversion_failed', '转换失败')}
+                <div className="font-medium text-sm">
+                  {t('conversion_failed')}
                 </div>
-                <div className="text-sm">
+                <div className="text-xs">
                   {errorMessage ||
                     subscribeProgress.data?.error ||
                     downloadMutation.error?.message ||

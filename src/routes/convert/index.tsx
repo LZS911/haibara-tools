@@ -17,7 +17,6 @@ import {
   PairList,
   ProgressBar,
   StepIcon,
-  ConversionArrow,
   type PairItem,
   type ConvertCategory,
   type FileFormat
@@ -158,36 +157,33 @@ function Convert() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-6">
-          <ConversionArrow className="w-8 h-8 text-white" size={32} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t('convert_title')}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">{t('convert_desc')}</p>
         </div>
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-          {t('convert_title')}
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          {t('convert_desc')}
-        </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {currentStep === 'select-type' && (
-          <Card className="border-2 border-blue-100 shadow-xl bg-gradient-to-br from-white to-blue-50">
-            <CardHeader className="rounded-t-lg">
-              <CardTitle className="text-2xl flex items-center gap-3">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
                   step="selectType"
-                  className="text-blue-600"
-                  size={24}
+                  className="text-slate-700"
+                  size={20}
                 />
                 {t('step1_select_type')}
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-sm">
                 {t('select_convert_type_format')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <div className="space-y-6">
                 <CategoryTabs
                   categories={categories}
@@ -207,31 +203,31 @@ function Convert() {
         )}
 
         {currentStep === 'upload-file' && selectedPair && (
-          <Card className="border-2 border-green-100 shadow-xl bg-gradient-to-br from-white to-green-50">
-            <CardHeader className=" rounded-t-lg">
-              <CardTitle className="text-2xl flex items-center gap-3">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
                   step="uploadFile"
-                  className="text-green-600"
-                  size={24}
+                  className="text-slate-700"
+                  size={20}
                 />
                 {t('step2_upload_file')}
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-sm">
                 {t('drag_upload_file_desc', {
                   type: selectedPair.from.toUpperCase()
                 })}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-3 text-blue-700">
+            <CardContent className="p-6">
+              <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-2 text-slate-700">
                   <StepIcon
                     step="converting_alt"
-                    className="text-blue-700"
-                    size={24}
+                    className="text-slate-600"
+                    size={18}
                   />
-                  <span className="font-semibold text-lg">
+                  <span className="font-medium text-sm">
                     {selectedPair.from.toUpperCase()} →{' '}
                     {selectedPair.to.toUpperCase()}
                   </span>
@@ -243,8 +239,8 @@ function Convert() {
                 onFileSelected={handleFile}
                 selectedConvertType={selectedPair}
               />
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={backToSelectType}>
+              <div className="flex justify-between mt-4">
+                <Button variant="outline" size="sm" onClick={backToSelectType}>
                   {t('back_to_select_type')}
                 </Button>
               </div>
@@ -254,21 +250,21 @@ function Convert() {
 
         {/* Step 3: Converting */}
         {currentStep === 'converting' && (
-          <Card className="border-2 border-yellow-100 shadow-xl bg-gradient-to-br from-white to-yellow-50">
-            <CardHeader className="rounded-t-lg">
-              <CardTitle className="text-2xl flex items-center gap-3">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
                   step="converting"
-                  className="text-yellow-600"
-                  size={24}
+                  className="text-slate-700"
+                  size={20}
                 />
                 {t('step3_converting')}
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-sm">
                 {t('processing_file_please_wait')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <ProgressBar
                 progress={progress}
                 status={status}
@@ -280,52 +276,49 @@ function Convert() {
 
         {/* Step 4: Completed */}
         {currentStep === 'completed' && (
-          <Card className="border-2 border-emerald-100 shadow-xl bg-gradient-to-br from-white to-emerald-50">
-            <CardHeader className="rounded-t-lg">
-              <CardTitle className="text-2xl flex items-center gap-3">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
                 <StepIcon
                   step="completed"
-                  className="text-emerald-600"
-                  size={24}
+                  className="text-green-600"
+                  size={20}
                 />
                 {t('step4_completed')}
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-sm">
                 {t('file_ready_download')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
-              <div className="text-center space-y-6">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-lg bg-green-50 border border-green-200 p-4">
                   <StepIcon
                     step="celebration"
-                    className="text-emerald-600"
-                    size={40}
+                    className="text-green-600"
+                    size={24}
                   />
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">
+                      {t('conversion_success')}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {t('file_converted_from_to', {
+                        from: selectedPair?.from.toUpperCase(),
+                        to: selectedPair?.to.toUpperCase()
+                      })}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {t('conversion_success')}
-                  </h3>
-                  <p className="text-gray-600">
-                    {t('file_converted_from_to', {
-                      from: selectedPair?.from.toUpperCase(),
-                      to: selectedPair?.to.toUpperCase()
-                    })}
-                  </p>
-                </div>
-                <div className="flex justify-center gap-4">
+                <div className="flex gap-3">
                   {downloadUrl && (
-                    <a href={downloadUrl} download>
-                      <Button
-                        size="lg"
-                        className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-8 py-3"
-                      >
+                    <a href={downloadUrl} download className="flex-1">
+                      <Button size="sm" className="w-full">
                         {t('download_converted_file')}
                       </Button>
                     </a>
                   )}
-                  <Button size="lg" variant="outline" onClick={resetConvert}>
+                  <Button size="sm" variant="outline" onClick={resetConvert}>
                     {t('start_new_conversion')}
                   </Button>
                 </div>
@@ -336,12 +329,14 @@ function Convert() {
 
         {/* Error status */}
         {status === 'error' && errorMessage && (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-3 text-red-700">
-              <StepIcon step="error" className="text-red-600" size={24} />
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-700">
+              <StepIcon step="error" className="text-red-600" size={20} />
               <div>
-                <div className="font-semibold">{t('conversion_failed')}</div>
-                <div className="text-sm">{errorMessage}</div>
+                <div className="font-medium text-sm">
+                  {t('conversion_failed')}
+                </div>
+                <div className="text-xs">{errorMessage}</div>
               </div>
             </div>
           </div>

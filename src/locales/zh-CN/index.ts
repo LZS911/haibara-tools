@@ -24,11 +24,20 @@ export default {
   tab_audio: '音频声音',
   tab_video: '视频影像',
   ai_convert_title: 'AI 视频转文档',
-
+  ai_convert_desc:
+    '输入B站视频BV号，AI为你生成内容纪要、文章、笔记等多种格式的文档',
+  step1_input_bv_id: '输入B站视频BV号',
+  input_bv_id_desc: '我们将自动下载视频并进行处理',
   select_convert_type: '选择转换类型',
   select_convert_type_desc: '从下方选择您需要的文件转换类型',
   pair_from_to: '{{from}} → {{to}}',
   accept_types: '支持类型：{{types}}',
+  downloading_video: '下载中，请稍候...',
+
+  step2_select_style: '第二步：选择输出选项',
+  select_style_desc: '选择你希望AI生成的文档风格和驱动模型',
+  step3_processing: '第三步：处理中',
+  processing_desc: 'AI正在努力工作中，请稍候...',
 
   status_idle: '就绪',
   status_uploading: '正在上传…',
@@ -88,6 +97,7 @@ export default {
   conversion_success: '转换成功！',
   conversion_success_desc: '您的文件已成功从 {{from}} 转换为 {{to}}',
   file_ready_download: '文件转换成功，可以下载了',
+  start_conversion: '开始转换',
 
   // 具体转换类型
   txt_to_docx: 'TXT 转 DOCX',
@@ -107,7 +117,8 @@ export default {
   step2_upload_file: '第二步：上传文件',
   step3_converting: '第三步：转换中',
   step4_completed: '转换完成！',
-
+  completed_desc: '你的文档已生成，快来查看吧！',
+  bv_input_placeholder: '例如：BV1xx411c7mD',
   // 步骤描述
   select_convert_type_format: '选择您需要的文件转换类型和格式',
   drag_upload_file_desc: '将要转换的 {{type}} 文件拖拽到下方区域或点击选择',
@@ -125,13 +136,13 @@ export default {
   continue_to_upload: '继续上传',
 
   // UploadDropzone 组件
-  drop_file_to_convert: '🎯 释放文件开始转换',
+  drop_file_to_convert: '释放文件开始转换',
   release_file_here: '将文件释放到此处',
-  file_type_not_supported: '❌ 文件类型不支持',
+  file_type_not_supported: '文件类型不支持',
   please_select_file_types: '请选择 {{types}} 格式的文件',
-  please_select_convert_type_first: '⏳ 请先选择转换类型',
+  please_select_convert_type_first: '请先选择转换类型',
   select_convert_type_above: '在上方选择您需要的文件转换类型',
-  upload_file_type: '📁 上传 {{type}} 文件',
+  upload_file_type: '上传 {{type}} 文件',
   drag_file_or_click_select: '将 {{type}} 文件拖拽到此处或点击选择',
   file_will_convert_to: '文件将被转换为 {{type}} 格式',
   supported_formats_label: '支持格式',
@@ -139,8 +150,8 @@ export default {
 
   // 操作按钮
   back_to_select_type: '← 返回选择类型',
-  download_converted_file: '📥 下载转换后的文件',
-  start_new_conversion: '🔄 开始新的转换',
+  download_converted_file: '下载转换后的文件',
+  start_new_conversion: ' 开始新的转换',
 
   // 状态和结果
   file_converted_from_to: '您的文件已成功从 {{from}} 转换为 {{to}}',
@@ -161,5 +172,117 @@ export default {
   progress_conversion_complete: '转换完成',
   progress_animation_effect: '动画效果',
   progress_stage_indicator: '进度阶段指示',
-  progress_loading_animation: '加载动画 (仅在处理时显示)'
+  progress_loading_animation: '加载动画 (仅在处理时显示)',
+
+  // 设置页面
+  settings: '设置',
+  settings_title: '应用设置',
+  settings_desc: '配置 API Keys 和应用设置',
+  settings_save: '保存配置',
+  settings_saving: '保存中...',
+  settings_save_success: '配置保存成功！',
+  settings_save_failed: '保存失败: {{error}}',
+  settings_save_fail_base: '保存配置失败',
+  settings_load_fail: '加载配置失败',
+  settings_config_location: '配置文件位置',
+  settings_app_version: '应用版本: {{appVersion}}',
+  settings_llm_section: 'LLM 提供商配置',
+  settings_provider_configured: '已配置',
+  settings_back_to_providers: '← 返回提供商列表',
+  settings_api_key_placeholder: '输入 API Key',
+  settings_default_model: '默认: {{model}}',
+  settings_volc_asr_section: '火山引擎 ASR 配置',
+  settings_volc_asr_title: '语音识别服务',
+  settings_volc_asr_desc: '用于视频转文档功能的语音识别',
+  settings_app_id_placeholder: '输入 App ID',
+  settings_access_token_placeholder: '输入 Access Token',
+
+  // LLM 提供商
+  settings_openai: 'OpenAI',
+  settings_openai_desc: 'GPT-4, GPT-3.5 等模型',
+  settings_deepseek: 'DeepSeek',
+  settings_deepseek_desc: '中文优化，性价比高',
+  settings_gemini: 'Google Gemini',
+  settings_gemini_desc: '有免费额度，适合开发测试',
+  settings_claude: 'Anthropic Claude',
+  settings_claude_desc: '长上下文，高质量输出',
+  settings_openrouter: 'OpenRouter',
+  settings_openrouter_desc: '统一访问多个模型',
+  settings_groq: 'Groq',
+  settings_groq_desc: '超快推理速度',
+  settings_cohere: 'Cohere',
+  settings_cohere_desc: '企业级 AI',
+  settings_volc_asr: '火山引擎 ASR',
+
+  // 更新通知
+  update_available: '发现新版本',
+  update_version_available: '版本 {{version}} 现已可用',
+  update_download: '下载更新',
+  update_downloading: '下载中...',
+  update_download_progress: '{{progress}}% 完成',
+  update_downloaded: '更新已下载',
+  update_install: '重启并安装',
+  update_install_desc: '重启应用以安装版本 {{version}}',
+  update_error: '更新失败，请稍后重试',
+  update_check: '检查更新',
+
+  // 侧边栏导航
+  nav_home: '首页',
+  nav_convert: '文件转换',
+  nav_media_to_docs: 'AI 转文档',
+  nav_settings: '设置',
+  nav_cache_management: '缓存管理',
+  sidebar_tools: '工具',
+  sidebar_manage: '管理',
+  sidebar_system: '系统',
+  sidebar_dashboard: '仪表板',
+
+  // 缓存管理页面
+  cache_management_title: '缓存管理',
+  cache_management_desc: '管理视频下载和转录的缓存数据',
+  cache_management_refreshing: '刷新中',
+  cache_management_refresh: '刷新',
+  cache_management_clearing: '清理中',
+  cache_management_clear_expired: '清理过期',
+  cache_management_total_count: '总缓存数',
+  cache_management_transcribed_count: '已转录',
+  cache_management_total_size: '占用空间',
+  cache_management_list_title: '缓存列表',
+  cache_management_loading: '加载中...',
+  cache_management_no_data: '暂无缓存数据',
+  cache_management_no_data_desc: '下载视频后，缓存会自动保存在这里',
+  cache_management_go_to_media_to_docs: '前往 AI 转文档',
+  cache_management_transcribed: '已转录',
+  cache_management_deleting: '删除中',
+  cache_management_delete: '删除',
+  cache_management_delete_confirm: '确定要删除 {{bvId}} 的缓存吗？',
+  cache_management_delete_success: '删除成功',
+  cache_management_delete_fail: '删除失败: {{error}}',
+  cache_management_clear_expired_confirm: '确定要清理超过 7 天的缓存吗？',
+  cache_management_clear_expired_success: '成功清理了 {{count}} 个过期缓存',
+  cache_management_clear_expired_fail: '清理失败: {{error}}',
+
+  // 风格选择器
+  style_xiaohongshu: '小红书风格',
+  style_wechat: '公众号风格',
+  style_notes: '知识笔记',
+  style_mindmap: '思维导图',
+  style_summary: '内容总结',
+
+  // 仪表盘
+  dashboard_welcome: '欢迎使用 Haibara Tools',
+  dashboard_electron_mode: 'Electron 模式',
+  dashboard_quick_actions: '快速操作',
+  dashboard_stats: '使用统计',
+  dashboard_recent_activity: '最近使用',
+  dashboard_no_recent_activity: '暂无使用记录',
+  dashboard_config_tip_title: '配置提示',
+  dashboard_config_tip_desc:
+    '首次使用？请前往设置页面配置您的 API Keys，以使用 AI 相关功能。',
+  dashboard_go_to_settings: '前往设置',
+  dashboard_quick_action_convert_desc: '快速转换文件格式',
+  dashboard_quick_action_media_to_docs_desc: '智能视频转文档',
+  dashboard_stat_today: '今日转换',
+  dashboard_stat_week: '本周转换',
+  dashboard_stat_total: '总计转换'
 };

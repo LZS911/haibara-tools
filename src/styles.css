@@ -56,38 +56,38 @@ code {
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
+  --radius: 0.5rem; /* 减小圆角，更原生 */
+  --background: oklch(0.98 0 0); /* 更柔和的背景 */
+  --foreground: oklch(0.15 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
+  --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.15 0 0); /* 更深的主色 */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.5 0.2 25);
+  --border: oklch(0.9 0 0); /* 更明显的边框 */
+  --input: oklch(0.98 0 0);
+  --ring: oklch(0.7 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.15 0 0);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.96 0 0);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.9 0 0);
+  --sidebar-ring: oklch(0.7 0 0);
 }
 
 .dark {
@@ -129,7 +129,21 @@ code {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Electron 窗口样式 */
+  html,
+  body,
+  #root {
+    @apply h-full overflow-hidden;
+  }
+
+  /* 原生客户端风格 - 字体优化 */
+  body {
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+    letter-spacing: -0.011em;
   }
 }
 
@@ -148,4 +162,88 @@ code {
 
 .keyframe-image {
   @apply rounded-lg w-full h-auto object-cover shadow-md max-h-96;
+}
+
+/* 原生客户端风格滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-md;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+::-webkit-scrollbar-corner {
+  @apply bg-transparent;
+}
+
+/* 卡片样式 - 原生风格 */
+.card-native {
+  @apply rounded-lg border border-slate-200 bg-white shadow-sm;
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 1px 3px 0 rgba(0, 0, 0, 0.02);
+}
+
+.card-native:hover {
+  @apply border-slate-300;
+  box-shadow:
+    0 2px 4px 0 rgba(0, 0, 0, 0.05),
+    0 2px 6px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* 按钮样式 - 原生风格 */
+button {
+  @apply transition-all duration-150;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* 输入框 - 原生风格 */
+input,
+textarea,
+select {
+  @apply transition-all duration-150;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-slate-300/50 border-slate-300;
+}
+
+/* 焦点样式 */
+:focus-visible {
+  @apply outline-none ring-2 ring-slate-300/50 ring-offset-2;
+}
+
+/* 原生工具栏样式 */
+.toolbar-native {
+  @apply border-b border-slate-200 bg-white/80 backdrop-blur-sm;
+}
+
+/* 面板样式 */
+.panel-native {
+  @apply rounded-lg border border-slate-200 bg-white p-4;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+/* 分割线 */
+.divider-native {
+  @apply border-slate-200;
 }

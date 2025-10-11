@@ -1,4 +1,3 @@
-
 import { Input } from '@/routes/-components/ui/input';
 import { Button } from '@/routes/-components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +28,7 @@ export function BvInput({ value, onChange, onStart, disabled }: BvInputProps) {
         className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
         disabled={disabled || !value}
       >
-        {t('start_conversion', '开始转换')}
+        {t('start_conversion')}
       </Button>
     </div>
   );

@@ -1,14 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/routes/-components/ui/button';
 
-const STYLES = [
-  { id: 'xiaohongshu', name: '小红书风格' },
-  { id: 'wechat', name: '公众号风格' },
-  { id: 'notes', name: '知识笔记' },
-  { id: 'mindmap', name: '思维导图' },
-  { id: 'summary', name: '内容总结' }
-];
-
 interface StyleSelectorProps {
   onSelect: (style: string) => void;
   disabled?: boolean;
@@ -16,6 +8,14 @@ interface StyleSelectorProps {
 
 export function StyleSelector({ onSelect, disabled }: StyleSelectorProps) {
   const { t } = useTranslation();
+
+  const STYLES = [
+    { id: 'style_xiaohongshu', name: t('style_xiaohongshu', '小红书风格') },
+    { id: 'style_wechat', name: t('style_wechat', '公众号风格') },
+    { id: 'style_notes', name: t('style_notes', '知识笔记') },
+    { id: 'style_mindmap', name: t('style_mindmap', '思维导图') },
+    { id: 'style_summary', name: t('style_summary', '内容总结') }
+  ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -28,7 +28,7 @@ export function StyleSelector({ onSelect, disabled }: StyleSelectorProps) {
           onClick={() => onSelect(style.id)}
           disabled={disabled}
         >
-          {t(style.id, style.name)}
+          {style.name}
         </Button>
       ))}
     </div>

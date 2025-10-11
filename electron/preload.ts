@@ -1,4 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { AppConfig } from '../src/electron.d';
+
+// 配置类型定义
 
 // 通过 contextBridge 安全地暴露 API
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -13,6 +16,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 获取应用版本
   getAppVersion: (): Promise<string> => {
     return ipcRenderer.invoke('get-app-version');
+  },
+
+  // 获取配置
+  getConfig: (): Promise<AppConfig> => {
+    return ipcRenderer.invoke('get-config');
+  },
+
+  // 保存配置
+  saveConfig: (
+    config: AppConfig
+  ): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('save-config', config);
+  },
+
+  // 获取 userData 路径
+  getUserDataPath: (): Promise<string> => {
+    return ipcRenderer.invoke('get-user-data-path');
   },
 
   // 检查更新
