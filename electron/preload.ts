@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { AppConfig } from '../src/electron.d';
+import type { AppConfig } from '../src/electron.d';
 
 // 配置类型定义
 

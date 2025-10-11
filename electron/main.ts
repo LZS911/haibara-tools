@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import updater from 'electron-updater';
 import dotenv from 'dotenv';
 import fs from 'node:fs';
-import { AppConfig } from '../src/electron.d';
+import type { AppConfig } from '../src/electron.d';
 
 const { autoUpdater } = updater;
 
