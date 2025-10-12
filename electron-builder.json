@@ -64,12 +64,12 @@
       {
         "target": "nsis",
         "arch": [
-          "x64",
-          "arm64"
+          "x64"
         ]
       }
     ],
-    "icon": "build/icon.ico"
+    "icon": "build/icon.ico",
+    "signAndEditExecutable": false
   },
   "nsis": {
     "oneClick": false,

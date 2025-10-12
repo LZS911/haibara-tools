@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import WebSocket from 'ws';
 import { gzip, gunzip } from 'zlib';
 import { promisify } from 'util';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
@@ -46,7 +47,7 @@ const ACCESS_KEY = process.env.VOLC_ACCESS_TOKEN;
  */
 function convertToWav(audioPath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const ffmpeg = spawn('ffmpeg', [
+    const ffmpeg = spawn(ffmpegInstaller.path, [
       '-v',
       'quiet',
       '-y',

@@ -23,6 +23,7 @@ import { Button } from '../-components/ui/button';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { TimelineView } from './-components/TimelineView';
 import { parseTimelineContent } from './-lib/utils';
+import { useAppStore } from '@/store/app';
 
 export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/media-to-docs/')({
 
 function AiConvert() {
   const { t } = useTranslation();
+  const { setIsTaskRunning } = useAppStore();
   const [bvId, setBvId] = useState('BV11T4EzyEdF');
   const [currentStep, setCurrentStep] = useState<AiConvertStep>('input-bv-id');
   const [jobId, setJobId] = useState<string>('');
@@ -63,6 +65,7 @@ function AiConvert() {
     setErrorMessage(undefined);
     const newJobId = nanoid();
     setJobId(newJobId);
+    setIsTaskRunning(true);
 
     downloadMutation.mutate(
       { bvId, jobId: newJobId },
@@ -78,6 +81,9 @@ function AiConvert() {
         },
         onError: (error) => {
           setErrorMessage(error.message);
+        },
+        onSettled: () => {
+          setIsTaskRunning(false);
         }
       }
     );
@@ -92,6 +98,7 @@ function AiConvert() {
 
     setSelectedStyle(style);
     setCurrentStep('processing');
+    setIsTaskRunning(true);
 
     summarizeMutation.mutate(
       {
@@ -117,6 +124,9 @@ function AiConvert() {
         },
         onError: (error) => {
           setErrorMessage(error.message);
+        },
+        onSettled: () => {
+          setIsTaskRunning(false);
         }
       }
     );

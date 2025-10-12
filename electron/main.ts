@@ -15,46 +15,38 @@ const __dirname = path.dirname(__filename);
 const isDev = process.env.NODE_ENV === 'development';
 
 // 加载环境变量
-// 在开发模式下，从项目根目录加载 .env
-// 在生产模式下，从 userData 目录加载 .env（用户可自行创建配置文件）
-if (isDev) {
-  // 开发模式：从项目根目录加载
-  dotenv.config({ path: path.join(process.cwd(), '.env') });
+// 无论在开发还是生产模式下，都从 userData 目录加载 .env
+const userDataPath = app.getPath('userData');
+const envPath = path.join(userDataPath, '.env');
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log('[Electron] Loaded .env file from:', envPath);
 } else {
-  // 生产模式：从 userData 目录加载
-  // 用户可以在 ~/Library/Application Support/Haibara Tools/.env 创建配置文件
-  const userDataPath = app.getPath('userData');
-  const envPath = path.join(userDataPath, '.env');
+  console.log('[Electron] No .env file found at:', envPath);
+  console.log(
+    '[Electron] You can create a .env file at this location to configure API keys and other settings'
+  );
 
-  if (fs.existsSync(envPath)) {
-    dotenv.config({ path: envPath });
-    console.log('[Electron] Loaded .env file from:', envPath);
-  } else {
-    console.log('[Electron] No .env file found at:', envPath);
-    console.log(
-      '[Electron] You can create a .env file at this location to configure API keys and other settings'
-    );
-
-    // 可选：创建一个示例 .env 文件
-    const exampleEnv = `# Haibara Tools Configuration
+  // 可选：创建一个示例 .env 文件
+  const exampleEnv = `# Haibara Tools Configuration
 # Add your API keys and configuration here
 
 # Example:
 # OPENAI_API_KEY=your_api_key_here
 # ANTHROPIC_API_KEY=your_api_key_here
 `;
-    try {
-      if (!fs.existsSync(userDataPath)) {
-        fs.mkdirSync(userDataPath, { recursive: true });
-      }
-      const examplePath = path.join(userDataPath, '.env.example');
-      if (!fs.existsSync(examplePath)) {
-        fs.writeFileSync(examplePath, exampleEnv, 'utf-8');
-        console.log('[Electron] Created .env.example at:', examplePath);
-      }
-    } catch (error) {
-      console.error('[Electron] Failed to create .env.example:', error);
+  try {
+    if (!fs.existsSync(userDataPath)) {
+      fs.mkdirSync(userDataPath, { recursive: true });
     }
+    const examplePath = path.join(userDataPath, '.env.example');
+    if (!fs.existsSync(examplePath)) {
+      fs.writeFileSync(examplePath, exampleEnv, 'utf-8');
+      console.log('[Electron] Created .env.example at:', examplePath);
+    }
+  } catch (error) {
+    console.error('[Electron] Failed to create .env.example:', error);
   }
 }
 let mainWindow: BrowserWindow | null = null;
@@ -134,8 +126,8 @@ async function createWindow() {
       webSecurity: true
     },
     title: 'Haibara Tools',
-    titleBarStyle: 'hiddenInset',
-    frame: process.platform === 'darwin' ? false : true
+    frame: false,
+    icon: path.join(__dirname, '../../build/icon.png')
   });
 
   // 开发模式：加载 Vite 开发服务器
@@ -221,31 +213,7 @@ function getConfigPath(): string {
 function loadConfig(): AppConfig {
   const configPath = getConfigPath();
 
-  // 开发环境：从 process.env 读取（已经通过 dotenv 加载）
-  if (isDev) {
-    return {
-      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-      OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
-      DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
-      DEEPSEEK_MODEL_NAME: process.env.DEEPSEEK_MODEL_NAME,
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-      GEMINI_MODEL_NAME: process.env.GEMINI_MODEL_NAME,
-      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-      ANTHROPIC_MODEL_NAME: process.env.ANTHROPIC_MODEL_NAME,
-      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
-      OPENROUTER_MODEL_NAME: process.env.OPENROUTER_MODEL_NAME,
-      GROQ_API_KEY: process.env.GROQ_API_KEY,
-      GROQ_MODEL_NAME: process.env.GROQ_MODEL_NAME,
-      COHERE_API_KEY: process.env.COHERE_API_KEY,
-      COHERE_MODEL_NAME: process.env.COHERE_MODEL_NAME,
-      VOLC_APP_ID: process.env.VOLC_APP_ID,
-      VOLC_ACCESS_TOKEN: process.env.VOLC_ACCESS_TOKEN,
-      PORT: process.env.PORT,
-      NODE_ENV: process.env.NODE_ENV
-    };
-  }
-
-  // 生产环境：从 config.json 读取
+  // 无论开发还是生产，都从 config.json 读取
   try {
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, 'utf-8');
