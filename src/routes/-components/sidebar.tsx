@@ -96,7 +96,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
         <span
           className={cn(
-            'transition-opacity duration-200',
+            'whitespace-nowrap transition-opacity duration-200',
 
             isCollapsed && 'opacity-0 w-0'
           )}
@@ -204,8 +204,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                   isCollapsed && 'opacity-0 w-0'
                 )}
               >
-                <p className="text-xs font-medium">Haibara Tools</p>
-                <p className="text-xs text-slate-400">
+                <p className="whitespace-nowrap text-xs font-medium">
+                  Haibara Tools
+                </p>
+                <p className="whitespace-nowrap text-xs text-slate-400">
                   {t('sidebar_dashboard', '仪表板')}
                 </p>
               </div>
