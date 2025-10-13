@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Allow to push tags and branches
+      actions: write # Allow to trigger other workflows
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,16 +32,27 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Check if tag already exists
+        id: check_tag
         run: |
           if git rev-parse "${{ env.VERSION }}" >/dev/null 2>&1; then
             echo "Tag ${{ env.VERSION }} already exists. Skipping release."
-            exit 0
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create and push tag
+        if: steps.check_tag.outputs.skip == 'false'
         run: |
           git tag ${{ env.VERSION }}
           git push origin ${{ env.VERSION }}
 
-      - name: Update release branch
-        run: git push origin HEAD:release --force
+      - name: Create versioned release branch
+        if: steps.check_tag.outputs.skip == 'false'
+        run: git push origin HEAD:refs/heads/release/${{ env.VERSION }}
+
+      - name: Trigger build workflow
+        if: steps.check_tag.outputs.skip == 'false'
+        run: gh workflow run build-electron.yml --ref ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
