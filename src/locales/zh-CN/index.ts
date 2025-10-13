@@ -284,5 +284,12 @@ export default {
   dashboard_quick_action_media_to_docs_desc: '智能视频转文档',
   dashboard_stat_today: '今日转换',
   dashboard_stat_week: '本周转换',
-  dashboard_stat_total: '总计转换'
+  dashboard_stat_total: '总计转换',
+
+  enable_vision_mode: '启用视觉模式',
+  support_vision_mode_desc: '✅ 当前模型支持视觉功能',
+  not_support_vision_mode_desc:
+    '⚠️ 当前模型不支持视觉功能，请选择 OpenAI、Anthropic 或 Gemini',
+  support_vision_mode_desc_not:
+    '💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述'
 };

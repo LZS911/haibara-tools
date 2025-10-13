@@ -1,7 +1,7 @@
 import { Titlebar } from './titlebar';
 import { Sidebar } from './sidebar';
 import { UpdateNotification } from './update-notification';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Props = {
   children: React.ReactNode;
@@ -12,6 +12,51 @@ export const Layout: React.FC<Props> = ({ children }) => {
     typeof window !== 'undefined' && window.electronAPI?.isElectron;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Load initial state from config (Electron) or localStorage (web)
+  useEffect(() => {
+    if (isElectron) {
+      window.electronAPI?.getConfig().then((config) => {
+        if (config.SIDEBAR_COLLAPSED !== undefined) {
+          setIsSidebarCollapsed(config.SIDEBAR_COLLAPSED);
+        }
+      });
+    } else {
+      const saved = window.localStorage.getItem('sidebar-collapsed');
+      if (saved !== null) {
+        setIsSidebarCollapsed(JSON.parse(saved));
+      }
+    }
+  }, [isElectron]);
+
+  const handleSetIsCollapsed = useCallback(
+    async (collapsed: boolean | ((prevState: boolean) => boolean)) => {
+      const newCollapsedValue =
+        typeof collapsed === 'function'
+          ? collapsed(isSidebarCollapsed)
+          : collapsed;
+
+      setIsSidebarCollapsed(newCollapsedValue);
+
+      if (isElectron) {
+        try {
+          const currentConfig = await window.electronAPI!.getConfig();
+          await window.electronAPI!.saveConfig({
+            ...currentConfig,
+            SIDEBAR_COLLAPSED: newCollapsedValue
+          });
+        } catch (error) {
+          console.error('Failed to save sidebar state:', error);
+        }
+      } else {
+        window.localStorage.setItem(
+          'sidebar-collapsed',
+          JSON.stringify(newCollapsedValue)
+        );
+      }
+    },
+    [isElectron, isSidebarCollapsed]
+  );
+
   return (
     <div className="flex h-screen flex-col bg-slate-50/50">
       {/* 自定义标题栏（仅 Electron） */}
@@ -21,19 +66,17 @@ export const Layout: React.FC<Props> = ({ children }) => {
         {/* 侧边栏 */}
         <Sidebar
           isCollapsed={isSidebarCollapsed}
-          setIsCollapsed={setIsSidebarCollapsed}
+          setIsCollapsed={handleSetIsCollapsed}
         />
 
         {/* 主内容区 */}
         <main
-          className={`flex-1 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
+          className={`flex-1 pt-8 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
           style={{
-            marginLeft: isSidebarCollapsed ? '4.5rem' : '14rem'
+            marginLeft: isSidebarCollapsed ? '4rem' : '13rem'
           }}
         >
-          <div className="mx-auto max-w-7xl px-6 py-6 md:px-8 md:py-8">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl px-6 md:px-8">{children}</div>
         </main>
       </div>
 

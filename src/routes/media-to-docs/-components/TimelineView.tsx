@@ -51,30 +51,30 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-8">
         <p className="text-gray-500">暂无时间轴内容</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 操作按钮 */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-lg font-bold text-gray-800">
           视频时间轴 ({items.length} 个时间点)
         </h2>
         <div className="flex gap-2">
           <Button onClick={handleCopy} variant="outline" size="sm">
             {isCopied ? (
-              <Check className="w-4 h-4 mr-2" />
+              <Check className="w-4 h-4 mr-1" />
             ) : (
-              <Copy className="w-4 h-4 mr-2" />
+              <Copy className="w-4 h-4 mr-1" />
             )}
             {isCopied ? '已复制' : '复制'}
           </Button>
           <Button onClick={handleDownload} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-1" />
             下载
           </Button>
         </div>
@@ -86,19 +86,19 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
         <div className="timeline-line" />
 
         {/* 时间轴项目 */}
-        <div className="space-y-12">
+        <div className="space-y-8">
           {items.map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="relative pl-24"
+              className="relative pl-20"
             >
               {/* 时间标记 */}
-              <div className="absolute left-0 top-0 flex items-center gap-3">
+              <div className="absolute left-0 top-0 flex items-center gap-2">
                 <div className="timeline-dot" />
-                <div className="flex items-center gap-2 text-blue-600 font-semibold">
+                <div className="flex items-center gap-1 text-blue-600 font-semibold text-sm">
                   <Clock className="w-4 h-4" />
                   <span>{item.time}</span>
                 </div>
@@ -106,15 +106,15 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
 
               {/* 内容卡片 */}
               <Card className="timeline-card">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   {/* 标题 */}
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h3 className="text-base font-bold text-gray-800 mb-2">
                     {item.title}
                   </h3>
 
                   {/* 关键帧图片 */}
                   {item.imageUrl && (
-                    <div className="mb-4">
+                    <div className="mb-2">
                       <img
                         src={item.imageUrl}
                         alt={`关键帧 ${item.time}`}
@@ -126,11 +126,11 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
 
                   {/* 画面描述 */}
                   {item.sceneDescription && (
-                    <div className="mb-4">
-                      <div className="text-sm font-semibold text-gray-600 mb-2">
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-gray-600 mb-1">
                         📷 画面描述
                       </div>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed text-sm">
                         {item.sceneDescription}
                       </p>
                     </div>
@@ -139,14 +139,14 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
                   {/* 内容要点 */}
                   {item.keyPoints.length > 0 && (
                     <div>
-                      <div className="text-sm font-semibold text-gray-600 mb-2">
+                      <div className="text-xs font-semibold text-gray-600 mb-1">
                         📝 内容要点
                       </div>
-                      <ul className="space-y-2">
+                      <ul className="space-y-1">
                         {item.keyPoints.map((point, idx) => (
                           <li
                             key={idx}
-                            className="flex items-start gap-2 text-gray-700"
+                            className="flex items-start gap-2 text-gray-700 text-sm"
                           >
                             <span className="text-blue-500 mt-1">•</span>
                             <span className="flex-1">{point}</span>
@@ -163,8 +163,8 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
       </div>
 
       {/* 底部操作 */}
-      <div className="text-center pt-8">
-        <Button onClick={onReset} size="lg" variant="outline">
+      <div className="text-center pt-4">
+        <Button onClick={onReset} variant="outline">
           {t('try_again_button', '再试一次')}
         </Button>
       </div>
