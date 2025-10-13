@@ -31,19 +31,14 @@
         "arch": [
           "universal"
         ]
-      },
-      {
-        "target": "zip",
-        "arch": [
-          "universal"
-        ]
       }
     ],
     "icon": "build/icon.icns",
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
     "entitlements": "build/entitlements.mac.plist",
-    "entitlementsInherit": "build/entitlements.mac.plist"
+    "entitlementsInherit": "build/entitlements.mac.plist",
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
   "dmg": {
     "contents": [
@@ -69,7 +64,8 @@
       }
     ],
     "icon": "build/icon.ico",
-    "signAndEditExecutable": false
+    "signAndEditExecutable": false,
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
   "nsis": {
     "oneClick": false,
@@ -82,15 +78,7 @@
       {
         "target": "AppImage",
         "arch": [
-          "x64",
-          "arm64"
-        ]
-      },
-      {
-        "target": "deb",
-        "arch": [
-          "x64",
-          "arm64"
+          "x64"
         ]
       }
     ],

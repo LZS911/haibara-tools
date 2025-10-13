@@ -3,7 +3,7 @@ import { marked } from 'marked';
 import TurndownService from 'turndown';
 import mammoth from 'mammoth';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
-import puppeteer from 'puppeteer';
+import { getBrowser } from '@/server/lib/puppeteer-utils';
 import pdf from 'pdf-parse';
 
 // 配置marked选项
@@ -43,13 +43,10 @@ export async function mdToPdf(
   const markdownContent = await fs.readFile(inputPath, 'utf-8');
   const html = await markdownToHtml(markdownContent);
 
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
   try {
-    const page = await browser.newPage();
-
     // 设置CSS样式以改善PDF外观
     const styledHtml = `
       <!doctype html>
@@ -105,7 +102,7 @@ export async function mdToPdf(
       }
     });
   } finally {
-    await browser.close();
+    await page.close();
   }
 }
 

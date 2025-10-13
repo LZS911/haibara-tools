@@ -1,13 +1,23 @@
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-import ffprobePath from '@ffprobe-installer/ffprobe';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import path from 'path';
 import fs from 'fs/promises';
 import { promisify } from 'util';
 import { progressManager } from '../progress-manager';
 
-ffmpeg.setFfmpegPath(ffmpegPath.path);
-ffmpeg.setFfprobePath(ffprobePath.path);
+const isPackaged = process.env.IS_PACKAGED === 'true';
+
+const ffmpegPath = isPackaged
+  ? ffmpegInstaller.path.replace('app.asar', 'app.asar.unpacked')
+  : ffmpegInstaller.path;
+
+const ffprobePath = isPackaged
+  ? ffprobeInstaller.path.replace('app.asar', 'app.asar.unpacked')
+  : ffprobeInstaller.path;
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
 

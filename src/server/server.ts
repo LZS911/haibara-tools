@@ -24,6 +24,12 @@ export const createServer = async (
   root = process.cwd(),
   isProd = process.env.NODE_ENV === 'production'
 ) => {
+  console.log('[Server] Creating server...');
+  console.log('[Server] Root:', root);
+  console.log('[Server] isProd:', isProd);
+  console.log('[Server] __dirname:', __dirname);
+  console.log('[Server] USER_DATA_PATH:', process.env.USER_DATA_PATH);
+
   const app = express();
 
   app.use('/trpc', trpcMiddleWare);
@@ -36,6 +42,7 @@ export const createServer = async (
   app.use('/media-files', (req, res, next) => {
     const baseDir = process.env.USER_DATA_PATH || process.cwd();
     const mediaPath = path.join(baseDir, 'tmp/media-to-docs-jobs');
+    console.log('[Server] Serving media files from:', mediaPath);
     express.static(mediaPath)(req, res, next);
   });
 
@@ -43,6 +50,7 @@ export const createServer = async (
   // app.use('/api/media-to-docs', mediaToDocsRoutes);
 
   if (!isProd) {
+    console.log('[Server] Setting up development mode with Vite...');
     const vite = await import('vite');
     const viteServer = await vite.createServer({
       root,
@@ -75,16 +83,44 @@ export const createServer = async (
       }
     });
 
+    console.log('[Server] ✅ Development server configured');
     return { app };
   } else {
-    app.use(express.static(path.resolve(__dirname, '../client')));
+    console.log('[Server] Setting up production mode...');
+
+    // 在生产模式下，静态文件在 root/dist/client
+    const clientPath = path.resolve(root, 'dist/client');
+    console.log('[Server] Client path:', clientPath);
+    console.log('[Server] Client path exists:', fs.existsSync(clientPath));
+
+    if (!fs.existsSync(clientPath)) {
+      console.error('[Server] ❌ Client path does not exist!');
+      throw new Error(`Client files not found at: ${clientPath}`);
+    }
+
+    // 列出客户端目录内容以便调试
+    try {
+      const files = fs.readdirSync(clientPath);
+      console.log('[Server] Client directory contents:', files);
+    } catch (error) {
+      console.error('[Server] Failed to read client directory:', error);
+    }
+
+    app.use(express.static(clientPath));
+    console.log('[Server] Static files middleware configured');
 
     // Handle any requests that don't match an API route by serving the React app's index.html
     app.get(/(.*)/, (_req, res) => {
-      res.sendFile(path.resolve(__dirname, '../client', 'index.html'));
+      const indexPath = path.resolve(clientPath, 'index.html');
+      console.log('[Server] Serving index.html from:', indexPath);
+      console.log('[Server] Index.html exists:', fs.existsSync(indexPath));
+      res.sendFile(indexPath);
     });
+
+    console.log('[Server] ✅ Production server configured');
   }
 
+  console.log('[Server] ✅ Server created successfully');
   return { app };
 };
 

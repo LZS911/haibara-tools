@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import { Document, Packer, Paragraph } from 'docx';
 import mammoth from 'mammoth';
-import puppeteer from 'puppeteer';
-// @ts-expect-error (无法找到 pdf-parse 的类型定义)
-import pdf from 'pdf-parse/lib/pdf-parse.js';
+import { getBrowser } from '@/server/lib/puppeteer-utils';
+import pdf from 'pdf-parse';
 
 export async function txtToDocx(
   inputPath: string,
@@ -25,18 +24,16 @@ export async function docxToPdf(
   outputPath: string
 ): Promise<void> {
   const { value: html } = await mammoth.convertToHtml({ path: inputPath });
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  const browser = await getBrowser();
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
     await page.setContent(
       `<!doctype html><html><head><meta charset="utf-8"/></head><body>${html}</body></html>`,
       { waitUntil: 'networkidle0' }
     );
     await page.pdf({ path: outputPath, format: 'A4', printBackground: true });
   } finally {
-    await browser.close();
+    await page.close();
   }
 }
 
