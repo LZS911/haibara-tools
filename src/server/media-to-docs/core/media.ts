@@ -1,7 +1,13 @@
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+const isPackaged = process.env.IS_PACKAGED === 'true';
+
+ffmpeg.setFfmpegPath(
+  isPackaged
+    ? ffmpegInstaller.path.replace('app.asar', 'app.asar.unpacked')
+    : ffmpegInstaller.path
+);
 
 export const mergeVideoAudio = (
   videoPath: string,

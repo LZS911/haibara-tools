@@ -4,9 +4,19 @@ import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import fs from 'node:fs/promises';
 import type { VideoFormat } from '../types';
 
+const isPackaged = process.env.IS_PACKAGED === 'true';
+
 // 设置 FFmpeg 和 FFprobe 路径
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-ffmpeg.setFfprobePath(ffprobeInstaller.path);
+ffmpeg.setFfmpegPath(
+  isPackaged
+    ? ffmpegInstaller.path.replace('app.asar', 'app.asar.unpacked')
+    : ffmpegInstaller.path
+);
+ffmpeg.setFfprobePath(
+  isPackaged
+    ? ffprobeInstaller.path.replace('app.asar', 'app.asar.unpacked')
+    : ffprobeInstaller.path
+);
 
 /**
  * 视频格式转换函数

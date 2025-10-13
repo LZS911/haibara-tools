@@ -40,9 +40,16 @@ async function findAvailablePort(startPort: number): Promise<number> {
 
 // 启动 Express 服务器
 async function startServer() {
+  console.log('[Electron] Starting server...');
+  console.log('[Electron] isDev:', isDev);
+  console.log('[Electron] __dirname:', __dirname);
+  console.log('[Electron] process.cwd():', process.cwd());
+
   try {
     // 查找可用端口（从 3000 开始）
+    console.log('[Electron] Finding available port...');
     serverPort = await findAvailablePort(3000);
+    console.log('[Electron] Found available port:', serverPort);
 
     // 获取应用资源根目录和用户数据目录
     // 在开发模式下使用 process.cwd()
@@ -52,56 +59,112 @@ async function startServer() {
     const appRoot = isDev ? process.cwd() : path.join(__dirname, '../..');
     const userDataPath = app.getPath('userData');
 
+    console.log('[Electron] App root:', appRoot);
+    console.log('[Electron] User data directory:', userDataPath);
+
+    // 检查关键文件是否存在
+    const serverPath = path.join(__dirname, '../server/server.cjs');
+    console.log('[Electron] Server path:', serverPath);
+    console.log('[Electron] Server exists:', fs.existsSync(serverPath));
+
+    if (!fs.existsSync(serverPath)) {
+      throw new Error(`Server file not found at: ${serverPath}`);
+    }
+
     // ⚠️ 重要：必须在导入 server 模块之前设置环境变量
     // 因为 server 模块在导入时会立即初始化，读取这个环境变量
     process.env.USER_DATA_PATH = userDataPath;
+    process.env.IS_PACKAGED = String(app.isPackaged);
 
     // 动态导入服务器模块
-    // __dirname 在打包后是 app.asar/dist/electron/
-    // 所以 server.cjs 在 ../server/server.cjs
-    const serverModule = await import(
-      path.join(__dirname, '../server/server.cjs')
-    );
+    console.log('[Electron] Importing server module...');
+    const serverModule = await import(serverPath);
+    console.log('[Electron] Server module imported successfully');
 
+    console.log('[Electron] Creating server...');
     const { app: expressApp } = await serverModule.createServer(appRoot, true);
+    console.log('[Electron] Server created successfully');
 
-    expressApp.listen(serverPort, () => {
-      console.log(`[Electron] Express server running on port ${serverPort}`);
-      console.log(`[Electron] App root: ${appRoot}`);
-      console.log(`[Electron] User data directory: ${userDataPath}`);
+    return new Promise<number>((resolve, reject) => {
+      const server = expressApp.listen(serverPort, () => {
+        console.log(
+          `[Electron] ✅ Express server running on port ${serverPort}`
+        );
+        console.log(`[Electron] App root: ${appRoot}`);
+        console.log(`[Electron] User data directory: ${userDataPath}`);
+        resolve(serverPort!);
+      });
+
+      server.on('error', (error: Error) => {
+        console.error('[Electron] ❌ Server error:', error);
+        reject(error);
+      });
     });
-
-    return serverPort;
   } catch (error) {
-    console.error('[Electron] Failed to start server:', error);
+    console.error('[Electron] ❌ Failed to start server:', error);
+    console.error('[Electron] Error stack:', (error as Error).stack);
     throw error;
   }
 }
 
 // 创建主窗口
 async function createWindow() {
+  console.log('[Electron] Creating main window...');
+
+  const preloadPath = path.join(__dirname, 'preload.cjs');
+  const iconPath = path.join(__dirname, '../../build/icon.png');
+
+  console.log('[Electron] Preload path:', preloadPath);
+  console.log('[Electron] Preload exists:', fs.existsSync(preloadPath));
+  console.log('[Electron] Icon path:', iconPath);
+  console.log('[Electron] Icon exists:', fs.existsSync(iconPath));
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1400,
+    height: 900,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true
     },
     title: 'Haibara Tools',
-    frame: false,
-    icon: path.join(__dirname, '../../build/icon.png')
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    frame: process.platform === 'darwin' ? false : true,
+    // frame: process.platform !== 'win32',
+    icon: iconPath
   });
+
+  console.log('[Electron] Window created successfully');
 
   // 开发模式：加载 Vite 开发服务器
   // 生产模式：加载本地构建文件
   if (isDev) {
+    console.log('[Electron] Loading dev server at http://localhost:3000');
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadURL(`http://localhost:${serverPort}`);
+    const url = `http://localhost:${serverPort}`;
+    console.log('[Electron] Loading production server at', url);
+    mainWindow.loadURL(url);
   }
+
+  // 监听加载完成事件
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[Electron] ✅ Window loaded successfully');
+  });
+
+  // 监听加载失败事件
+  mainWindow.webContents.on(
+    'did-fail-load',
+    (_event, errorCode, errorDescription) => {
+      console.error(
+        '[Electron] ❌ Window failed to load:',
+        errorCode,
+        errorDescription
+      );
+    }
+  );
 
   // 在默认浏览器中打开外部链接
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -112,11 +175,13 @@ async function createWindow() {
   });
 
   mainWindow.on('closed', () => {
+    console.log('[Electron] Window closed');
     mainWindow = null;
   });
 }
 
 // 配置自动更新
+
 function setupAutoUpdater() {
   // 仅在生产环境启用自动更新
   if (isDev) {
@@ -124,9 +189,20 @@ function setupAutoUpdater() {
     return;
   }
 
+  // 允许通过环境变量禁用自动更新
+  if (process.env.DISABLE_AUTO_UPDATE === 'true') {
+    console.log('[Electron] Auto-updater disabled by environment variable');
+    return;
+  }
+
   // 配置自动更新
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
+
+  // 设置请求超时（默认 120 秒太长）
+  autoUpdater.requestHeaders = {
+    'Cache-Control': 'no-cache'
+  };
 
   // 监听更新事件
   autoUpdater.on('update-available', (info) => {
@@ -154,14 +230,31 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (error) => {
     console.error('[Electron] Auto-updater error:', error);
-    mainWindow?.webContents.send('update-error', error.message);
+    // 不向渲染进程发送错误，避免在没有配置更新服务时影响用户体验
+    // mainWindow?.webContents.send('update-error', error.message);
   });
 
-  // 启动时检查更新
+  // 启动时检查更新（使用更短的延迟和超时控制）
   setTimeout(() => {
-    autoUpdater.checkForUpdates().catch((error) => {
-      console.error('[Electron] Failed to check for updates:', error);
+    // 创建一个超时 Promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Update check timeout')), 10000); // 10 秒超时
     });
+
+    // 使用 Promise.race 来确保即使检查超时也不会阻塞应用
+    Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])
+      .then((result) => {
+        if (result) {
+          console.log('[Electron] Update check completed');
+        }
+      })
+      .catch((error) => {
+        console.warn(
+          '[Electron] Update check failed or timed out (this is normal if no updates are configured):',
+          error.message
+        );
+        // 不抛出错误，让应用继续运行
+      });
   }, 3000);
 }
 
@@ -291,42 +384,84 @@ function setupIPC() {
 
 // 应用启动
 app.whenReady().then(async () => {
+  console.log('[Electron] ========================================');
+  console.log('[Electron] App is ready, starting initialization...');
+  console.log('[Electron] Platform:', process.platform);
+  console.log('[Electron] Architecture:', process.arch);
+  console.log('[Electron] Node version:', process.version);
+  console.log('[Electron] Electron version:', process.versions.electron);
+  console.log('[Electron] ========================================');
+
   try {
     // 加载配置并注入到 process.env
+    console.log('[Electron] Loading configuration...');
     const config = loadConfig();
+    console.log('[Electron] Configuration loaded:', Object.keys(config));
     Object.entries(config).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         process.env[key] = value;
       }
     });
 
-    // 启动 Express 服务器（开发和生产模式都需要）
+    // 启动 Express 服务器（仅生产模式）
     if (!isDev) {
+      console.log('[Electron] Starting Express server (production mode)...');
       await startServer();
+      console.log('[Electron] ✅ Server started successfully');
+    } else {
+      console.log('[Electron] Skipping server startup (development mode)');
     }
+
     // 创建窗口
+    console.log('[Electron] Creating application window...');
     await createWindow();
+    console.log('[Electron] ✅ Window created successfully');
 
     // 在 macOS 上设置 Dock 图标
     if (process.platform === 'darwin') {
       const iconPath = path.join(process.cwd(), 'build/icon.png');
-      app.dock?.setIcon(iconPath);
+      console.log('[Electron] Setting Dock icon:', iconPath);
+      if (fs.existsSync(iconPath)) {
+        app.dock?.setIcon(iconPath);
+      } else {
+        console.warn('[Electron] ⚠️ Dock icon not found at:', iconPath);
+      }
     }
 
     // 设置 IPC 通信
+    console.log('[Electron] Setting up IPC handlers...');
     setupIPC();
 
     // 设置自动更新
+    // console.log('[Electron] Setting up auto-updater...');
     setupAutoUpdater();
+
+    console.log('[Electron] ========================================');
+    console.log('[Electron] ✅ Application started successfully');
+    console.log('[Electron] ========================================');
 
     // macOS 特定行为
     app.on('activate', () => {
+      console.log('[Electron] App activated');
       if (BrowserWindow.getAllWindows().length === 0) {
+        console.log('[Electron] No windows, creating new window...');
         createWindow();
       }
     });
   } catch (error) {
-    console.error('[Electron] Failed to start application:', error);
+    console.error('[Electron] ========================================');
+    console.error('[Electron] ❌ FATAL ERROR: Failed to start application');
+    console.error('[Electron] Error:', error);
+    console.error('[Electron] Stack:', (error as Error).stack);
+    console.error('[Electron] ========================================');
+
+    // 显示错误对话框
+    const { dialog } = await import('electron');
+    await dialog.showErrorBox(
+      'Application Startup Error',
+      `Failed to start Haibara Tools:\n\n${(error as Error).message}\n\nPlease check the console for more details.`
+    );
+
     app.quit();
   }
 });

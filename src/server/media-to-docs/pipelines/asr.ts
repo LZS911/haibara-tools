@@ -47,7 +47,14 @@ const ACCESS_KEY = process.env.VOLC_ACCESS_TOKEN;
  */
 function convertToWav(audioPath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const ffmpeg = spawn(ffmpegInstaller.path, [
+        const isPackaged = process.env.IS_PACKAGED === 'true';
+    const ffmpegPath = isPackaged
+      ? ffmpegInstaller.path.replace(
+          `${path.sep}app.asar${path.sep}`,
+          `${path.sep}app.asar.unpacked${path.sep}`
+        )
+      : ffmpegInstaller.path;
+    const ffmpeg = spawn(ffmpegPath, [
       '-v',
       'quiet',
       '-y',
