@@ -1,6 +1,6 @@
 {
   "name": "haibara-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "一站式实用工具集合，支持文件转换、AI视频转文档等功能",
   "author": {
     "name": "LZS911",
@@ -42,6 +42,7 @@
     "@openrouter/ai-sdk-provider": "^1.2.0",
     "@puppeteer/browsers": "^2.10.11",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-router": "^1.121.2",
@@ -78,6 +79,7 @@
     "spark-md5": "^3.0.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
+    "tanstack-router-keepalive": "^1.0.0",
     "turndown": "^7.2.1",
     "ws": "^8.18.3",
     "zod": "^4.0.8",

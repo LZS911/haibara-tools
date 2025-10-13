@@ -24,7 +24,8 @@ import {
 import type { ConvertStep, ConvertStatus } from './-types';
 
 export const Route = createFileRoute('/convert/')({
-  component: Convert
+  component: Convert,
+  staticData: { keepAlive: true }
 });
 
 function Convert() {

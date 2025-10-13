@@ -27,29 +27,29 @@ export function ProcessingSteps({
   const stageInfo = stageMapping[stage] || stageMapping.downloading;
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 p-8">
+    <div className="flex flex-col items-center justify-center space-y-4 p-4">
       {/* 进度圆环 */}
-      <div className="relative w-32 h-32">
+      <div className="relative w-24 h-24">
         {stage !== 'completed' && stage !== 'error' && (
-          <Spinner className="w-32 h-32 text-yellow-500" />
+          <Spinner className="w-24 h-24 text-yellow-500" />
         )}
         <div
-          className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${stageInfo.color}`}
+          className={`absolute inset-0 flex items-center justify-center text-xl font-bold ${stageInfo.color}`}
         >
           {progress}%
         </div>
       </div>
 
       {/* 状态文本 */}
-      <div className="text-center space-y-2">
-        <p className={`text-xl font-semibold ${stageInfo.color}`}>
+      <div className="text-center space-y-1">
+        <p className={`text-lg font-semibold ${stageInfo.color}`}>
           {stageInfo.text}
         </p>
-        {message && <p className="text-sm text-gray-600">{message}</p>}
+        {message && <p className="text-xs text-gray-600">{message}</p>}
       </div>
 
       {/* 进度条 */}
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 transition-all duration-500 ease-in-out"

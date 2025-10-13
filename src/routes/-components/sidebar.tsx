@@ -21,7 +21,7 @@ interface NavItem {
 
 interface SidebarProps {
   isCollapsed: boolean;
-  setIsCollapsed: (isCollapsed: boolean) => void;
+  setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
@@ -83,7 +83,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
           isTaskRunning && 'cursor-not-allowed opacity-50 pointer-events-none',
 
-          isCollapsed ? 'justify-center h-12 w-12' : 'gap-3 px-3 py-2'
+          isCollapsed ? 'justify-center h-10 w-10' : 'gap-3 px-3 py-2'
         )}
       >
         <Icon
@@ -111,14 +111,14 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     <aside
       className={cn(
         'fixed left-0 top-0 z-40 h-full border-r border-slate-200 bg-white transition-all duration-300',
-        isCollapsed ? 'w-18 p2' : 'w-56'
+        isCollapsed ? 'w-16 p-1' : 'w-52'
       )}
       style={{
         top: isElectron ? '44px' : '0',
         height: isElectron ? 'calc(100vh - 44px)' : '100vh'
       }}
     >
-      <nav className="relative flex h-full flex-col p-3">
+      <nav className="relative flex h-full flex-col p-2">
         {/* Collapse Button */}
         <div
           className={cn(

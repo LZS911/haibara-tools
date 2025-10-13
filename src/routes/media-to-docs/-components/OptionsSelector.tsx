@@ -1,17 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/routes/-components/ui/button';
 import { useState } from 'react';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/routes/-components/ui/card';
+import { Card } from '@/routes/-components/ui/card';
 import { cn } from '@/routes/-lib/utils';
 import { trpc } from '@/router';
-import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { CheckCircle, XCircle, Loader, ChevronsUpDown } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import type { SummaryStyle, LLMProvider } from '../-types';
+import { Switch } from '@/routes/-components/ui/switch';
 
 const STYLES: { id: SummaryStyle; name: string }[] = [
   { id: 'note', name: '结构笔记' },
@@ -54,8 +50,8 @@ export function OptionsSelector({
   const [selectedProvider, setSelectedProvider] =
     useState<LLMProvider>('openai');
   const [enableVision, setEnableVision] = useState(true);
+  const [isProvidersExpanded, setIsProvidersExpanded] = useState(false);
 
-  // 支持视觉的模型
   const visionProviders: LLMProvider[] = ['openai', 'anthropic', 'gemini'];
   const initialTestStatus: Record<LLMProvider, TestStatus> = {
     openai: 'idle',
@@ -105,142 +101,140 @@ export function OptionsSelector({
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <Card className="bg-transparent">
-        <CardHeader className="px-2">
-          <CardTitle className="text-xl">
-            {t('select_style_title', '1. 选择内容风格')}
-          </CardTitle>
-          <CardDescription>
-            {t('select_style_desc_new', '选择你希望 AI 生成的文档风格')}
-          </CardDescription>
-        </CardHeader>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-2">
-          {STYLES.map((style) => (
-            <Button
-              key={style.id}
-              variant="outline"
-              size="lg"
-              className={cn(
-                'p-6 h-auto text-lg hover:bg-blue-50 hover:border-blue-400',
-                selectedStyle === style.id &&
-                  'border-blue-500 bg-blue-50 text-blue-600'
-              )}
-              onClick={() => setSelectedStyle(style.id)}
-            >
-              {t(style.id, style.name)}
-            </Button>
-          ))}
-        </div>
-      </Card>
+  const visibleProviders = isProvidersExpanded
+    ? PROVIDERS
+    : PROVIDERS.slice(0, 3);
 
-      <Card className="bg-transparent">
-        <CardHeader className="px-2">
-          <CardTitle className="text-xl">
-            {t('select_provider_title', '2. 选择大语言模型')}
-          </CardTitle>
-          <CardDescription>
-            {t('select_provider_desc', '不同的模型会影响内容质量和响应速度')}
-          </CardDescription>
-        </CardHeader>
-        <div className="space-y-3 p-2">
-          {PROVIDERS.map((provider) => (
-            <div key={provider.id} className="flex items-center gap-2">
+  return (
+    <Card className="bg-transparent shadow-none p-4">
+      <div className="space-y-4">
+        {/* -- Content Style -- */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            {t('select_style_title', '1. 内容风格')}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {STYLES.map((style) => (
               <Button
-                variant="outline"
-                size="lg"
+                key={style.id}
+                variant={selectedStyle === style.id ? 'default' : 'outline'}
+                size="sm"
+                className="text-xs"
+                onClick={() => setSelectedStyle(style.id)}
+              >
+                {t(style.id, style.name)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* -- LLM Provider -- */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            {t('select_provider_title', '2. 大语言模型')}
+          </label>
+          <div className="space-y-2">
+            {visibleProviders.map((provider) => (
+              <div
+                key={provider.id}
                 className={cn(
-                  'flex-grow p-4 h-auto text-left hover:bg-green-50 hover:border-green-400',
+                  'flex items-center gap-2 p-2 border rounded-md cursor-pointer',
                   selectedProvider === provider.id &&
-                    'border-green-500 bg-green-50 text-green-600'
+                    'border-blue-500 bg-blue-50'
                 )}
                 onClick={() => setSelectedProvider(provider.id)}
               >
-                <div className="flex flex-col gap-1">
-                  <span className="text-lg font-medium">
-                    {t(provider.id, provider.name)}
-                  </span>
-                  {provider.description && (
-                    <span className="text-sm text-gray-500">
-                      {provider.description}
-                    </span>
-                  )}
+                <div className="flex-grow">
+                  <div className="text-sm font-medium">{provider.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {provider.description}
+                  </div>
                 </div>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleTestProvider(provider.id)}
-                disabled={
-                  checkModelMutation.isPending &&
-                  testStatus[provider.id] === 'testing'
-                }
-                className="flex items-center gap-2 text-gray-500 hover:text-gray-800"
-              >
-                {renderStatusIcon(provider.id)}
-                <span>{t('test_connectivity', '测试')}</span>
-              </Button>
-            </div>
-          ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTestProvider(provider.id);
+                  }}
+                  disabled={
+                    checkModelMutation.isPending &&
+                    testStatus[provider.id] === 'testing'
+                  }
+                  className="flex items-center gap-1 text-gray-500 hover:text-gray-800 text-xs pr-0"
+                >
+                  {renderStatusIcon(provider.id)}
+                  <span>{t('test_connectivity', '测试')}</span>
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="link"
+            size="sm"
+            className="text-xs text-blue-600 p-0 h-auto"
+            onClick={() => setIsProvidersExpanded(!isProvidersExpanded)}
+          >
+            <ChevronsUpDown className="w-3 h-3 mr-1" />
+            {isProvidersExpanded
+              ? t('collapse', '收起')
+              : t('show_all', '查看所有模型')}
+          </Button>
         </div>
-      </Card>
 
-      {hasVideo && (
-        <Card className="bg-transparent">
-          <CardHeader className="px-2">
-            <CardTitle className="text-xl">
+        {/* -- Vision Mode -- */}
+        {hasVideo && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
               {t('vision_mode_title', '3. 视觉增强模式')}
-            </CardTitle>
-            <CardDescription>
-              {t(
-                'vision_mode_desc',
-                '启用后将提取视频关键帧，生成图文结合的时间轴笔记'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <div className="p-2 space-y-3">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+            </label>
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
               <div className="flex-1">
-                <div className="font-medium">启用视觉模式</div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="font-medium text-sm">
+                  {t('enable_vision_mode', '启用视觉模式')}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
                   {visionProviders.includes(selectedProvider)
-                    ? '✅ 当前模型支持视觉功能'
-                    : '⚠️ 当前模型不支持视觉功能，请选择 OpenAI、Anthropic 或 Gemini'}
+                    ? t('support_vision_mode_desc', '✅ 当前模型支持视觉功能')
+                    : t(
+                        'not_support_vision_mode_desc',
+                        '⚠️ 当前模型不支持视觉功能，请选择 OpenAI、Anthropic 或 Gemini'
+                      )}
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={enableVision}
-                  onChange={(e) => setEnableVision(e.target.checked)}
-                  disabled={!visionProviders.includes(selectedProvider)}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+              <Switch
+                checked={
+                  enableVision && visionProviders.includes(selectedProvider)
+                }
+                onCheckedChange={setEnableVision}
+                disabled={!visionProviders.includes(selectedProvider)}
+              />
             </div>
             {enableVision && visionProviders.includes(selectedProvider) && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述
+              <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+                {t(
+                  'support_vision_mode_desc_not',
+                  '💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述'
+                )}
               </div>
             )}
           </div>
-        </Card>
-      )}
+        )}
 
-      <div className="text-center pt-6">
-        <Button
-          size="lg"
-          className="w-full max-w-xs text-xl py-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90"
-          onClick={() => {
-            onStart(selectedStyle, selectedProvider, enableVision);
-          }}
-          disabled={disabled}
-        >
-          {t('start_generation_button', '开始生成')}
-        </Button>
+        {/* -- Start Button -- */}
+        <div className="text-center pt-2">
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => {
+              onStart(selectedStyle, selectedProvider, enableVision);
+            }}
+            disabled={disabled}
+          >
+            {t('start_generation_button', '开始生成')}
+          </Button>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }

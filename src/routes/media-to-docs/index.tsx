@@ -26,7 +26,8 @@ import { parseTimelineContent } from './-lib/utils';
 import { useAppStore } from '@/store/app';
 
 export const Route = createFileRoute('/media-to-docs/')({
-  component: AiConvert
+  component: AiConvert,
+  staticData: { keepAlive: true }
 });
 
 function AiConvert() {
@@ -161,9 +162,7 @@ function AiConvert() {
           <h1 className="text-2xl font-semibold text-slate-900">
             {t('ai_convert_title')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {t('ai_convert_desc')}
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{t('ai_convert_desc')}</p>
         </div>
       </div>
 
@@ -202,9 +201,7 @@ function AiConvert() {
                   ) : (
                     <div className="flex items-center justify-center text-slate-600">
                       <Spinner className="w-5 h-5 mr-2" />
-                      <span className="text-sm">
-                        {t('downloading_video')}
-                      </span>
+                      <span className="text-sm">{t('downloading_video')}</span>
                     </div>
                   )}
                 </div>

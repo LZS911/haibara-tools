@@ -8,7 +8,8 @@ import { Save, RefreshCw, Info, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/settings/')({
-  component: Settings
+  component: Settings,
+  staticData: { keepAlive: true }
 });
 
 interface LLMProvider {
@@ -115,7 +116,10 @@ function Settings() {
       setConfig(loadedConfig);
     } catch (error) {
       console.error('Failed to load config:', error);
-      setMessage({ type: 'error', text: t('settings_load_fail', '加载配置失败') });
+      setMessage({
+        type: 'error',
+        text: t('settings_load_fail', '加载配置失败')
+      });
     } finally {
       setLoading(false);
     }
@@ -145,14 +149,23 @@ function Settings() {
     try {
       const result = await window.electronAPI.saveConfig(config);
       if (result.success) {
-        setMessage({ type: 'success', text: t('settings_save_success', '配置保存成功！') });
+        setMessage({
+          type: 'success',
+          text: t('settings_save_success', '配置保存成功！')
+        });
         setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: 'error', text: t('settings_save_failed', { error: result.error }) });
+        setMessage({
+          type: 'error',
+          text: t('settings_save_failed', { error: result.error })
+        });
       }
     } catch (error) {
       console.error('Failed to save config:', error);
-      setMessage({ type: 'error', text: t('settings_save_fail_base', '保存配置失败') });
+      setMessage({
+        type: 'error',
+        text: t('settings_save_fail_base', '保存配置失败')
+      });
     } finally {
       setSaving(false);
     }
@@ -186,7 +199,9 @@ function Settings() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{t('settings_title', '设置')}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t('settings_title', '设置')}
+          </h1>
           <p className="mt-1 text-sm text-slate-500">
             {t('settings_desc', '配置 API Keys 和应用设置')}
           </p>
@@ -225,9 +240,13 @@ function Settings() {
             <Info className="h-4 w-4 text-blue-600" />
           </div>
           <div className="flex-1 text-sm">
-            <p className="font-medium text-slate-900">{t('settings_config_location', '配置文件位置')}</p>
+            <p className="font-medium text-slate-900">
+              {t('settings_config_location', '配置文件位置')}
+            </p>
             <p className="mt-1 break-all text-slate-600">{userDataPath}</p>
-            <p className="mt-2 text-slate-600">{t('settings_app_version', { appVersion })}</p>
+            <p className="mt-2 text-slate-600">
+              {t('settings_app_version', { appVersion })}
+            </p>
           </div>
         </div>
       </Card>
@@ -308,8 +327,11 @@ function Settings() {
                         <Input
                           id={provider.apiKeyField}
                           type="password"
-                          placeholder={t('settings_api_key_placeholder', '输入 API Key')}
-                          value={config[provider.apiKeyField] || ''}
+                          placeholder={t(
+                            'settings_api_key_placeholder',
+                            '输入 API Key'
+                          )}
+                          value={config[provider.apiKeyField] as string}
                           onChange={(e) =>
                             handleInputChange(
                               provider.apiKeyField,
@@ -330,7 +352,7 @@ function Settings() {
                           id={provider.modelNameField}
                           type="text"
                           placeholder={provider.defaultModel}
-                          value={config[provider.modelNameField] || ''}
+                          value={config[provider.modelNameField] as string}
                           onChange={(e) =>
                             handleInputChange(
                               provider.modelNameField,
@@ -340,7 +362,9 @@ function Settings() {
                         />
                         {provider.defaultModel && (
                           <p className="mt-1 text-xs text-slate-500">
-                            {t('settings_default_model', { model: provider.defaultModel })}
+                            {t('settings_default_model', {
+                              model: provider.defaultModel
+                            })}
                           </p>
                         )}
                       </div>
@@ -395,7 +419,10 @@ function Settings() {
               <Input
                 id="VOLC_ACCESS_TOKEN"
                 type="password"
-                placeholder={t('settings_access_token_placeholder', '输入 Access Token')}
+                placeholder={t(
+                  'settings_access_token_placeholder',
+                  '输入 Access Token'
+                )}
                 value={config.VOLC_ACCESS_TOKEN || ''}
                 onChange={(e) =>
                   handleInputChange('VOLC_ACCESS_TOKEN', e.target.value)

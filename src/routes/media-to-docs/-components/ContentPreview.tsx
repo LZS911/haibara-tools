@@ -39,8 +39,8 @@ export function ContentPreview({ onReset, content, title }: ContentPreviewProps)
     if (content === null) {
       return (
         <div className="flex flex-col items-center justify-center h-full">
-          <Spinner className="text-4xl" />
-          <p className="mt-4 text-muted-foreground">{t('generating_content', '内容生成中...')}</p>
+          <Spinner className="text-3xl" />
+          <p className="mt-2 text-muted-foreground">{t('generating_content', '内容生成中...')}</p>
         </div>
       );
     }
@@ -51,17 +51,17 @@ export function ContentPreview({ onReset, content, title }: ContentPreviewProps)
 
     return (
       <div
-        className="prose prose-lg dark:prose-invert max-w-none"
+        className="prose dark:prose-invert max-w-none"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
     );
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{title}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+          <CardTitle className="text-base">{title}</CardTitle>
           {content && (
             <Button onClick={handleCopy} variant="ghost" size="icon">
               {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -69,15 +69,15 @@ export function ContentPreview({ onReset, content, title }: ContentPreviewProps)
             </Button>
           )}
         </CardHeader>
-        <CardContent>
-          <div className="h-96 overflow-y-auto bg-muted/30 p-4 rounded-md border">
+        <CardContent className="p-4 pt-0">
+          <div className="h-80 overflow-y-auto bg-muted/30 p-2 rounded-md border">
             {renderContent()}
           </div>
         </CardContent>
       </Card>
 
       <div className="text-center">
-        <Button onClick={onReset} size="lg" variant="outline">
+        <Button onClick={onReset} variant="outline">
           {t('try_again_button', '再试一次')}
         </Button>
       </div>

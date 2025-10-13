@@ -1,5 +1,6 @@
 // 配置类型定义
 export interface AppConfig {
+  SIDEBAR_COLLAPSED?: boolean;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL_NAME?: string;
   DEEPSEEK_API_KEY?: string;
