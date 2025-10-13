@@ -1,6 +1,6 @@
 {
   "name": "haibara-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "一站式实用工具集合，支持文件转换、AI视频转文档等功能",
   "author": {
     "name": "LZS911",
@@ -27,8 +27,7 @@
     "dist:linux": "pnpm dist:clean && pnpm electron:build && electron-builder --linux",
     "dist:clean": "rimraf release dist",
     "start": "cross-env NODE_ENV=production node dist/server/server.cjs",
-    "test": "vitest run",
-    "test:llm": "tsx scripts/test-llm-providers.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.25",

@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import updater from 'electron-updater';
-import dotenv from 'dotenv';
 import fs from 'node:fs';
 import type { AppConfig } from '../src/electron.d';
 
@@ -14,41 +13,6 @@ const __dirname = path.dirname(__filename);
 
 const isDev = process.env.NODE_ENV === 'development';
 
-// 加载环境变量
-// 无论在开发还是生产模式下，都从 userData 目录加载 .env
-const userDataPath = app.getPath('userData');
-const envPath = path.join(userDataPath, '.env');
-
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath });
-  console.log('[Electron] Loaded .env file from:', envPath);
-} else {
-  console.log('[Electron] No .env file found at:', envPath);
-  console.log(
-    '[Electron] You can create a .env file at this location to configure API keys and other settings'
-  );
-
-  // 可选：创建一个示例 .env 文件
-  const exampleEnv = `# Haibara Tools Configuration
-# Add your API keys and configuration here
-
-# Example:
-# OPENAI_API_KEY=your_api_key_here
-# ANTHROPIC_API_KEY=your_api_key_here
-`;
-  try {
-    if (!fs.existsSync(userDataPath)) {
-      fs.mkdirSync(userDataPath, { recursive: true });
-    }
-    const examplePath = path.join(userDataPath, '.env.example');
-    if (!fs.existsSync(examplePath)) {
-      fs.writeFileSync(examplePath, exampleEnv, 'utf-8');
-      console.log('[Electron] Created .env.example at:', examplePath);
-    }
-  } catch (error) {
-    console.error('[Electron] Failed to create .env.example:', error);
-  }
-}
 let mainWindow: BrowserWindow | null = null;
 let serverPort: number | null = null;
 
@@ -342,6 +306,12 @@ app.whenReady().then(async () => {
     }
     // 创建窗口
     await createWindow();
+
+    // 在 macOS 上设置 Dock 图标
+    if (process.platform === 'darwin') {
+      const iconPath = path.join(process.cwd(), 'build/icon.png');
+      app.dock?.setIcon(iconPath);
+    }
 
     // 设置 IPC 通信
     setupIPC();
