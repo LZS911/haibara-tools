@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import updater from 'electron-updater';
 import fs from 'node:fs';
 import type { AppConfig } from '../src/electron.d';
@@ -56,14 +56,14 @@ async function startServer() {
     // 在生产模式下：
     //   - appRoot: 应用资源目录（用于读取静态文件）
     //   - userData: 用户数据目录（用于写入临时文件、缓存等）
-    const appRoot = isDev ? process.cwd() : path.join(__dirname, '../..');
+    const appRoot = isDev ? process.cwd() : path.join(__dirname, '..', '..');
     const userDataPath = app.getPath('userData');
 
     console.log('[Electron] App root:', appRoot);
     console.log('[Electron] User data directory:', userDataPath);
 
     // 检查关键文件是否存在
-    const serverPath = path.join(__dirname, '../server/server.cjs');
+    const serverPath = path.join(__dirname, '..', 'server', 'server.cjs');
     console.log('[Electron] Server path:', serverPath);
     console.log('[Electron] Server exists:', fs.existsSync(serverPath));
 
@@ -78,7 +78,8 @@ async function startServer() {
 
     // 动态导入服务器模块
     console.log('[Electron] Importing server module...');
-    const serverModule = await import(serverPath);
+    // 使用 pathToFileURL 将文件路径转换为 file:// URL，以确保在 Windows 上动态导入正常工作
+    const serverModule = await import(pathToFileURL(serverPath).href);
     console.log('[Electron] Server module imported successfully');
 
     console.log('[Electron] Creating server...');
@@ -112,7 +113,7 @@ async function createWindow() {
   console.log('[Electron] Creating main window...');
 
   const preloadPath = path.join(__dirname, 'preload.cjs');
-  const iconPath = path.join(__dirname, '../../build/icon.png');
+  const iconPath = path.join(__dirname, '..', '..', 'build', 'icon.png');
 
   console.log('[Electron] Preload path:', preloadPath);
   console.log('[Electron] Preload exists:', fs.existsSync(preloadPath));
@@ -231,30 +232,17 @@ function setupAutoUpdater() {
   autoUpdater.on('error', (error) => {
     console.error('[Electron] Auto-updater error:', error);
     // 不向渲染进程发送错误，避免在没有配置更新服务时影响用户体验
-    // mainWindow?.webContents.send('update-error', error.message);
+    mainWindow?.webContents.send('update-error', error.message);
   });
 
   // 启动时检查更新（使用更短的延迟和超时控制）
   setTimeout(() => {
-    // 创建一个超时 Promise
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Update check timeout')), 10000); // 10 秒超时
+    autoUpdater.checkForUpdates().catch((error) => {
+      console.warn(
+        '[Electron] Update check failed on startup (this is normal if no updates are configured):',
+        error.message
+      );
     });
-
-    // 使用 Promise.race 来确保即使检查超时也不会阻塞应用
-    Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])
-      .then((result) => {
-        if (result) {
-          console.log('[Electron] Update check completed');
-        }
-      })
-      .catch((error) => {
-        console.warn(
-          '[Electron] Update check failed or timed out (this is normal if no updates are configured):',
-          error.message
-        );
-        // 不抛出错误，让应用继续运行
-      });
   }, 3000);
 }
 

@@ -4,12 +4,14 @@ import {
   Video,
   Settings,
   Database,
-  ChevronLeft
+  ChevronLeft,
+  CloudUpload
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../store/app';
 import { cn } from '../-lib/utils';
+import { useEffect, useState } from 'react';
 
 interface NavItem {
   path: string;
@@ -32,6 +34,19 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     typeof window !== 'undefined' && window.electronAPI?.isElectron;
 
   const { isTaskRunning } = useAppStore();
+  const [appVersion, setAppVersion] = useState('');
+
+  useEffect(() => {
+    if (isElectron && window.electronAPI) {
+      window.electronAPI.getAppVersion().then(setAppVersion);
+    }
+  }, [isElectron]);
+
+  const handleCheckForUpdate = () => {
+    if (isElectron && window.electronAPI) {
+      window.electronAPI.checkForUpdates();
+    }
+  };
 
   const navItems: NavItem[] = [
     {
@@ -181,7 +196,35 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         )}
 
         {/* 底部信息 */}
-        <div className="mt-auto border-t border-slate-200 pt-3">
+        <div className="mt-auto space-y-2 border-t border-slate-200 pt-3">
+          {isElectron && (
+            <div
+              className={cn(
+                'flex items-center rounded-lg px-3 py-1 text-sm text-slate-500',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              <div
+                className={cn(
+                  'flex-1 transition-opacity duration-200',
+                  isCollapsed && 'opacity-0 w-0'
+                )}
+              >
+                <p className="whitespace-nowrap text-xs font-medium">
+                  {t('version', '版本')} {appVersion}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCheckForUpdate}
+                className="h-8 w-8 flex-shrink-0"
+                title={t('check_for_updates', '检查更新')}
+              >
+                <CloudUpload className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <Link
             to="/"
             className={cn(

@@ -79,6 +79,7 @@ jobs:
             release/*.zip
             release/*.AppImage
             release/*.deb
+            release/*.yml
           draft: false
           prerelease: false
         env:
