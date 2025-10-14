@@ -280,16 +280,8 @@ function saveConfig(config: AppConfig): void {
     if (!fs.existsSync(userDataPath)) {
       fs.mkdirSync(userDataPath, { recursive: true });
     }
-
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
     console.log('[Electron] Config saved to:', configPath);
-
-    // 更新 process.env
-    Object.entries(config).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        process.env[key] = value;
-      }
-    });
   } catch (error) {
     console.error('[Electron] Failed to save config:', error);
     throw error;
@@ -329,21 +321,43 @@ function setupIPC() {
   });
 
   // 检查更新
-  ipcMain.handle('check-for-updates', async () => {
+  ipcMain.handle('check-for-updates', () => {
     if (isDev) {
-      return { available: false, message: 'Updates disabled in development' };
+      console.log(
+        '[Electron] Update check skipped: disabled in development mode.'
+      );
+      return Promise.resolve({
+        available: false,
+        isLatest: true,
+        message: 'Updates disabled in development'
+      });
     }
 
-    try {
-      const result = await autoUpdater.checkForUpdates();
-      return {
-        available: result !== null,
-        version: result?.updateInfo.version
-      };
-    } catch (error) {
-      console.error('[Electron] Check for updates failed:', error);
-      return { available: false, error: (error as Error).message };
-    }
+    return new Promise((resolve) => {
+      // 移除之前的监听器，避免重复触发
+      autoUpdater.removeAllListeners('update-not-available');
+      autoUpdater.removeAllListeners('update-available');
+      autoUpdater.removeAllListeners('error');
+
+      autoUpdater.once('update-not-available', () => {
+        console.log('[Electron] Update not available.');
+        resolve({ available: false, isLatest: true });
+      });
+
+      autoUpdater.once('update-available', (info) => {
+        console.log('[Electron] Update available:', info.version);
+        resolve({ available: true, isLatest: false, version: info.version });
+      });
+
+      autoUpdater.once('error', (error) => {
+        console.error('[Electron] Check for updates failed:', error.message);
+        // 不把错误信息发送到渲染进程，避免在网络错误等情况下打扰用户
+        resolve({ available: false, error: 'Failed to check for updates' });
+      });
+
+      console.log('[Electron] Checking for updates...');
+      autoUpdater.checkForUpdates();
+    });
   });
 
   // 下载更新
@@ -372,6 +386,23 @@ function setupIPC() {
 
 // 应用启动
 app.whenReady().then(async () => {
+  // In dev mode, write a context file for the separate server process to find the userData path.
+  if (isDev) {
+    try {
+      const userDataPath = app.getPath('userData');
+      const context = { userDataPath };
+      const contextPath = path.join(process.cwd(), 'tmp', 'electron-context.json');
+      const tmpDir = path.dirname(contextPath);
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      fs.writeFileSync(contextPath, JSON.stringify(context));
+      console.log('[Electron] Wrote dev context to:', contextPath);
+    } catch (error) {
+      console.error('[Electron] Failed to write dev context file:', error);
+    }
+  }
+
   console.log('[Electron] ========================================');
   console.log('[Electron] App is ready, starting initialization...');
   console.log('[Electron] Platform:', process.platform);
@@ -381,15 +412,9 @@ app.whenReady().then(async () => {
   console.log('[Electron] ========================================');
 
   try {
-    // 加载配置并注入到 process.env
     console.log('[Electron] Loading configuration...');
     const config = loadConfig();
     console.log('[Electron] Configuration loaded:', Object.keys(config));
-    Object.entries(config).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        process.env[key] = value;
-      }
-    });
 
     // 启动 Express 服务器（仅生产模式）
     if (!isDev) {

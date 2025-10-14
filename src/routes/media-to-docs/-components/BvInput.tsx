@@ -16,7 +16,7 @@ export function BvInput({ value, onChange, onStart, disabled }: BvInputProps) {
     <div className="flex w-full max-w-lg mx-auto items-center space-x-2">
       <Input
         type="text"
-        placeholder={t('bv_input_placeholder', '例如：BV1xx411c7mD')}
+        placeholder={t('bv_input_placeholder', '例如：BV11T4EzyEdF')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="text-base"

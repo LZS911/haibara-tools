@@ -35,6 +35,7 @@ import {
   type Keyframe
 } from '@/routes/media-to-docs/-types';
 import { extractKeyframes } from './pipelines/keyframe';
+import { PROVIDERS, STYLES } from './data';
 
 // BV1BxnPzCESt
 const t = initTRPC.context<TRPCContext>().create();
@@ -330,6 +331,27 @@ export const mediaToDocsRouter = t.router({
 
         progressManager.markCompleted(jobId, '文档生成完成');
 
+        // 保存生成的内容到带元数据的 JSON 文件中
+        const summariesDir = path.join(outputDir, 'summaries');
+        await fsp.mkdir(summariesDir, { recursive: true });
+        const summaryId = nanoid();
+        const summaryData = {
+          id: summaryId,
+          createdAt: new Date().toISOString(),
+          provider,
+          style,
+          content: summarizedContent,
+          keyframes: keyframes.map((kf) => ({
+            ...kf,
+            // 转换服务端路径为前端可访问 URL
+            imageUrl: kf.imagePath.includes('tmp/media-to-docs-jobs')
+              ? `/media-files/${kf.imagePath.split('tmp/media-to-docs-jobs/')[1]}`
+              : undefined
+          }))
+        };
+        const summaryPath = path.join(summariesDir, `${summaryId}.json`);
+        await fsp.writeFile(summaryPath, JSON.stringify(summaryData, null, 2));
+
         const result = {
           originalText: fullText,
           summarizedContent: summarizedContent,
@@ -365,6 +387,32 @@ export const mediaToDocsRouter = t.router({
       const isAvailable = await checkModelAvailability(provider);
       return { isAvailable };
     }),
+
+  getOptionsData: t.procedure.query(async () => {
+    const availabilityPromises = PROVIDERS.map(async (provider) => {
+      const isAvailable = await checkModelAvailability(provider.id);
+      return {
+        id: provider.id,
+        status: isAvailable ? 'success' : 'error'
+      };
+    });
+
+    const availabilityResults = await Promise.all(availabilityPromises);
+
+    const providerStatuses = availabilityResults.reduce(
+      (acc, result) => {
+        acc[result.id] = result.status as 'success' | 'error';
+        return acc;
+      },
+      {} as Record<string, 'success' | 'error'>
+    );
+
+    return {
+      styles: STYLES,
+      providers: PROVIDERS,
+      providerStatuses
+    };
+  }),
   // 缓存管理 API
   listCaches: t.procedure.query(async () => {
     const caches = await listAllCaches();

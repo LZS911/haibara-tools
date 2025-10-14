@@ -1,7 +1,7 @@
 import { Titlebar } from './titlebar';
 import { Sidebar } from './sidebar';
 import { UpdateNotification } from './update-notification';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 type Props = {
   children: React.ReactNode;
@@ -12,18 +12,24 @@ export const Layout: React.FC<Props> = ({ children }) => {
     typeof window !== 'undefined' && window.electronAPI?.isElectron;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Load initial state from config (Electron) or localStorage (web)
   useEffect(() => {
     if (isElectron) {
       window.electronAPI?.getConfig().then((config) => {
         if (config.SIDEBAR_COLLAPSED !== undefined) {
-          setIsSidebarCollapsed(config.SIDEBAR_COLLAPSED);
+          setIsSidebarCollapsed(config.SIDEBAR_COLLAPSED === String(true));
+          return;
         }
+        setIsSidebarCollapsed(false);
       });
     } else {
       const saved = window.localStorage.getItem('sidebar-collapsed');
       if (saved !== null) {
-        setIsSidebarCollapsed(JSON.parse(saved));
+        try {
+          setIsSidebarCollapsed(JSON.parse(saved));
+        } catch (error) {
+          console.error('Failed to parse sidebar state:', error);
+          setIsSidebarCollapsed(false);
+        }
       }
     }
   }, [isElectron]);
@@ -34,7 +40,6 @@ export const Layout: React.FC<Props> = ({ children }) => {
         typeof collapsed === 'function'
           ? collapsed(isSidebarCollapsed)
           : collapsed;
-
       setIsSidebarCollapsed(newCollapsedValue);
 
       if (isElectron) {
@@ -42,7 +47,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
           const currentConfig = await window.electronAPI!.getConfig();
           await window.electronAPI!.saveConfig({
             ...currentConfig,
-            SIDEBAR_COLLAPSED: newCollapsedValue
+            SIDEBAR_COLLAPSED: String(newCollapsedValue)
           });
         } catch (error) {
           console.error('Failed to save sidebar state:', error);

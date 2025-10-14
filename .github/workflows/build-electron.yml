@@ -40,7 +40,12 @@ jobs:
       - name: Type check
         run: pnpm build:client
 
+      - name: Build app for Pull Request
+        if: github.event_name == 'pull_request'
+        run: pnpm dist
+
       - name: Build and Publish Release
+        if: github.event_name == 'workflow_dispatch'
         run: pnpm release:ci
         env:
           # GitHub token for release

@@ -1,6 +1,6 @@
 // 配置类型定义
 export interface AppConfig {
-  SIDEBAR_COLLAPSED?: boolean;
+  SIDEBAR_COLLAPSED?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL_NAME?: string;
   DEEPSEEK_API_KEY?: string;
@@ -46,6 +46,7 @@ export interface ElectronAPI {
   // 检查更新
   checkForUpdates: () => Promise<{
     available: boolean;
+    isLatest?: boolean;
     version?: string;
     error?: string;
   }>;

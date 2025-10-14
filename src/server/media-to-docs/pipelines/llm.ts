@@ -13,6 +13,8 @@ import type {
   Keyframe
 } from '@/routes/media-to-docs/-types';
 import fs from 'fs';
+import path from 'path';
+import type { AppConfig } from '../../../electron';
 
 // --- Style Prompts ---
 
@@ -243,45 +245,104 @@ interface ProviderConfig {
   baseURL?: string;
 }
 
+let loadedConfig: AppConfig | null = null;
+let userDataPath: string | undefined = undefined;
+let pathResolved = false;
+
+function resolveUserDataPath(): string | undefined {
+  if (pathResolved) {
+    return userDataPath;
+  }
+
+  // 1. Check for production Electron env var
+  userDataPath = process.env.USER_DATA_PATH;
+
+  // 2. Check for development Electron context file
+  if (!userDataPath) {
+    try {
+      const contextFilePath = path.join(
+        process.cwd(),
+        'tmp',
+        'electron-context.json'
+      );
+      if (fs.existsSync(contextFilePath)) {
+        const contextContent = fs.readFileSync(contextFilePath, 'utf-8');
+        userDataPath = JSON.parse(contextContent).userDataPath;
+      }
+    } catch (error) {
+      // Not in Electron dev mode, ignore
+    }
+  }
+  pathResolved = true;
+  return userDataPath;
+}
+
+function getConfig(): AppConfig {
+  if (loadedConfig !== null) {
+    return loadedConfig;
+  }
+
+  const dataPath = resolveUserDataPath();
+  if (dataPath) {
+    const configPath = path.join(dataPath, 'config.json');
+    try {
+      if (fs.existsSync(configPath)) {
+        const content = fs.readFileSync(configPath, 'utf-8');
+        loadedConfig = JSON.parse(content) as AppConfig;
+        console.log('[Server] Loaded config from', configPath);
+        return loadedConfig ?? {};
+      }
+    } catch (error) {
+      console.error('[Server] Failed to load config.json:', error);
+    }
+  }
+
+  loadedConfig = {};
+  return loadedConfig;
+}
+
 function getProviderConfig(provider: LLMProvider): ProviderConfig {
+  const isElectron = !!resolveUserDataPath();
+  const providerConfig = isElectron ? getConfig() : process.env;
+  // Electron mode: read from config.json ONLY
   switch (provider) {
     case 'openai':
       return {
-        apiKey: process.env.OPENAI_API_KEY || '',
-        modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o'
+        apiKey: providerConfig.OPENAI_API_KEY || '',
+        modelName: providerConfig.OPENAI_MODEL_NAME || 'gpt-4o'
       };
     case 'deepseek':
       return {
-        apiKey: process.env.DEEPSEEK_API_KEY || '',
-        modelName: process.env.DEEPSEEK_MODEL_NAME || 'deepseek-chat',
+        apiKey: providerConfig.DEEPSEEK_API_KEY || '',
+        modelName: providerConfig.DEEPSEEK_MODEL_NAME || 'deepseek-chat',
         baseURL: 'https://api.deepseek.com'
       };
     case 'gemini':
       return {
-        apiKey: process.env.GEMINI_API_KEY || '',
-        modelName: process.env.GEMINI_MODEL_NAME || 'gemini-2.0-flash'
+        apiKey: providerConfig.GEMINI_API_KEY || '',
+        modelName: providerConfig.GEMINI_MODEL_NAME || 'gemini-2.0-flash'
       };
     case 'anthropic':
       return {
-        apiKey: process.env.ANTHROPIC_API_KEY || '',
+        apiKey: providerConfig.ANTHROPIC_API_KEY || '',
         modelName:
-          process.env.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022'
+          providerConfig.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022'
       };
     case 'openrouter':
       return {
-        apiKey: process.env.OPENROUTER_API_KEY || '',
+        apiKey: providerConfig.OPENROUTER_API_KEY || '',
         modelName:
-          process.env.OPENROUTER_MODEL_NAME || 'anthropic/claude-3.5-sonnet'
+          providerConfig.OPENROUTER_MODEL_NAME || 'anthropic/claude-3.5-sonnet'
       };
     case 'groq':
       return {
-        apiKey: process.env.GROQ_API_KEY || '',
-        modelName: process.env.GROQ_MODEL_NAME || 'llama-3.3-70b-versatile'
+        apiKey: providerConfig.GROQ_API_KEY || '',
+        modelName: providerConfig.GROQ_MODEL_NAME || 'llama-3.3-70b-versatile'
       };
     case 'cohere':
       return {
-        apiKey: process.env.COHERE_API_KEY || '',
-        modelName: process.env.COHERE_MODEL_NAME || 'command-r-plus-08-2024'
+        apiKey: providerConfig.COHERE_API_KEY || '',
+        modelName: providerConfig.COHERE_MODEL_NAME || 'command-r-plus-08-2024'
       };
     default:
       throw new Error(`Unsupported provider: ${provider}`);

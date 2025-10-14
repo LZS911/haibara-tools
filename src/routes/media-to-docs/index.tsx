@@ -7,7 +7,7 @@ import {
   CardTitle
 } from '@/routes/-components/ui/card';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StepIcon } from '@/routes/convert/-components';
 import { BvInput } from './-components/BvInput';
 import { OptionsSelector } from './-components/OptionsSelector';
@@ -32,8 +32,10 @@ export const Route = createFileRoute('/media-to-docs/')({
 
 function AiConvert() {
   const { t } = useTranslation();
-  const { setIsTaskRunning } = useAppStore();
-  const [bvId, setBvId] = useState('BV11T4EzyEdF');
+  const { setIsTaskRunning, jobToLoadFromHistory, setJobToLoadFromHistory } =
+    useAppStore();
+  //BV11T4EzyEdF
+  const [bvId, setBvId] = useState('');
   const [currentStep, setCurrentStep] = useState<AiConvertStep>('input-bv-id');
   const [jobId, setJobId] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -47,6 +49,31 @@ function AiConvert() {
   const [displayMode, setDisplayMode] = useState<'timeline' | 'markdown'>(
     'timeline'
   );
+
+  useEffect(() => {
+    if (jobToLoadFromHistory) {
+      console.log('Loading job from history:', jobToLoadFromHistory);
+      // 从历史记录加载任务
+      setBvId(jobToLoadFromHistory.bvId);
+      setAudioPath(jobToLoadFromHistory.audioPath);
+      setVideoPath(jobToLoadFromHistory.videoPath);
+      setCurrentStep('select-style');
+
+      // 重置错误和之前任务的状态
+      setErrorMessage(undefined);
+      downloadMutation.reset();
+      summarizeMutation.reset();
+      setSummarizedContent(null);
+      setSelectedStyle(null);
+      setKeyframes([]);
+      setJobId('');
+      setDisplayMode('timeline');
+
+      // 清理 store 中的任务，防止重复加载
+      setJobToLoadFromHistory(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobToLoadFromHistory]);
 
   const downloadMutation = useMutation(
     trpc.mediaToDoc.downloadBvVideo.mutationOptions()
@@ -226,7 +253,7 @@ function AiConvert() {
                 {t('select_style_desc')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 pt-0">
               <OptionsSelector
                 onStart={handleStartProcessing}
                 disabled={summarizeMutation.isPending}
@@ -237,30 +264,35 @@ function AiConvert() {
         )}
 
         {/* 步骤 3: 处理中 */}
-        {currentStep === 'processing' && (
-          <Card className="border-slate-200 bg-white">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
-                <StepIcon
-                  step="converting"
-                  className="text-slate-700"
-                  size={20}
+        {currentStep === 'processing' &&
+          !(
+            subscribeProgress.data?.stage === 'error' ||
+            downloadMutation.isError ||
+            summarizeMutation.isError
+          ) && (
+            <Card className="border-slate-200 bg-white">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2 font-medium text-slate-900">
+                  <StepIcon
+                    step="converting"
+                    className="text-slate-700"
+                    size={20}
+                  />
+                  {t('step3_processing')}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  {t('processing_desc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <ProcessingSteps
+                  stage={subscribeProgress.data?.stage || 'downloading'}
+                  progress={subscribeProgress.data?.progress || 0}
+                  message={subscribeProgress.data?.message || undefined}
                 />
-                {t('step3_processing')}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {t('processing_desc')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ProcessingSteps
-                stage={subscribeProgress.data?.stage || 'downloading'}
-                progress={subscribeProgress.data?.progress || 0}
-                message={subscribeProgress.data?.message || undefined}
-              />
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
         {/* 步骤 4: 完成 */}
         {currentStep === 'completed' && (
@@ -332,19 +364,24 @@ function AiConvert() {
           downloadMutation.isError ||
           summarizeMutation.isError) && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700">
-              <StepIcon step="error" className="text-red-600" size={20} />
-              <div>
-                <div className="font-medium text-sm">
-                  {t('conversion_failed')}
-                </div>
-                <div className="text-xs">
-                  {errorMessage ||
-                    subscribeProgress.data?.error ||
-                    downloadMutation.error?.message ||
-                    summarizeMutation.error?.message}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-700">
+                <StepIcon step="error" className="text-red-600" size={20} />
+                <div>
+                  <div className="font-medium text-sm">
+                    {t('conversion_failed')}
+                  </div>
+                  <div className="text-xs">
+                    {errorMessage ||
+                      subscribeProgress.data?.error ||
+                      downloadMutation.error?.message ||
+                      summarizeMutation.error?.message}
+                  </div>
                 </div>
               </div>
+              <Button variant="destructive" size="sm" onClick={handleReset}>
+                {t('reset', '重置')}
+              </Button>
             </div>
           </div>
         )}

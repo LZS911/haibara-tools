@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import type { Keyframe } from '@/routes/media-to-docs/-types';
 
 // 媒体文件缓存根目录
 // 在 Electron 环境下使用 userData 目录，否则使用 process.cwd()
@@ -10,6 +11,15 @@ function getBaseDir(): string {
 
 export function getMediaRoot(): string {
   return path.join(getBaseDir(), 'tmp/media-to-docs-jobs');
+}
+
+interface Summary {
+  id: string;
+  createdAt: string;
+  provider: string;
+  style: string;
+  content: string;
+  keyframes?: Keyframe[];
 }
 
 /**
@@ -87,6 +97,33 @@ export async function findAudioFile(dir: string): Promise<string | null> {
 }
 
 /**
+ * 在指定目录中递归查找视频文件
+ */
+export async function findVideoFile(dir: string): Promise<string | null> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        const result = await findVideoFile(fullPath);
+        if (result) return result;
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (['.mp4', '.mkv', '.avi', '.mov', '.webm'].includes(ext)) {
+          return fullPath;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error finding video file in ${dir}:`, error);
+    return null;
+  }
+}
+
+/**
  * 获取所有缓存的列表
  */
 export async function listAllCaches(): Promise<
@@ -96,6 +133,10 @@ export async function listAllCaches(): Promise<
     size: number;
     createdAt: Date;
     hasTranscript: boolean;
+    title: string | null;
+    audioPath: string | null;
+    videoPath: string | null;
+    summaries: Summary[];
   }>
 > {
   const mediaRoot = getMediaRoot();
@@ -107,23 +148,25 @@ export async function listAllCaches(): Promise<
   }
 
   const entries = await fs.readdir(mediaRoot, { withFileTypes: true });
-  const caches: Array<{
-    bvId: string;
-    path: string;
-    size: number;
-    createdAt: Date;
-    hasTranscript: boolean;
-  }> = [];
-
-  for (const entry of entries) {
-    if (entry.isDirectory() && entry.name.startsWith('BV')) {
+  const cachePromises = entries
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('BV'))
+    .map(async (entry) => {
       const cachePath = path.join(mediaRoot, entry.name);
       try {
+        const subEntries = await fs.readdir(cachePath, { withFileTypes: true });
+        const contentDirEntry = subEntries.find((e) => e.isDirectory());
+
+        if (!contentDirEntry) {
+          return null; // Incomplete cache, skip
+        }
+
+        const contentPath = path.join(cachePath, contentDirEntry.name);
+
         const stats = await fs.stat(cachePath);
         const size = await getDirectorySize(cachePath);
 
         // 检查是否有转录缓存
-        const transcriptPath = path.join(cachePath, 'transcript.txt');
+        const transcriptPath = path.join(contentPath, 'transcript.txt');
         let hasTranscript = false;
         try {
           await fs.access(transcriptPath);
@@ -132,18 +175,53 @@ export async function listAllCaches(): Promise<
           // transcript 不存在
         }
 
-        caches.push({
+        // 读取所有摘要
+        const summariesDir = path.join(contentPath, 'summaries');
+        let summaries: Summary[] = [];
+        try {
+          const summaryFiles = await fs.readdir(summariesDir);
+          const summaryPromises = summaryFiles
+            .filter((file) => file.endsWith('.json'))
+            .map(async (file) => {
+              const summaryPath = path.join(summariesDir, file);
+              const content = await fs.readFile(summaryPath, 'utf-8');
+              return JSON.parse(content) as Summary;
+            });
+          summaries = await Promise.all(summaryPromises);
+          // 按创建时间降序排序
+          summaries.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        } catch {
+          // summaries 目录不存在或读取失败
+        }
+
+        // 获取标题和音频路径
+        const { title, audioPath } = await checkDownloadCache(entry.name);
+        // 获取视频路径
+        const videoPath = await findVideoFile(cachePath);
+
+        return {
           bvId: entry.name,
           path: cachePath,
           size,
           createdAt: stats.ctime,
-          hasTranscript
-        });
+          hasTranscript,
+          title: title || entry.name,
+          audioPath,
+          videoPath,
+          summaries
+        };
       } catch (error) {
         console.error(`Error reading cache ${entry.name}:`, error);
+        return null;
       }
-    }
-  }
+    });
+
+  const caches = (await Promise.all(cachePromises)).filter(
+    (cache): cache is NonNullable<typeof cache> => cache !== null
+  );
 
   return caches.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
