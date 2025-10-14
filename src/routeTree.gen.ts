@@ -13,7 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
 import { Route as ConvertIndexRouteImport } from './routes/convert/index'
-import { Route as MediaToDocsCacheManagementIndexRouteImport } from './routes/media-to-docs/cache-management/index'
+import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,10 +35,10 @@ const ConvertIndexRoute = ConvertIndexRouteImport.update({
   path: '/convert/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MediaToDocsCacheManagementIndexRoute =
-  MediaToDocsCacheManagementIndexRouteImport.update({
-    id: '/media-to-docs/cache-management/',
-    path: '/media-to-docs/cache-management/',
+const MediaToDocsConvertHistoryIndexRoute =
+  MediaToDocsConvertHistoryIndexRouteImport.update({
+    id: '/media-to-docs/convert-history/',
+    path: '/media-to-docs/convert-history/',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -47,14 +47,14 @@ export interface FileRoutesByFullPath {
   '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
-  '/media-to-docs/cache-management': typeof MediaToDocsCacheManagementIndexRoute
+  '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
-  '/media-to-docs/cache-management': typeof MediaToDocsCacheManagementIndexRoute
+  '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,7 +62,7 @@ export interface FileRoutesById {
   '/convert/': typeof ConvertIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
-  '/media-to-docs/cache-management/': typeof MediaToDocsCacheManagementIndexRoute
+  '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,21 +71,21 @@ export interface FileRouteTypes {
     | '/convert'
     | '/media-to-docs'
     | '/settings'
-    | '/media-to-docs/cache-management'
+    | '/media-to-docs/convert-history'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/convert'
     | '/media-to-docs'
     | '/settings'
-    | '/media-to-docs/cache-management'
+    | '/media-to-docs/convert-history'
   id:
     | '__root__'
     | '/'
     | '/convert/'
     | '/media-to-docs/'
     | '/settings/'
-    | '/media-to-docs/cache-management/'
+    | '/media-to-docs/convert-history/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,7 +93,7 @@ export interface RootRouteChildren {
   ConvertIndexRoute: typeof ConvertIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
-  MediaToDocsCacheManagementIndexRoute: typeof MediaToDocsCacheManagementIndexRoute
+  MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -126,11 +126,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConvertIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/media-to-docs/cache-management/': {
-      id: '/media-to-docs/cache-management/'
-      path: '/media-to-docs/cache-management'
-      fullPath: '/media-to-docs/cache-management'
-      preLoaderRoute: typeof MediaToDocsCacheManagementIndexRouteImport
+    '/media-to-docs/convert-history/': {
+      id: '/media-to-docs/convert-history/'
+      path: '/media-to-docs/convert-history'
+      fullPath: '/media-to-docs/convert-history'
+      preLoaderRoute: typeof MediaToDocsConvertHistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -141,7 +141,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvertIndexRoute: ConvertIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
-  MediaToDocsCacheManagementIndexRoute: MediaToDocsCacheManagementIndexRoute,
+  MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

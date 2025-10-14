@@ -20,8 +20,8 @@ i18n.use(initReactI18next).init({
   resources,
   lng: localStorage.getItem('i18nextLng') || 'zh',
   fallbackLng: 'zh',
-  debug: process.env.NODE_ENV === 'development',
-
+  // debug: process.env.NODE_ENV === 'development',
+  debug: false,
   interpolation: {
     escapeValue: false,
     skipOnVariables: false

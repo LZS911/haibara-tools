@@ -291,5 +291,10 @@ export default {
   not_support_vision_mode_desc:
     '⚠️ 当前模型不支持视觉功能，请选择 OpenAI、Anthropic 或 Gemini',
   support_vision_mode_desc_not:
-    '💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述'
+    '💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述',
+  reset: '重置',
+  timeline_view: '时间轴',
+  document_view: '文档',
+  download_failed_check_bv: '下载失败，请检查 BV 号是否正确',
+  generated_content_title: 'AI 生成内容'
 };

@@ -1,6 +1,6 @@
 {
   "name": "haibara-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "一站式实用工具集合，支持文件转换、AI视频转文档等功能",
   "author": {
     "name": "LZS911",
@@ -69,6 +69,7 @@
     "marked": "^16.2.0",
     "multer": "^2.0.2",
     "nanoid": "^5.1.6",
+    "next-themes": "^0.4.6",
     "openai": "^5.22.1",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.2.0",
@@ -77,6 +78,7 @@
     "react-dom": "^19.0.0",
     "react-i18next": "^15.6.1",
     "sharp": "^0.34.3",
+    "sonner": "^2.0.7",
     "spark-md5": "^3.0.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",

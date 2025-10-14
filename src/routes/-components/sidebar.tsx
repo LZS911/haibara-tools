@@ -1,4 +1,4 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouterState, type LinkProps } from '@tanstack/react-router';
 import {
   RefreshCw,
   Video,
@@ -12,9 +12,10 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../store/app';
 import { cn } from '../-lib/utils';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface NavItem {
-  path: string;
+  path: LinkProps['to'];
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   electronOnly?: boolean;
@@ -35,6 +36,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
   const { isTaskRunning } = useAppStore();
   const [appVersion, setAppVersion] = useState('');
+  const [isCheckingForUpdate, setIsCheckingForUpdate] = useState(false);
 
   useEffect(() => {
     if (isElectron && window.electronAPI) {
@@ -42,9 +44,36 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     }
   }, [isElectron]);
 
-  const handleCheckForUpdate = () => {
+  const handleCheckForUpdate = async () => {
     if (isElectron && window.electronAPI) {
-      window.electronAPI.checkForUpdates();
+      setIsCheckingForUpdate(true);
+      try {
+        const result = await window.electronAPI.checkForUpdates();
+        if (result?.isLatest) {
+          toast(t('update_check_title', '检查更新'), {
+            description: t(
+              'update_latest_message',
+              '您当前使用的已是最新版本。'
+            )
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check for updates:', error);
+        toast(
+          t(
+            'update_check_failed_message',
+            '无法连接到更新服务器，请稍后重试。'
+          ),
+          {
+            description: t(
+              'update_check_failed_message',
+              '无法连接到更新服务器，请稍后重试。'
+            )
+          }
+        );
+      } finally {
+        setIsCheckingForUpdate(false);
+      }
     }
   };
 
@@ -62,7 +91,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       category: 'tools'
     },
     {
-      path: '/media-to-docs/cache-management',
+      path: '/media-to-docs/convert-history',
       label: t('nav_cache_management', '缓存管理'),
       icon: Database,
       category: 'manage'
@@ -200,15 +229,16 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           {isElectron && (
             <div
               className={cn(
-                'flex items-center rounded-lg px-3 py-1 text-sm text-slate-500',
-                isCollapsed && 'justify-center'
+                'flex items-center rounded-lg py-1 text-sm text-slate-500',
+                {
+                  'px-3': !isCollapsed
+                }
               )}
             >
               <div
-                className={cn(
-                  'flex-1 transition-opacity duration-200',
-                  isCollapsed && 'opacity-0 w-0'
-                )}
+                className={cn('flex-1 transition-opacity duration-200', {
+                  hidden: isCollapsed
+                })}
               >
                 <p className="whitespace-nowrap text-xs font-medium">
                   {t('version', '版本')} {appVersion}
@@ -216,12 +246,16 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
               </div>
               <Button
                 variant="ghost"
-                size="icon"
                 onClick={handleCheckForUpdate}
-                className="h-8 w-8 flex-shrink-0"
+                disabled={isCheckingForUpdate}
+                className="h-8 w-8 flex-shrink-0 cursor-pointer"
                 title={t('check_for_updates', '检查更新')}
               >
-                <CloudUpload className="h-4 w-4" />
+                <CloudUpload
+                  className={cn('h-4 w-4 cursor-pointer!', {
+                    'animate-spin': isCheckingForUpdate
+                  })}
+                />
               </Button>
             </div>
           )}
@@ -242,10 +276,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <img src="/icon.svg" alt="Logo" className="h-5 w-5" />
               </div>
               <div
-                className={cn(
-                  'flex-1 transition-opacity duration-200',
-                  isCollapsed && 'opacity-0 w-0'
-                )}
+                className={cn('flex-1 transition-opacity duration-200', {
+                  hidden: isCollapsed
+                })}
               >
                 <p className="whitespace-nowrap text-xs font-medium">
                   Haibara Tools

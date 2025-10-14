@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Layout } from './-components/layout';
 import { KeepAliveOutlet, KeepAliveProvider } from 'tanstack-router-keepalive';
 import { UpdateNotification } from './-components/update-notification';
+import { Toaster } from './-components/ui/sonner';
 
 export const Route = createRootRoute({
   component: () => (
@@ -11,6 +12,7 @@ export const Route = createRootRoute({
         <KeepAliveOutlet />
         <UpdateNotification />
         <TanStackRouterDevtools />
+        <Toaster />
       </Layout>
     </KeepAliveProvider>
   )
