@@ -50,3 +50,9 @@ jobs:
       - name: Create versioned release branch
         if: steps.check_tag.outputs.skip == 'false'
         run: git push origin HEAD:refs/heads/release/${{ env.VERSION }}
+
+      - name: Trigger build workflow
+        if: steps.check_tag.outputs.skip == 'false'
+        run: gh workflow run build-electron.yml --ref ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
