@@ -1,6 +1,6 @@
 {
   "name": "haibara-tools",
-  "version": "0.0.3",
+  "version": "0.0.1",
   "description": "一站式实用工具集合，支持文件转换、AI视频转文档等功能",
   "author": {
     "name": "LZS911",
@@ -25,6 +25,7 @@
     "dist:win": "pnpm dist:clean && pnpm electron:build && electron-builder --win",
     "dist:mac": "pnpm dist:clean && pnpm electron:build && electron-builder --mac",
     "dist:linux": "pnpm dist:clean && pnpm electron:build && electron-builder --linux",
+    "release:ci": "pnpm electron:build && electron-builder --publish onTag",
     "dist:clean": "rimraf release dist",
     "start": "cross-env NODE_ENV=production node dist/server/server.cjs",
     "test": "vitest run"
