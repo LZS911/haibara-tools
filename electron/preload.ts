@@ -112,5 +112,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => {
       ipcRenderer.removeListener('update-error', listener);
     };
+  },
+
+  // 选择文件夹
+  selectFolder: (): Promise<string | undefined> => {
+    return ipcRenderer.invoke('select-folder');
+  },
+
+  // 打开文件夹/文件
+  openPath: (path: string): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('open-path', path);
   }
 });

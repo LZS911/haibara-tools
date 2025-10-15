@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import type { ImageFormat } from '../types';
+import type { ImageFormat } from '../../../types/convert';
 
 interface ConvertOptions {
   quality?: number;

@@ -23,11 +23,21 @@ export function ProgressBar({ progress, status, fileName }: ProgressBarProps) {
   const getStatusIcon = () => {
     switch (status) {
       case 'uploading':
-        return <StatusIcon status="uploading" className="text-blue-600" size={32} />;
+        return (
+          <StatusIcon status="uploading" className="text-blue-600" size={32} />
+        );
       case 'processing':
-        return <StatusIcon status="processing" className="text-yellow-600" size={32} />;
+        return (
+          <StatusIcon
+            status="processing"
+            className="text-yellow-600"
+            size={32}
+          />
+        );
       case 'done':
-        return <StatusIcon status="done" className="text-emerald-600" size={32} />;
+        return (
+          <StatusIcon status="done" className="text-emerald-600" size={32} />
+        );
       case 'error':
         return <StatusIcon status="error" className="text-red-600" size={32} />;
       default:
@@ -102,22 +112,42 @@ export function ProgressBar({ progress, status, fileName }: ProgressBarProps) {
         <div
           className={`flex items-center gap-1 ${progress >= 20 ? 'text-green-600 font-medium' : ''}`}
         >
-          {progress >= 20 ? <CheckMark className="text-green-600" size={12} /> : '○'} {t('progress_create_task')}
+          {progress >= 20 ? (
+            <CheckMark className="text-green-600" size={12} />
+          ) : (
+            '○'
+          )}{' '}
+          {t('progress_create_task')}
         </div>
         <div
           className={`flex items-center gap-1 ${progress >= 40 ? 'text-green-600 font-medium' : ''}`}
         >
-          {progress >= 40 ? <CheckMark className="text-green-600" size={12} /> : '○'} {t('progress_upload_file')}
+          {progress >= 40 ? (
+            <CheckMark className="text-green-600" size={12} />
+          ) : (
+            '○'
+          )}{' '}
+          {t('progress_upload_file')}
         </div>
         <div
           className={`flex items-center gap-1 ${progress >= 60 ? 'text-green-600 font-medium' : ''}`}
         >
-          {progress >= 60 ? <CheckMark className="text-green-600" size={12} /> : '○'} {t('progress_start_conversion')}
+          {progress >= 60 ? (
+            <CheckMark className="text-green-600" size={12} />
+          ) : (
+            '○'
+          )}{' '}
+          {t('progress_start_conversion')}
         </div>
         <div
           className={`flex items-center gap-1 ${progress >= 100 ? 'text-green-600 font-medium' : ''}`}
         >
-          {progress >= 100 ? <CheckMark className="text-green-600" size={12} /> : '○'} {t('progress_conversion_complete')}
+          {progress >= 100 ? (
+            <CheckMark className="text-green-600" size={12} />
+          ) : (
+            '○'
+          )}{' '}
+          {t('progress_conversion_complete')}
         </div>
       </div>
 

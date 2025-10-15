@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { promises as fs, createWriteStream } from 'fs';
-import type { TaskData, SettingData } from './types';
+import type { TaskData, SettingData } from '../../../types/bilibili';
 import { mergeVideoAudio } from './media';
 import { sleep } from './utils';
 
@@ -11,6 +11,8 @@ export interface DownloadProgress {
   id: string;
   status: number;
   progress: number;
+  totalSize: number;
+  downloadedSize: number;
 }
 
 async function handleDeleteFile(setting: SettingData, videoInfo: TaskData) {
@@ -60,34 +62,46 @@ export default async (
     });
   }
 
-  // 下载视频
-  const videoWriter = createWriteStream(videoInfo.filePathList[2]);
-  const videoResponse = await axios.get(
-    videoInfo.downloadUrl.video,
-    downloadConfig
-  );
+  const videoResponse = await axios.get(videoInfo.downloadUrl.video, {
+    ...downloadConfig,
+    responseType: 'stream'
+  });
+  const audioResponse = await axios.get(videoInfo.downloadUrl.audio, {
+    ...downloadConfig,
+    responseType: 'stream'
+  });
+
   const videoTotalLength = Number(videoResponse.headers['content-length'] || 0);
-  let videoDownloaded = 0;
-  let lastVideoUpdate = 0;
-  videoResponse.data.on('data', (chunk: Buffer) => {
-    videoDownloaded += chunk.length;
+  const audioTotalLength = Number(audioResponse.headers['content-length'] || 0);
+  const totalSize = videoTotalLength + audioTotalLength;
+
+  let downloadedSize = 0;
+  let lastUpdate = 0;
+
+  const progressUpdate = (chunkLength: number, status: number) => {
+    downloadedSize += chunkLength;
     const now = Date.now();
-    const progress = Math.round(
-      (videoDownloaded / videoTotalLength) * 100 * 0.75
-    );
-    // 节流：每1秒更新一次，或者进度达到100%时
-    if (now - lastVideoUpdate >= 1000 || progress >= 75) {
+    if (now - lastUpdate > 1000 || downloadedSize === totalSize) {
+      const progress = Math.round((downloadedSize / totalSize) * 100);
       progressCallback({
         id: videoInfo.id,
-        status: 1,
-        progress
+        status,
+        progress,
+        totalSize,
+        downloadedSize
       });
-      lastVideoUpdate = now;
+      lastUpdate = now;
     }
+  };
+
+  // 下载视频
+  const videoWriter = createWriteStream(videoInfo.filePathList[2]);
+  videoResponse.data.on('data', (chunk: Buffer) => {
+    progressUpdate(chunk.length, 1);
   });
   videoResponse.data.pipe(videoWriter);
   await new Promise<void>((resolve, reject) => {
-    videoWriter.on('finish', () => resolve());
+    videoWriter.on('finish', resolve);
     videoWriter.on('error', reject);
   });
 
@@ -95,32 +109,12 @@ export default async (
 
   // 下载音频
   const audioWriter = createWriteStream(videoInfo.filePathList[3]);
-  const audioResponse = await axios.get(
-    videoInfo.downloadUrl.audio,
-    downloadConfig
-  );
-  const audioTotalLength = Number(audioResponse.headers['content-length'] || 0);
-  let audioDownloaded = 0;
-  let lastAudioUpdate = 0;
   audioResponse.data.on('data', (chunk: Buffer) => {
-    audioDownloaded += chunk.length;
-    const now = Date.now();
-    const progress = Math.round(
-      (audioDownloaded / audioTotalLength) * 100 * 0.22 + 75
-    );
-    // 节流：每1秒更新一次，或者进度达到97%时
-    if (now - lastAudioUpdate >= 1000 || progress >= 97) {
-      progressCallback({
-        id: videoInfo.id,
-        status: 2,
-        progress
-      });
-      lastAudioUpdate = now;
-    }
+    progressUpdate(chunk.length, 2);
   });
   audioResponse.data.pipe(audioWriter);
   await new Promise<void>((resolve, reject) => {
-    audioWriter.on('finish', () => resolve());
+    audioWriter.on('finish', resolve);
     audioWriter.on('error', reject);
   });
 
@@ -131,7 +125,9 @@ export default async (
     progressCallback({
       id: videoInfo.id,
       status: 3,
-      progress: 98
+      progress: 99,
+      totalSize,
+      downloadedSize
     });
     try {
       await mergeVideoAudio(
@@ -142,7 +138,9 @@ export default async (
       progressCallback({
         id: videoInfo.id,
         status: 0,
-        progress: 100
+        progress: 100,
+        totalSize,
+        downloadedSize: totalSize
       });
       await handleDeleteFile(setting, videoInfo);
     } catch (error) {
@@ -150,7 +148,9 @@ export default async (
       progressCallback({
         id: videoInfo.id,
         status: 5,
-        progress: 100
+        progress: 100,
+        totalSize,
+        downloadedSize
       });
       await handleDeleteFile(setting, videoInfo);
     }
@@ -158,7 +158,9 @@ export default async (
     progressCallback({
       id: videoInfo.id,
       status: 0,
-      progress: 100
+      progress: 100,
+      totalSize,
+      downloadedSize: totalSize
     });
     await handleDeleteFile(setting, videoInfo);
   }

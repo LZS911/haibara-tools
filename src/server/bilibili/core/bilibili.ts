@@ -3,16 +3,15 @@ import { customAlphabet } from 'nanoid';
 import { formatSeconed, filterTitle, sleep } from './utils';
 import { qualityMap } from './data/quality';
 import alphabet from './data/alphabet';
-import type {
-  VideoData,
-  Page,
-  DownloadUrl,
-  Subtitle,
-  SettingData
-} from './types';
-
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36';
+import {
+  type VideoData,
+  type Page,
+  type DownloadUrl,
+  type Subtitle,
+  type SettingData,
+  LoginStatus
+} from '../../../types/bilibili';
+import { UA } from './data/ua';
 
 // 自定义uuid
 const nanoid = customAlphabet(alphabet, 16);
@@ -112,11 +111,11 @@ const checkLogin = async (SESSDATA: string) => {
     }
   );
   if (data.data.isLogin && !data.data.vipStatus) {
-    return 1;
+    return LoginStatus.user;
   } else if (data.data.isLogin && data.data.vipStatus) {
-    return 2;
+    return LoginStatus.vip;
   } else {
-    return 0;
+    return LoginStatus.visitor;
   }
 };
 

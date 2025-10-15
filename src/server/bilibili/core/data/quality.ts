@@ -10,7 +10,7 @@ const qualityMap = {
   64: '720P',
   32: '480P清晰',
   16: '320P流畅'
-}
+};
 
 const resolution = {
   127: {
@@ -57,16 +57,12 @@ const resolution = {
     width: 640,
     height: 360
   }
-}
+};
 
 const userQuality = {
   0: [16, 32],
   1: [16, 32, 64, 80],
   2: [16, 32, 64, 74, 80, 112, 116, 120, 125, 126, 127]
-}
+};
 
-export {
-  qualityMap,
-  userQuality,
-  resolution
-}
+export { qualityMap, userQuality, resolution };

@@ -37,7 +37,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
+      - name: Run code quality checks
+        run: pnpm lint
+
+      - name: Build client
         run: pnpm build:client
 
       - name: Build app for Pull Request

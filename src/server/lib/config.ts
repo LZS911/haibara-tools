@@ -4,7 +4,7 @@ import type { AppConfig } from '../../electron.d';
 
 let cachedConfig: AppConfig | null = null;
 
-function getUserDataPath(): string | null {
+export function getUserDataPath(): string | null {
   // For packaged app (production), Electron sets this env var.
   if (process.env.IS_PACKAGED === 'true') {
     return process.env.USER_DATA_PATH || null;
@@ -12,7 +12,11 @@ function getUserDataPath(): string | null {
 
   // For development, Electron writes a context file.
   try {
-    const contextPath = path.join(process.cwd(), 'tmp', 'electron-context.json');
+    const contextPath = path.join(
+      process.cwd(),
+      'tmp',
+      'electron-context.json'
+    );
     if (fs.existsSync(contextPath)) {
       const context = JSON.parse(fs.readFileSync(contextPath, 'utf-8'));
       return context.userDataPath || null;
@@ -70,7 +74,25 @@ function loadConfig(): AppConfig {
     GROQ_API_KEY: process.env.GROQ_API_KEY,
     GROQ_MODEL_NAME: process.env.GROQ_MODEL_NAME,
     COHERE_API_KEY: process.env.COHERE_API_KEY,
-    COHERE_MODEL_NAME: process.env.COHERE_MODEL_NAME
+    COHERE_MODEL_NAME: process.env.COHERE_MODEL_NAME,
+    BILIBILI_SESSDATA: process.env.BILIBILI_SESSDATA,
+    BILIBILI_BFE_ID: process.env.BILIBILI_BFE_ID,
+    BILIBILI_DOWNLOAD_PATH: process.env.BILIBILI_DOWNLOAD_PATH,
+    BILIBILI_IS_DANMAKU: process.env.BILIBILI_IS_DANMAKU
+      ? process.env.BILIBILI_IS_DANMAKU === String(true)
+      : undefined,
+    BILIBILI_IS_COVER: process.env.BILIBILI_IS_COVER
+      ? process.env.BILIBILI_IS_COVER === String(true)
+      : undefined,
+    BILIBILI_IS_SUBTITLE: process.env.BILIBILI_IS_SUBTITLE
+      ? process.env.BILIBILI_IS_SUBTITLE === String(true)
+      : undefined,
+    BILIBILI_IS_FOLDER: process.env.BILIBILI_IS_FOLDER
+      ? process.env.BILIBILI_IS_FOLDER === String(true)
+      : undefined,
+    BILIBILI_DOWNLOADING_MAX_SIZE: process.env.BILIBILI_DOWNLOADING_MAX_SIZE
+      ? parseInt(process.env.BILIBILI_DOWNLOADING_MAX_SIZE, 10)
+      : undefined
   };
 
   return cachedConfig;

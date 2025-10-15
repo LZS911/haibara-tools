@@ -6,7 +6,7 @@ import {
   type ConvertCategory,
   type FileFormat,
   isValidConvertType
-} from './types';
+} from '../../types/convert';
 import { createJobMeta, readJobMeta } from './storage';
 
 const t = initTRPC.context<TRPCContext>().create();

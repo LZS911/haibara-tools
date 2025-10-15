@@ -40,10 +40,7 @@ function Dashboard() {
     },
     {
       title: t('nav_media_to_docs', 'AI 转文档'),
-      desc: t(
-        'dashboard_quick_action_media_to_docs_desc',
-        '智能视频转文档'
-      ),
+      desc: t('dashboard_quick_action_media_to_docs_desc', '智能视频转文档'),
       icon: Video,
       to: '/media-to-docs',
       color: 'bg-purple-500',
@@ -96,7 +93,8 @@ function Dashboard() {
         </div>
         {isElectron && (
           <div className="text-xs text-slate-400">
-            <Clock className="inline h-4 w-4" /> {t('dashboard_electron_mode', 'Electron 模式')}
+            <Clock className="inline h-4 w-4" />{' '}
+            {t('dashboard_electron_mode', 'Electron 模式')}
           </div>
         )}
       </div>
@@ -168,7 +166,9 @@ function Dashboard() {
         <Card className="border-slate-200 bg-white p-6">
           <div className="text-center text-slate-400">
             <FileText className="mx-auto h-12 w-12 opacity-20" />
-            <p className="mt-2 text-sm">{t('dashboard_no_recent_activity', '暂无使用记录')}</p>
+            <p className="mt-2 text-sm">
+              {t('dashboard_no_recent_activity', '暂无使用记录')}
+            </p>
           </div>
         </Card>
       </div>
@@ -181,9 +181,14 @@ function Dashboard() {
               <Zap className="h-4 w-4 text-blue-600" />
             </div>
             <div className="flex-1 text-sm">
-              <p className="font-medium text-blue-900">{t('dashboard_config_tip_title', '配置提示')}</p>
+              <p className="font-medium text-blue-900">
+                {t('dashboard_config_tip_title', '配置提示')}
+              </p>
               <p className="mt-1 text-blue-700">
-                {t('dashboard_config_tip_desc', '首次使用？请前往设置页面配置您的 API Keys，以使用 AI 相关功能。')}
+                {t(
+                  'dashboard_config_tip_desc',
+                  '首次使用？请前往设置页面配置您的 API Keys，以使用 AI 相关功能。'
+                )}
               </p>
               <Link to="/settings">
                 <Button

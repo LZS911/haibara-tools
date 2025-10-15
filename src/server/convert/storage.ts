@@ -7,7 +7,7 @@ import {
   type JobStatus,
   type FileFormat,
   sanitizeFileName
-} from './types';
+} from '../../types/convert';
 
 // 在 Electron 环境下使用 userData 目录，否则使用 process.cwd()
 // 使用函数而不是常量，确保每次都能获取最新的环境变量

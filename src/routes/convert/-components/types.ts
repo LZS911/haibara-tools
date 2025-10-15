@@ -6,7 +6,7 @@ import type {
   ImageFormat,
   AudioFormat,
   VideoFormat
-} from '@/server/convert/types';
+} from '@/types/convert';
 import { FILE_TYPE_ICONS, CATEGORY_ICONS } from './icons';
 
 // 重新导出服务端类型供组件使用

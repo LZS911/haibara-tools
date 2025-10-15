@@ -11,9 +11,9 @@ import {
   checkUrlRedirect,
   getDownloadList,
   parseHtml
-} from './core/bilibili';
-import download from './core/download';
-import type { SettingData } from './core/types';
+} from '../bilibili/core/bilibili';
+import download from '../bilibili/core/download';
+import type { SettingData } from '../../types/bilibili';
 import {
   checkModelAvailability,
   getCompletion,

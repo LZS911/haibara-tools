@@ -1,7 +1,4 @@
-import type {
-  SummaryStyle,
-  LLMProvider
-} from '@/routes/media-to-docs/-types';
+import type { SummaryStyle, LLMProvider } from '@/routes/media-to-docs/-types';
 
 export const STYLES: { id: SummaryStyle; name: string }[] = [
   { id: 'note', name: '结构笔记' },

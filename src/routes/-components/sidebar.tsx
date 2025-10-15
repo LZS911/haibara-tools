@@ -5,7 +5,8 @@ import {
   Settings,
   Database,
   ChevronLeft,
-  CloudUpload
+  CloudUpload,
+  Download
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
@@ -88,6 +89,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       path: '/media-to-docs',
       label: t('nav_media_to_docs', 'AI 转文档'),
       icon: Video,
+      category: 'tools'
+    },
+    {
+      path: '/bilibili-downloader',
+      label: t('nav_bilibili_downloader', 'B站下载'),
+      icon: Download,
       category: 'tools'
     },
     {

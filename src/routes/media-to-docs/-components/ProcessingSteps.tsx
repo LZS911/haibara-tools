@@ -16,12 +16,30 @@ export function ProcessingSteps({
   const { t } = useTranslation();
 
   const stageMapping: Record<ProgressStage, { text: string; color: string }> = {
-    downloading: { text: t('progress_stage_downloading', '视频下载中'), color: 'text-blue-600' },
-    transcribing: { text: t('progress_stage_transcribing', '语音识别中'), color: 'text-purple-600' },
-    'extracting-keyframes': { text: t('progress_stage_extracting_keyframes', '提取关键帧中'), color: 'text-orange-600' },
-    generating: { text: t('progress_stage_generating', '文档生成中'), color: 'text-green-600' },
-    completed: { text: t('progress_stage_completed', '处理完成'), color: 'text-emerald-600' },
-    error: { text: t('progress_stage_error', '处理失败'), color: 'text-red-600' }
+    downloading: {
+      text: t('progress_stage_downloading', '视频下载中'),
+      color: 'text-blue-600'
+    },
+    transcribing: {
+      text: t('progress_stage_transcribing', '语音识别中'),
+      color: 'text-purple-600'
+    },
+    'extracting-keyframes': {
+      text: t('progress_stage_extracting_keyframes', '提取关键帧中'),
+      color: 'text-orange-600'
+    },
+    generating: {
+      text: t('progress_stage_generating', '文档生成中'),
+      color: 'text-green-600'
+    },
+    completed: {
+      text: t('progress_stage_completed', '处理完成'),
+      color: 'text-emerald-600'
+    },
+    error: {
+      text: t('progress_stage_error', '处理失败'),
+      color: 'text-red-600'
+    }
   };
 
   const stageInfo = stageMapping[stage] || stageMapping.downloading;

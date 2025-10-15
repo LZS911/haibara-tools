@@ -147,7 +147,9 @@ const RequestBuilder = {
   newAuthHeaders: () => {
     const { VOLC_APP_ID, VOLC_ACCESS_TOKEN } = getConfig();
     if (!VOLC_APP_ID || !VOLC_ACCESS_TOKEN) {
-      throw new Error('Volcano Engine credentials not configured in newAuthHeaders');
+      throw new Error(
+        'Volcano Engine credentials not configured in newAuthHeaders'
+      );
     }
     return {
       'X-Api-Resource-Id': 'volc.bigasr.sauc.duration',

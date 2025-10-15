@@ -12,10 +12,12 @@ export const createTRPContext = ({
 const t = initTRPC.context<TRPCContext>().create();
 
 import { mediaToDocsRouter } from './media-to-docs';
+import { bilibiliRouter } from './bilibili';
 
 export const appRouter = t.router({
   convert: convertRouter,
-  mediaToDoc: mediaToDocsRouter
+  mediaToDoc: mediaToDocsRouter,
+  bilibili: bilibiliRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({

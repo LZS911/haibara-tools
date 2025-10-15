@@ -44,13 +44,15 @@ export function CategoryTabs({
                   isActive ? 'scale-110' : 'group-hover:scale-110'
                 )}
               >
-                <CategoryIcon 
-                  category={key} 
+                <CategoryIcon
+                  category={key}
                   className={cn(
                     'transition-colors duration-300',
-                    isActive ? config.textColor : 'text-gray-600 group-hover:text-gray-800'
-                  )} 
-                  size={32} 
+                    isActive
+                      ? config.textColor
+                      : 'text-gray-600 group-hover:text-gray-800'
+                  )}
+                  size={32}
                 />
               </div>
 

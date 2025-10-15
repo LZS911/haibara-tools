@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { JobStatus } from './types';
+import type { JobStatus } from '../../types/convert';
 
 export interface ProgressUpdate {
   jobId: string;

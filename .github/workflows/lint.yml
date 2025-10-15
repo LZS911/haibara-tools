@@ -1,0 +1,46 @@
+name: Code Quality Check
+
+on:
+  # PR 到任何分支时触发
+  pull_request:
+    branches: ['**']
+
+  # 推送到 main 或 dev 分支时触发
+  push:
+    branches: [main, dev]
+
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run code quality checks
+        run: pnpm lint
+
+      - name: Check for lint errors
+        if: failure()
+        run: |
+          echo "❌ 代码检查失败！请修复以下问题："
+          echo "1. 运行 'pnpm prettier:w' 修复格式问题"
+          echo "2. 运行 'pnpm eslint' 查看 ESLint 错误"
+          echo "3. 运行 'pnpm ts-check' 查看类型错误"
+          exit 1

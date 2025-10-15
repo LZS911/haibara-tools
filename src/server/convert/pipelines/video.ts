@@ -2,7 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import fs from 'node:fs/promises';
-import type { VideoFormat } from '../types';
+import type { VideoFormat } from '../../../types/convert';
 
 const isPackaged = process.env.IS_PACKAGED === 'true';
 

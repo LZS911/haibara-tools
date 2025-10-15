@@ -13,7 +13,7 @@ import {
   getMimeByExt,
   type ImageFormat,
   type VideoFormat
-} from './types';
+} from '../../types/convert';
 import { txtToDocx, docxToPdf, pdfToTxt } from './pipelines/text';
 import { mdToPdf, mdToDocx, docxToMd, pdfToMd } from './pipelines/markdown';
 import { convertImageFormat } from './pipelines/image';

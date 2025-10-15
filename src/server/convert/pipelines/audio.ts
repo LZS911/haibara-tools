@@ -2,7 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import fs from 'node:fs/promises';
-import type { AudioFormat } from '../types';
+import type { AudioFormat } from '../../../types/convert';
 
 const isPackaged = process.env.IS_PACKAGED === 'true';
 
@@ -31,7 +31,7 @@ export async function convertAudioFormat(
   // 验证输入文件是否存在
   try {
     await fs.access(inputPath);
-  } catch (error) {
+  } catch {
     throw new Error(`Input file not found: ${inputPath}`);
   }
 

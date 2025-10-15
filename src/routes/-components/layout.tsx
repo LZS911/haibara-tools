@@ -76,7 +76,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
 
         {/* 主内容区 */}
         <main
-          className={`flex-1 pt-8 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
+          className={`flex-1 pt-8 pb-4 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
           style={{
             marginLeft: isSidebarCollapsed ? '4rem' : '13rem'
           }}

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
 import { Route as ConvertIndexRouteImport } from './routes/convert/index'
+import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ConvertIndexRoute = ConvertIndexRouteImport.update({
   path: '/convert/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BilibiliDownloaderIndexRoute = BilibiliDownloaderIndexRouteImport.update({
+  id: '/bilibili-downloader/',
+  path: '/bilibili-downloader/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MediaToDocsConvertHistoryIndexRoute =
   MediaToDocsConvertHistoryIndexRouteImport.update({
     id: '/media-to-docs/convert-history/',
@@ -44,6 +50,7 @@ const MediaToDocsConvertHistoryIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
   '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
   '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bilibili-downloader/': typeof BilibiliDownloaderIndexRoute
   '/convert/': typeof ConvertIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/bilibili-downloader'
     | '/convert'
     | '/media-to-docs'
     | '/settings'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/bilibili-downloader'
     | '/convert'
     | '/media-to-docs'
     | '/settings'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/bilibili-downloader/'
     | '/convert/'
     | '/media-to-docs/'
     | '/settings/'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BilibiliDownloaderIndexRoute: typeof BilibiliDownloaderIndexRoute
   ConvertIndexRoute: typeof ConvertIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
@@ -126,6 +139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConvertIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bilibili-downloader/': {
+      id: '/bilibili-downloader/'
+      path: '/bilibili-downloader'
+      fullPath: '/bilibili-downloader'
+      preLoaderRoute: typeof BilibiliDownloaderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/media-to-docs/convert-history/': {
       id: '/media-to-docs/convert-history/'
       path: '/media-to-docs/convert-history'
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BilibiliDownloaderIndexRoute: BilibiliDownloaderIndexRoute,
   ConvertIndexRoute: ConvertIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,

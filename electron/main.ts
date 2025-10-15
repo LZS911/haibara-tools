@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, protocol } from 'electron';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import updater from 'electron-updater';
@@ -381,10 +381,45 @@ function setupIPC() {
     }
     autoUpdater.quitAndInstall();
   });
+
+  // 选择文件夹
+  ipcMain.handle('select-folder', async () => {
+    const { dialog } = await import('electron');
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    });
+    return result.filePaths[0];
+  });
+
+  // 打开文件夹/文件
+  ipcMain.handle('open-path', async (_event, path: string) => {
+    try {
+      await shell.openPath(path);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to open path:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  });
 }
 
 // 应用启动
 app.whenReady().then(async () => {
+  protocol.registerFileProtocol('local-resource', (request, callback) => {
+    const url = request.url.replace(/^local-resource:\/\//, '');
+    // Decode URL to handle special characters in file paths
+    const decodedUrl = decodeURI(url);
+    try {
+      return callback(decodedUrl);
+    } catch (error) {
+      console.error('Failed to register protocol', error);
+      return callback('404');
+    }
+  });
+
   // In dev mode, write a context file for the separate server process to find the userData path.
   if (isDev) {
     try {
