@@ -1,114 +1,52 @@
-import puppeteer, { Browser as PuppeteerBrowser } from 'puppeteer-core';
-import path from 'node:path';
-import fs from 'node:fs';
-import {
-  install,
-  Browser,
-  computeExecutablePath,
-  canDownload
-} from '@puppeteer/browsers';
-
-// Use a directory within the project or user data for storing Chromium
-// In Electron, use USER_DATA_PATH if available
-const getChromiumPath = () => {
-  const baseDir = process.env.USER_DATA_PATH || process.cwd();
-  return path.join(baseDir, '.local-chromium');
-};
+import puppeteer, { type Browser as PuppeteerBrowser } from 'puppeteer-core';
 
 let browserInstance: PuppeteerBrowser | null = null;
+
+// Helper function to delay execution
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getBrowser = async (): Promise<PuppeteerBrowser> => {
   if (browserInstance && browserInstance.isConnected()) {
     return browserInstance;
   }
 
-  const chromiumPath = getChromiumPath();
+  const maxRetries = 10;
+  const retryDelay = 500; // ms
 
-  if (!fs.existsSync(chromiumPath)) {
-    console.log('[Puppeteer] Creating chromium directory:', chromiumPath);
-    fs.mkdirSync(chromiumPath, { recursive: true });
-  }
-
-  const browser = Browser.CHROMIUM;
-  // Use a newer build that supports Apple Silicon (arm64)
-  // Chrome 120+ has better arm64 support
-  const buildId = '131.0.6778.85';
-
-  console.log('[Puppeteer] Computing executable path...');
-  console.log('[Puppeteer] Browser:', browser);
-  console.log('[Puppeteer] Build ID:', buildId);
-  console.log('[Puppeteer] Cache dir:', chromiumPath);
-  console.log('[Puppeteer] Platform:', process.platform);
-  console.log('[Puppeteer] Arch:', process.arch);
-
-  const executablePath = computeExecutablePath({
-    browser,
-    buildId,
-    cacheDir: chromiumPath
-  });
-
-  console.log('[Puppeteer] Executable path:', executablePath);
-  console.log('[Puppeteer] Executable exists:', fs.existsSync(executablePath));
-
-  if (!fs.existsSync(executablePath)) {
+  for (let i = 0; i < maxRetries; i++) {
     try {
-      console.log('[Puppeteer] Checking if build can be downloaded...');
-      const isDownloadable = await canDownload({
-        browser,
-        buildId,
-        cacheDir: chromiumPath
+      console.log(`[Puppeteer] Attempting to connect... (Attempt ${i + 1})`);
+      browserInstance = await puppeteer.connect({
+        browserURL: 'http://localhost:9222'
       });
-      console.log('[Puppeteer] Is downloadable:', isDownloadable);
 
-      if (isDownloadable) {
-        console.log('[Puppeteer] Downloading Chromium...');
-        await install({
-          browser,
-          buildId,
-          cacheDir: chromiumPath,
-          downloadProgressCallback: (
-            downloadedBytes: number,
-            totalBytes: number
-          ) => {
-            const percent = ((downloadedBytes / totalBytes) * 100).toFixed(2);
-            console.log(
-              `[Puppeteer] Download progress: ${percent}% (${downloadedBytes}/${totalBytes})`
-            );
-          }
-        });
-        console.log('[Puppeteer] ✅ Chromium downloaded successfully');
-      } else {
-        throw new Error(
-          `Chromium build ${buildId} is not available for download.`
-        );
-      }
+      console.log('[Puppeteer] ✅ Browser connected successfully');
+
+      browserInstance.on('disconnected', () => {
+        console.log('[Puppeteer] Browser disconnected.');
+        browserInstance = null;
+      });
+
+      return browserInstance;
     } catch (error) {
-      console.error('[Puppeteer] ❌ Failed to download Chromium:', error);
-      if (error instanceof Error) {
-        throw new Error(`Could not download browser: ${error.message}`);
+      console.warn(
+        `[Puppeteer] Connection attempt ${i + 1} failed. Retrying in ${
+          retryDelay / 1000
+        }s...`
+      );
+      if (i < maxRetries - 1) {
+        await delay(retryDelay);
+      } else {
+        console.error(
+          '[Puppeteer] ❌ Failed to connect to browser after multiple retries.'
+        );
+        throw new Error('Could not connect to browser.');
       }
-      throw new Error('Could not download browser.');
     }
   }
 
-  console.log('[Puppeteer] Launching browser...');
-  browserInstance = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu'
-    ]
-  });
-  console.log('[Puppeteer] ✅ Browser launched successfully');
-
-  browserInstance.on('disconnected', () => {
-    browserInstance = null;
-  });
-
-  return browserInstance;
+  // This part should not be reachable due to the throw in the loop
+  throw new Error('Could not connect to browser.');
 };
 
 export { getBrowser };

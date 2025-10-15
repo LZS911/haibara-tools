@@ -128,6 +128,11 @@ function AiConvert() {
     setCurrentStep('processing');
     setIsTaskRunning(true);
 
+    const currentJobId = jobId || nanoid();
+    if (!jobId) {
+      setJobId(currentJobId);
+    }
+
     summarizeMutation.mutate(
       {
         audioPath,
@@ -136,7 +141,7 @@ function AiConvert() {
         provider,
         enableVision,
         skipAsr: false, // 🧪 测试模式：如需跳过 ASR，取消注释
-        jobId
+        jobId: currentJobId
       },
       {
         onSuccess: (data) => {

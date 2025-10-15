@@ -4,6 +4,7 @@ import type { TRPCContext } from '../../types';
 import { randomUUID } from 'crypto';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
+import { getConfig } from '../../lib/config';
 
 const t = initTRPC.context<TRPCContext>().create();
 
@@ -13,27 +14,21 @@ const SUBMIT_URL =
 const QUERY_URL =
   'https://openspeech-direct.zijieapi.com/api/v3/auc/bigmodel/query';
 
-// --- Config ---
-const APP_ID = process.env.VOLC_APP_ID;
-const ACCESS_TOKEN = process.env.VOLC_ACCESS_TOKEN;
-
 // --- Utilities ---
 
-const checkConfig = () => {
-  if (!APP_ID || !ACCESS_TOKEN) {
+const submitTask = async (fileUrl: string) => {
+  const { VOLC_APP_ID, VOLC_ACCESS_TOKEN } = getConfig();
+  if (!VOLC_APP_ID || !VOLC_ACCESS_TOKEN) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: '火山引擎凭证未配置'
     });
   }
-};
 
-const submitTask = async (fileUrl: string) => {
-  checkConfig();
   const taskId = randomUUID();
   const headers = {
-    'X-Api-App-Key': APP_ID,
-    'X-Api-Access-Key': ACCESS_TOKEN,
+    'X-Api-App-Key': VOLC_APP_ID,
+    'X-Api-Access-Key': VOLC_ACCESS_TOKEN,
     'X-Api-Resource-Id': 'volc.bigasr.auc',
     'X-Api-Request-Id': taskId,
     'X-Api-Sequence': '-1',
@@ -73,10 +68,17 @@ const submitTask = async (fileUrl: string) => {
 };
 
 const queryTask = async (taskId: string, logId: string) => {
-  checkConfig();
+  const { VOLC_APP_ID, VOLC_ACCESS_TOKEN } = getConfig();
+  if (!VOLC_APP_ID || !VOLC_ACCESS_TOKEN) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: '火山引擎凭证未配置'
+    });
+  }
+
   const headers = {
-    'X-Api-App-Key': APP_ID,
-    'X-Api-Access-Key': ACCESS_TOKEN,
+    'X-Api-App-Key': VOLC_APP_ID,
+    'X-Api-Access-Key': VOLC_ACCESS_TOKEN,
     'X-Api-Resource-Id': 'volc.bigasr.auc',
     'X-Api-Request-Id': taskId,
     'X-Tt-Logid': logId,

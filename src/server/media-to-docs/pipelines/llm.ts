@@ -13,8 +13,7 @@ import type {
   Keyframe
 } from '@/routes/media-to-docs/-types';
 import fs from 'fs';
-import path from 'path';
-import type { AppConfig } from '../../../electron';
+import { getConfig } from '../../lib/config';
 
 // --- Style Prompts ---
 
@@ -245,65 +244,8 @@ interface ProviderConfig {
   baseURL?: string;
 }
 
-let loadedConfig: AppConfig | null = null;
-let userDataPath: string | undefined = undefined;
-let pathResolved = false;
-
-function resolveUserDataPath(): string | undefined {
-  if (pathResolved) {
-    return userDataPath;
-  }
-
-  // 1. Check for production Electron env var
-  userDataPath = process.env.USER_DATA_PATH;
-
-  // 2. Check for development Electron context file
-  if (!userDataPath) {
-    try {
-      const contextFilePath = path.join(
-        process.cwd(),
-        'tmp',
-        'electron-context.json'
-      );
-      if (fs.existsSync(contextFilePath)) {
-        const contextContent = fs.readFileSync(contextFilePath, 'utf-8');
-        userDataPath = JSON.parse(contextContent).userDataPath;
-      }
-    } catch (error) {
-      // Not in Electron dev mode, ignore
-    }
-  }
-  pathResolved = true;
-  return userDataPath;
-}
-
-function getConfig(): AppConfig {
-  if (loadedConfig !== null) {
-    return loadedConfig;
-  }
-
-  const dataPath = resolveUserDataPath();
-  if (dataPath) {
-    const configPath = path.join(dataPath, 'config.json');
-    try {
-      if (fs.existsSync(configPath)) {
-        const content = fs.readFileSync(configPath, 'utf-8');
-        loadedConfig = JSON.parse(content) as AppConfig;
-        console.log('[Server] Loaded config from', configPath);
-        return loadedConfig ?? {};
-      }
-    } catch (error) {
-      console.error('[Server] Failed to load config.json:', error);
-    }
-  }
-
-  loadedConfig = {};
-  return loadedConfig;
-}
-
 function getProviderConfig(provider: LLMProvider): ProviderConfig {
-  const isElectron = !!resolveUserDataPath();
-  const providerConfig = isElectron ? getConfig() : process.env;
+  const providerConfig = getConfig();
   // Electron mode: read from config.json ONLY
   switch (provider) {
     case 'openai':

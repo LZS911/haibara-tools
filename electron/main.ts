@@ -131,9 +131,8 @@ async function createWindow() {
     },
     title: 'Haibara Tools',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    frame: process.platform === 'darwin' ? false : true,
+    frame: process.platform === 'darwin' ? false : true
     // frame: process.platform !== 'win32',
-    icon: iconPath
   });
 
   console.log('[Electron] Window created successfully');
@@ -391,7 +390,11 @@ app.whenReady().then(async () => {
     try {
       const userDataPath = app.getPath('userData');
       const context = { userDataPath };
-      const contextPath = path.join(process.cwd(), 'tmp', 'electron-context.json');
+      const contextPath = path.join(
+        process.cwd(),
+        'tmp',
+        'electron-context.json'
+      );
       const tmpDir = path.dirname(contextPath);
       if (!fs.existsSync(tmpDir)) {
         fs.mkdirSync(tmpDir, { recursive: true });
@@ -430,10 +433,17 @@ app.whenReady().then(async () => {
     await createWindow();
     console.log('[Electron] ✅ Window created successfully');
 
-    // 在 macOS 上设置 Dock 图标
+    // 在 macOS 上设置 Dock 图标，确保在各种情况下（包括台前调度）都能正确显示
     if (process.platform === 'darwin') {
-      const iconPath = path.join(process.cwd(), 'build/icon.png');
-      console.log('[Electron] Setting Dock icon:', iconPath);
+      const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'build', 'icon.png') // 生产环境
+        : path.join(process.cwd(), 'build/icon.png'); // 开发环境
+
+      console.log(
+        `[Electron] Setting Dock icon for ${app.isPackaged ? 'production' : 'development'}...`
+      );
+      console.log('[Electron] Icon path:', iconPath);
+
       if (fs.existsSync(iconPath)) {
         app.dock?.setIcon(iconPath);
       } else {
