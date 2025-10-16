@@ -152,6 +152,10 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow(browserWindowOptions);
 
+  if (!isDev) {
+    mainWindow.setMenu(null);
+  }
+
   console.log('[Electron] Window created successfully');
 
   // 开发模式：加载 Vite 开发服务器

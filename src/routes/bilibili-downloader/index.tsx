@@ -73,6 +73,10 @@ function BilibiliDownloader() {
     trpc.bilibili.downloadVideo.mutationOptions()
   );
 
+  const checkFileExistsMutation = useMutation(
+    trpc.bilibili.checkFileExists.mutationOptions()
+  );
+
   // 取消下载
   const cancelDownloadMutation = useMutation(
     trpc.bilibili.cancelDownload.mutationOptions()
@@ -169,6 +173,32 @@ function BilibiliDownloader() {
     }
 
     try {
+      const pagesToDownload = videoInfo.page.filter((p) =>
+        selectedPages.includes(p.page)
+      );
+
+      const existingFilesResult = await checkFileExistsMutation.mutateAsync({
+        bvId: videoInfo.bvid,
+        title: videoInfo.title,
+        pages: pagesToDownload.map((p) => ({
+          page: p.page,
+          title: p.title
+        }))
+      });
+
+      if (existingFilesResult.exists) {
+        const fileList = existingFilesResult.existingFiles.join('\n');
+        const confirmed = window.confirm(
+          t(
+            'files_exist_overwrite_confirm',
+            `以下文件已存在，是否覆盖？\n${fileList}`
+          )
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
       const result = await downloadVideoMutation.mutateAsync({
         bvId: videoInfo.bvid,
         videoUrl: videoInfo.url,
