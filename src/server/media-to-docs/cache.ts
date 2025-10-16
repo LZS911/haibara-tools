@@ -1,16 +1,19 @@
 import fs from 'fs/promises';
 import path from 'path';
 import type { Keyframe } from '@/routes/media-to-docs/-types';
+import { getUserDataPath } from '../lib/config';
 
 // 媒体文件缓存根目录
 // 在 Electron 环境下使用 userData 目录，否则使用 process.cwd()
 // 使用函数而不是常量，确保每次都能获取最新的环境变量
-function getBaseDir(): string {
-  return process.env.USER_DATA_PATH || process.cwd();
-}
 
 export function getMediaRoot(): string {
-  return path.join(getBaseDir(), 'tmp/media-to-docs-jobs');
+  // 优先使用用户配置的路径
+  const userDataPath = getUserDataPath();
+  if (userDataPath) {
+    return path.join(userDataPath, 'media-to-docs-jobs');
+  }
+  return path.join(process.cwd(), 'tmp', 'media-to-docs-jobs');
 }
 
 interface Summary {

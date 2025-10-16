@@ -4,7 +4,6 @@ import url from 'node:url';
 import * as fs from 'node:fs';
 import express from 'express';
 import { trpcMiddleWare } from './trpc';
-import convertRoutes from './convert/routes';
 
 const PORT =
   typeof process.env.PORT !== 'undefined'
@@ -33,9 +32,6 @@ export const createServer = async (
   const app = express();
 
   app.use('/trpc', trpcMiddleWare);
-
-  // Use convert routes
-  app.use(convertRoutes);
 
   // Serve media files (audio, video, keyframes) for media-to-docs service
   // 动态获取路径，确保在运行时使用正确的 userData 路径

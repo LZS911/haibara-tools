@@ -11,9 +11,9 @@ import {
   checkUrlRedirect,
   getDownloadList,
   parseHtml
-} from './core/bilibili';
-import download from './core/download';
-import type { SettingData } from './core/types';
+} from '../bilibili/core/bilibili';
+import download from '../bilibili/core/download';
+import type { SettingData } from '../../types/bilibili';
 import {
   checkModelAvailability,
   getCompletion,
@@ -35,7 +35,8 @@ import {
   type Keyframe
 } from '@/routes/media-to-docs/-types';
 import { extractKeyframes } from './pipelines/keyframe';
-import { PROVIDERS, STYLES } from './data';
+import { LLM_PROVIDERS } from '../llm/providers';
+import { STYLES } from './data';
 
 // BV1BxnPzCESt
 const t = initTRPC.context<TRPCContext>().create();
@@ -389,7 +390,7 @@ export const mediaToDocsRouter = t.router({
     }),
 
   getOptionsData: t.procedure.query(async () => {
-    const availabilityPromises = PROVIDERS.map(async (provider) => {
+    const availabilityPromises = LLM_PROVIDERS.map(async (provider) => {
       const isAvailable = await checkModelAvailability(provider.id);
       return {
         id: provider.id,
@@ -409,7 +410,7 @@ export const mediaToDocsRouter = t.router({
 
     return {
       styles: STYLES,
-      providers: PROVIDERS,
+      providers: LLM_PROVIDERS,
       providerStatuses
     };
   }),

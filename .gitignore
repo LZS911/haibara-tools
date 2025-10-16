@@ -13,6 +13,7 @@ BilibiliVideoDownload
 docs
 temp
 test
+__test__
 tmp
 .local-chromium
 

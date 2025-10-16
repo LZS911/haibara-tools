@@ -8,6 +8,7 @@ import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import { progressManager } from '../progress-manager';
+import { getConfig } from '../../lib/config';
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -36,10 +37,6 @@ const SerializationType = {
 };
 const CompressionType = { GZIP: 0b0001 };
 
-// --- Config ---
-const APP_KEY = process.env.VOLC_APP_ID;
-const ACCESS_KEY = process.env.VOLC_ACCESS_TOKEN;
-
 // --- Utilities ---
 
 /**
@@ -47,7 +44,7 @@ const ACCESS_KEY = process.env.VOLC_ACCESS_TOKEN;
  */
 function convertToWav(audioPath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-        const isPackaged = process.env.IS_PACKAGED === 'true';
+    const isPackaged = process.env.IS_PACKAGED === 'true';
     const ffmpegPath = isPackaged
       ? ffmpegInstaller.path.replace(
           `${path.sep}app.asar${path.sep}`,
@@ -147,12 +144,20 @@ class AsrRequestHeader {
 }
 
 const RequestBuilder = {
-  newAuthHeaders: () => ({
-    'X-Api-Resource-Id': 'volc.bigasr.sauc.duration',
-    'X-Api-Request-Id': randomUUID(),
-    'X-Api-Access-Key': ACCESS_KEY,
-    'X-Api-App-Key': APP_KEY
-  }),
+  newAuthHeaders: () => {
+    const { VOLC_APP_ID, VOLC_ACCESS_TOKEN } = getConfig();
+    if (!VOLC_APP_ID || !VOLC_ACCESS_TOKEN) {
+      throw new Error(
+        'Volcano Engine credentials not configured in newAuthHeaders'
+      );
+    }
+    return {
+      'X-Api-Resource-Id': 'volc.bigasr.sauc.duration',
+      'X-Api-Request-Id': randomUUID(),
+      'X-Api-Access-Key': VOLC_ACCESS_TOKEN,
+      'X-Api-App-Key': VOLC_APP_ID
+    };
+  },
 
   newFullClientRequest: async (seq: number): Promise<Buffer> => {
     const header = new AsrRequestHeader();
@@ -312,7 +317,8 @@ class AsrWsClient {
 
   public execute(filePath: string, jobId?: string): Promise<AsrResponse[]> {
     return new Promise((resolve, reject) => {
-      if (!APP_KEY || !ACCESS_KEY) {
+      const { VOLC_APP_ID, VOLC_ACCESS_TOKEN } = getConfig();
+      if (!VOLC_APP_ID || !VOLC_ACCESS_TOKEN) {
         return reject(
           new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',

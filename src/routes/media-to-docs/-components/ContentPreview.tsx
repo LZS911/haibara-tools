@@ -1,6 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/routes/-components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/routes/-components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/routes/-components/ui/card';
 import { marked } from 'marked';
 import { useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
@@ -13,7 +18,11 @@ interface ContentPreviewProps {
   title: string;
 }
 
-export function ContentPreview({ onReset, content, title }: ContentPreviewProps) {
+export function ContentPreview({
+  onReset,
+  content,
+  title
+}: ContentPreviewProps) {
   const { t } = useTranslation();
   const [renderedContent, setRenderedContent] = useState('');
   const [isCopied, setIsCopied] = useState(false);
@@ -40,13 +49,19 @@ export function ContentPreview({ onReset, content, title }: ContentPreviewProps)
       return (
         <div className="flex flex-col items-center justify-center h-full">
           <Spinner className="text-3xl" />
-          <p className="mt-2 text-muted-foreground">{t('generating_content', '内容生成中...')}</p>
+          <p className="mt-2 text-muted-foreground">
+            {t('generating_content', '内容生成中...')}
+          </p>
         </div>
       );
     }
 
     if (content === '') {
-      return <p className="text-muted-foreground">{t('content_placeholder', '这里是AI生成的文档内容...')}</p>;
+      return (
+        <p className="text-muted-foreground">
+          {t('content_placeholder', '这里是AI生成的文档内容...')}
+        </p>
+      );
     }
 
     return (
@@ -64,7 +79,11 @@ export function ContentPreview({ onReset, content, title }: ContentPreviewProps)
           <CardTitle className="text-base">{title}</CardTitle>
           {content && (
             <Button onClick={handleCopy} variant="ghost" size="icon">
-              {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {isCopied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
               <span className="sr-only">{t('copy_button', 'Copy')}</span>
             </Button>
           )}

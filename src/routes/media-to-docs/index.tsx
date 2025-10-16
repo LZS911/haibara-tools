@@ -8,7 +8,6 @@ import {
 } from '@/routes/-components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
-import { StepIcon } from '@/routes/convert/-components';
 import { BvInput } from './-components/BvInput';
 import { OptionsSelector } from './-components/OptionsSelector';
 import { ProcessingSteps } from './-components/ProcessingSteps';
@@ -24,6 +23,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { TimelineView } from './-components/TimelineView';
 import { parseTimelineContent } from './-lib/utils';
 import { useAppStore } from '@/store/app';
+import { StepIcon } from './-components/Icons/StepIcon';
 
 export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert,
@@ -35,7 +35,7 @@ function AiConvert() {
   const { setIsTaskRunning, jobToLoadFromHistory, setJobToLoadFromHistory } =
     useAppStore();
   //BV11T4EzyEdF
-  const [bvId, setBvId] = useState('');
+  const [bvId, setBvId] = useState('BV1Zm4y197t6');
   const [currentStep, setCurrentStep] = useState<AiConvertStep>('input-bv-id');
   const [jobId, setJobId] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -128,6 +128,11 @@ function AiConvert() {
     setCurrentStep('processing');
     setIsTaskRunning(true);
 
+    const currentJobId = jobId || nanoid();
+    if (!jobId) {
+      setJobId(currentJobId);
+    }
+
     summarizeMutation.mutate(
       {
         audioPath,
@@ -136,7 +141,7 @@ function AiConvert() {
         provider,
         enableVision,
         skipAsr: false, // 🧪 测试模式：如需跳过 ASR，取消注释
-        jobId
+        jobId: currentJobId
       },
       {
         onSuccess: (data) => {

@@ -14,7 +14,8 @@ const clientBuildConfig: BuildEnvironmentOptions = {
   outDir: 'dist/client',
   emitAssets: true,
   copyPublicDir: true,
-  emptyOutDir: true
+  emptyOutDir: true,
+  sourcemap: false
 };
 
 // Server Build Configuration
@@ -23,6 +24,7 @@ const serverBuildConfig: BuildEnvironmentOptions = {
   outDir: 'dist/server',
   copyPublicDir: false,
   emptyOutDir: true,
+  sourcemap: false,
   rollupOptions: {
     input: path.resolve(__dirname, 'src/server/server.ts'),
     output: {
@@ -40,6 +42,7 @@ const electronBuildConfig: BuildEnvironmentOptions = {
   outDir: 'dist/electron',
   copyPublicDir: false,
   emptyOutDir: true,
+  sourcemap: false,
   rollupOptions: {
     input: {
       main: path.resolve(__dirname, 'electron/main.ts'),

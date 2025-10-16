@@ -2,18 +2,17 @@ import { Titlebar } from './titlebar';
 import { Sidebar } from './sidebar';
 import { UpdateNotification } from './update-notification';
 import { useState, useCallback, useEffect } from 'react';
+import { CONSTANT } from '../../data/constant';
 
 type Props = {
   children: React.ReactNode;
 };
 
 export const Layout: React.FC<Props> = ({ children }) => {
-  const isElectron =
-    typeof window !== 'undefined' && window.electronAPI?.isElectron;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (isElectron) {
+    if (CONSTANT.IS_ELECTRON) {
       window.electronAPI?.getConfig().then((config) => {
         if (config.SIDEBAR_COLLAPSED !== undefined) {
           setIsSidebarCollapsed(config.SIDEBAR_COLLAPSED === String(true));
@@ -32,7 +31,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
         }
       }
     }
-  }, [isElectron]);
+  }, []);
 
   const handleSetIsCollapsed = useCallback(
     async (collapsed: boolean | ((prevState: boolean) => boolean)) => {
@@ -42,7 +41,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
           : collapsed;
       setIsSidebarCollapsed(newCollapsedValue);
 
-      if (isElectron) {
+      if (CONSTANT.IS_ELECTRON) {
         try {
           const currentConfig = await window.electronAPI!.getConfig();
           await window.electronAPI!.saveConfig({
@@ -59,13 +58,13 @@ export const Layout: React.FC<Props> = ({ children }) => {
         );
       }
     },
-    [isElectron, isSidebarCollapsed]
+    [isSidebarCollapsed]
   );
 
   return (
     <div className="flex h-screen flex-col bg-slate-50/50">
       {/* 自定义标题栏（仅 Electron） */}
-      {isElectron && <Titlebar />}
+      {CONSTANT.IS_ELECTRON && <Titlebar />}
 
       <div className="flex flex-1 overflow-hidden">
         {/* 侧边栏 */}
@@ -76,7 +75,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
 
         {/* 主内容区 */}
         <main
-          className={`flex-1 pt-8 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
+          className={`flex-1 pt-8 pb-4 overflow-y-auto bg-slate-50/50 transition-all duration-300`}
           style={{
             marginLeft: isSidebarCollapsed ? '4rem' : '13rem'
           }}
@@ -86,7 +85,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
       </div>
 
       {/* 更新通知（仅 Electron） */}
-      {isElectron && <UpdateNotification />}
+      {CONSTANT.IS_ELECTRON && <UpdateNotification />}
     </div>
   );
 };

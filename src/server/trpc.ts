@@ -2,7 +2,6 @@ import { initTRPC } from '@trpc/server';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import type { TRPCContext } from './types';
-import { convertRouter } from './convert';
 
 export const createTRPContext = ({
   req: _req,
@@ -12,10 +11,13 @@ export const createTRPContext = ({
 const t = initTRPC.context<TRPCContext>().create();
 
 import { mediaToDocsRouter } from './media-to-docs';
+import { bilibiliRouter } from './bilibili';
+import { llmRouter } from './llm';
 
 export const appRouter = t.router({
-  convert: convertRouter,
-  mediaToDoc: mediaToDocsRouter
+  mediaToDoc: mediaToDocsRouter,
+  bilibili: bilibiliRouter,
+  llm: llmRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({

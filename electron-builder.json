@@ -13,6 +13,7 @@
     "dist/client/**/*",
     "dist/server/**/*",
     "dist/electron/**/*",
+    "build/**/*",
     "package.json"
   ],
   "asarUnpack": [

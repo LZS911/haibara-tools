@@ -17,6 +17,14 @@ export interface AppConfig {
   COHERE_MODEL_NAME?: string;
   VOLC_APP_ID?: string;
   VOLC_ACCESS_TOKEN?: string;
+  BILIBILI_SESSDATA?: string;
+  BILIBILI_BFE_ID?: string;
+  BILIBILI_DOWNLOAD_PATH?: string;
+  BILIBILI_IS_DANMAKU?: boolean;
+  BILIBILI_IS_COVER?: boolean;
+  BILIBILI_IS_SUBTITLE?: boolean;
+  BILIBILI_IS_FOLDER?: boolean;
+  BILIBILI_DOWNLOADING_MAX_SIZE?: number;
   PORT?: string;
   NODE_ENV?: string;
 }
@@ -77,6 +85,12 @@ export interface ElectronAPI {
 
   // 监听更新错误
   onUpdateError: (callback: (message: string) => void) => () => void;
+
+  // 选择文件夹
+  selectFolder: () => Promise<string | undefined>;
+
+  // 打开文件夹/文件
+  openPath: (path: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 // 扩展 Window 接口
