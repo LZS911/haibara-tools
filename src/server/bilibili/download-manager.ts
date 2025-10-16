@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs';
 import { nanoid } from 'nanoid';
 import type { SettingData, VideoData } from '../../types/bilibili';
 import download, { type DownloadProgress } from './core/download';
@@ -31,6 +32,7 @@ type ProgressCallback = (
 class DownloadManager {
   private tasks: Map<string, DownloadTask> = new Map();
   private activeDownloads: Set<string> = new Set();
+  private controllers: Map<string, AbortController> = new Map();
   private maxConcurrent = 3;
   private progressCallbacks: Map<string, ProgressCallback[]> = new Map();
 
@@ -67,6 +69,16 @@ class DownloadManager {
     this.activeDownloads.add(taskId);
     this.updateTaskStatus(taskId, 'downloading', 0);
 
+    const controller = new AbortController();
+    this.controllers.set(taskId, controller);
+
+    task.videoPath = videoData.filePathList[2];
+    task.audioPath = videoData.filePathList[3];
+    task.coverPath = videoData.filePathList[1];
+    if (settings.isMerge) {
+      task.mergedPath = videoData.filePathList[0];
+    }
+
     try {
       const taskData = {
         ...videoData,
@@ -74,22 +86,19 @@ class DownloadManager {
         progress: 0
       };
 
-      await download(taskData, settings, (progress: DownloadProgress) => {
-        this.updateTaskProgress(
-          taskId,
-          progress.progress,
-          progress.totalSize,
-          progress.downloadedSize
-        );
-      });
-
-      // 更新任务路径
-      task.videoPath = videoData.filePathList[2];
-      task.audioPath = videoData.filePathList[3];
-      task.coverPath = videoData.filePathList[1]; // 封面路径
-      if (settings.isMerge) {
-        task.mergedPath = videoData.filePathList[0];
-      }
+      await download(
+        taskData,
+        settings,
+        (progress: DownloadProgress) => {
+          this.updateTaskProgress(
+            taskId,
+            progress.progress,
+            progress.totalSize,
+            progress.downloadedSize
+          );
+        },
+        controller.signal
+      );
 
       this.updateTaskStatus(taskId, 'completed', 100);
 
@@ -104,21 +113,45 @@ class DownloadManager {
         task.coverPath
       );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知错误';
-      task.error = errorMessage;
-      this.updateTaskStatus(taskId, 'failed', task.progress);
-      throw error;
+      if (controller.signal.aborted) {
+        this.updateTaskStatus(taskId, 'cancelled', task.progress);
+      } else {
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        task.error = errorMessage;
+        this.updateTaskStatus(taskId, 'failed', task.progress);
+        throw error;
+      }
     } finally {
       this.activeDownloads.delete(taskId);
+      this.controllers.delete(taskId);
     }
   }
 
   // 取消下载
-  cancelTask(taskId: string): void {
+  async cancelTask(taskId: string): Promise<void> {
     const task = this.tasks.get(taskId);
-    if (task && task.status === 'downloading') {
+    const controller = this.controllers.get(taskId);
+
+    if (task && controller && task.status === 'downloading') {
+      controller.abort();
       this.updateTaskStatus(taskId, 'cancelled', task.progress);
       this.activeDownloads.delete(taskId);
+      this.controllers.delete(taskId);
+
+      // 等待一小段时间以确保文件句柄已释放
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      try {
+        const { videoPath, audioPath } = task;
+        if (videoPath && (await fs.stat(videoPath).catch(() => false))) {
+          await fs.unlink(videoPath);
+        }
+        if (audioPath && (await fs.stat(audioPath).catch(() => false))) {
+          await fs.unlink(audioPath);
+        }
+      } catch (e) {
+        console.error(`删除任务 ${taskId} 的文件失败`, e);
+      }
     }
   }
 

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { promises as fs, createWriteStream } from 'fs';
+import * as http from 'http';
+import * as https from 'https';
 import type { TaskData, SettingData } from '../../../types/bilibili';
 import { mergeVideoAudio } from './media';
 import { sleep } from './utils';
@@ -27,62 +29,79 @@ async function handleDeleteFile(setting: SettingData, videoInfo: TaskData) {
 export default async (
   videoInfo: TaskData,
   setting: SettingData,
-  progressCallback: (progress: DownloadProgress) => void
+  progressCallback: (progress: DownloadProgress) => void,
+  signal?: AbortSignal
 ) => {
-  const imageConfig = {
-    headers: {
-      'User-Agent': UA,
-      cookie: `SESSDATA=${setting.SESSDATA}`
-    },
-    responseType: 'stream' as const
-  };
-  const downloadConfig = {
-    headers: {
-      'User-Agent': UA,
-      referer: videoInfo.url
-    },
-    responseType: 'stream' as const
-  };
+  const httpAgent = new http.Agent({ keepAlive: false });
+  const httpsAgent = new https.Agent({ keepAlive: false });
+
+  const downloadHeaders = { 'User-Agent': UA, referer: videoInfo.url };
+
+  // 1. 创建文件夹
   if (setting.isFolder) {
-    // 创建文件夹
     try {
       await fs.mkdir(videoInfo.fileDir, { recursive: true });
     } catch (error) {
-      console.error(`创建文件夹失败：${error}`);
+      // 忽略文件夹已存在的错误
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code !== 'EEXIST'
+      ) {
+        console.error(`创建文件夹失败：${error}`);
+        throw error; // 抛出其他错误
+      }
     }
   }
-  // 下载封面
+
+  // 2. 下载封面 (小文件，无需分块)
   if (setting.isCover) {
+    const imageConfig = {
+      headers: {
+        'User-Agent': UA,
+        cookie: `SESSDATA=${setting.SESSDATA}`
+      },
+      responseType: 'stream' as const,
+      httpAgent,
+      httpsAgent,
+      signal
+    };
     const writer = createWriteStream(videoInfo.filePathList[1]);
     const response = await axios.get(videoInfo.cover, imageConfig);
     response.data.pipe(writer);
     await new Promise<void>((resolve, reject) => {
-      writer.on('finish', () => resolve());
+      writer.on('finish', resolve);
       writer.on('error', reject);
     });
   }
 
-  const videoResponse = await axios.get(videoInfo.downloadUrl.video, {
-    ...downloadConfig,
-    responseType: 'stream'
+  // 3. 获取文件总大小
+  const videoHead = await axios.head(videoInfo.downloadUrl.video, {
+    headers: downloadHeaders,
+    httpAgent,
+    httpsAgent,
+    signal
   });
-  const audioResponse = await axios.get(videoInfo.downloadUrl.audio, {
-    ...downloadConfig,
-    responseType: 'stream'
+  const audioHead = await axios.head(videoInfo.downloadUrl.audio, {
+    headers: downloadHeaders,
+    httpAgent,
+    httpsAgent,
+    signal
   });
-
-  const videoTotalLength = Number(videoResponse.headers['content-length'] || 0);
-  const audioTotalLength = Number(audioResponse.headers['content-length'] || 0);
+  const videoTotalLength = Number(videoHead.headers['content-length'] || 0);
+  const audioTotalLength = Number(audioHead.headers['content-length'] || 0);
   const totalSize = videoTotalLength + audioTotalLength;
 
   let downloadedSize = 0;
   let lastUpdate = 0;
 
-  const progressUpdate = (chunkLength: number, status: number) => {
+  const overallProgressUpdate = (chunkLength: number, status: number) => {
     downloadedSize += chunkLength;
     const now = Date.now();
     if (now - lastUpdate > 1000 || downloadedSize === totalSize) {
-      const progress = Math.round((downloadedSize / totalSize) * 100);
+      const progress =
+        totalSize > 0 ? Math.round((downloadedSize / totalSize) * 100) : 0;
       progressCallback({
         id: videoInfo.id,
         status,
@@ -94,33 +113,61 @@ export default async (
     }
   };
 
-  // 下载视频
-  const videoWriter = createWriteStream(videoInfo.filePathList[2]);
-  videoResponse.data.on('data', (chunk: Buffer) => {
-    progressUpdate(chunk.length, 1);
-  });
-  videoResponse.data.pipe(videoWriter);
-  await new Promise<void>((resolve, reject) => {
-    videoWriter.on('finish', resolve);
-    videoWriter.on('error', reject);
-  });
+  // 4. 定义分块下载函数
+  const downloadInChunks = async (
+    url: string,
+    filePath: string,
+    fileSize: number,
+    status: number
+  ) => {
+    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+    const writer = createWriteStream(filePath);
 
+    for (let start = 0; start < fileSize; start += CHUNK_SIZE) {
+      if (signal?.aborted)
+        throw new DOMException('Download aborted by user', 'AbortError');
+
+      const end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+
+      const response = await axios.get(url, {
+        headers: { ...downloadHeaders, Range: `bytes=${start}-${end}` },
+        responseType: 'stream',
+        httpAgent,
+        httpsAgent,
+        signal
+      });
+
+      const streamPromise = new Promise<void>((resolve, reject) => {
+        response.data.on('data', (chunk: Buffer) => {
+          overallProgressUpdate(chunk.length, status);
+        });
+        response.data.pipe(writer, { end: false });
+        response.data.on('end', resolve);
+        response.data.on('error', reject);
+      });
+
+      await streamPromise;
+    }
+    writer.end();
+  };
+
+  // 5. 执行下载
+  await downloadInChunks(
+    videoInfo.downloadUrl.video,
+    videoInfo.filePathList[2],
+    videoTotalLength,
+    1
+  );
+  await sleep(500);
+  await downloadInChunks(
+    videoInfo.downloadUrl.audio,
+    videoInfo.filePathList[3],
+    audioTotalLength,
+    2
+  );
   await sleep(500);
 
-  // 下载音频
-  const audioWriter = createWriteStream(videoInfo.filePathList[3]);
-  audioResponse.data.on('data', (chunk: Buffer) => {
-    progressUpdate(chunk.length, 2);
-  });
-  audioResponse.data.pipe(audioWriter);
-  await new Promise<void>((resolve, reject) => {
-    audioWriter.on('finish', resolve);
-    audioWriter.on('error', reject);
-  });
-
-  await sleep(500);
-
-  // 合成视频
+  // 6. 合成视频
   if (setting.isMerge) {
     progressCallback({
       id: videoInfo.id,

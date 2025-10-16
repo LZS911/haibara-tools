@@ -107,3 +107,17 @@ function loadConfig(): AppConfig {
 export function getConfig(): AppConfig {
   return loadConfig();
 }
+
+// 从配置文件或环境变量获取下载路径
+export function getDownloadPath(): string {
+  const config = getConfig();
+  // 优先使用用户配置的路径
+  if (config.BILIBILI_DOWNLOAD_PATH) {
+    return config.BILIBILI_DOWNLOAD_PATH;
+  }
+  const userDataPath = getUserDataPath();
+  if (userDataPath) {
+    return path.join(userDataPath, 'bilibili-downloads');
+  }
+  return path.join(process.cwd(), 'tmp', 'bilibili-downloads');
+}

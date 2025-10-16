@@ -59,6 +59,7 @@ const getDownloadList = async (
     // 获取字幕地址
     const subtitle = await getSubtitle(currentCid, currentBvid, settings);
     const taskId = nanoid();
+    const fileDir = handleFileDir(videoInfo.title, currentBvid, settings);
     const videoData: VideoData = {
       ...videoInfo,
       id: taskId,
@@ -73,19 +74,10 @@ const getDownloadList = async (
       filePathList: handleFilePathList(
         selected.length === 1 ? 0 : currentPage,
         currentPageData.title,
-        videoInfo.up[0].name,
-        currentBvid,
-        taskId,
+        fileDir,
         settings
       ),
-      fileDir: handleFileDir(
-        selected.length === 1 ? 0 : currentPage,
-        currentPageData.title,
-        videoInfo.up[0].name,
-        currentBvid,
-        taskId,
-        settings
-      ),
+      fileDir,
       subtitle
     };
     downloadList.push(videoData);
@@ -419,37 +411,32 @@ const getSubtitle = async (
 // 处理filePathList
 const handleFilePathList = (
   page: number,
-  title: string,
-  up: string,
-  bvid: string,
-  id: string,
+  partTitle: string,
+  fileDir: string,
   settings: SettingData
 ): string[] => {
-  const downloadPath = settings.downloadPath;
-  const name = `${!page ? '' : `[P${page}]`}${filterTitle(`${title}-${up}-${bvid}-${id}`)}`;
-  const isFolder = settings.isFolder;
+  const baseName = `${page ? `[P${page}]` : ''}${filterTitle(partTitle)}`;
   return [
-    `${downloadPath}/${isFolder ? `${name}/` : ''}${name}.mp4`,
-    `${downloadPath}/${isFolder ? `${name}/` : ''}${name}.png`,
-    `${downloadPath}/${isFolder ? `${name}/` : ''}${name}-video.mp4`,
-    `${downloadPath}/${isFolder ? `${name}/` : ''}${name}-audio.m4s`,
-    isFolder ? `${downloadPath}/${name}/` : ''
+    `${fileDir}${baseName}.mp4`, // merged
+    `${fileDir}cover.png`, // cover
+    `${fileDir}${baseName}-video.mp4`, // temp video
+    `${fileDir}${baseName}-audio.m4s`, // temp audio
+    fileDir // directory path
   ];
 };
 
 // 处理fileDir
 const handleFileDir = (
-  page: number,
-  title: string,
-  up: string,
+  mainTitle: string,
   bvid: string,
-  id: string,
   settings: SettingData
 ): string => {
   const downloadPath = settings.downloadPath;
-  const name = `${!page ? '' : `[P${page}]`}${filterTitle(`${title}-${up}-${bvid}-${id}`)}`;
-  const isFolder = settings.isFolder;
-  return `${downloadPath}${isFolder ? `/${name}/` : ''}`;
+  const folderName = filterTitle(`${mainTitle} - ${bvid}`);
+  if (settings.isFolder) {
+    return `${downloadPath}/${folderName}/`;
+  }
+  return `${downloadPath}/`;
 };
 
 // 处理bv多p逻辑

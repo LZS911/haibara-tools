@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import { getUserDataPath } from '../lib/config';
+import { getUserDataPath, getDownloadPath } from '../lib/config';
 
 // 获取历史记录文件路径
 function getHistoryFilePath(): string {
@@ -124,18 +124,37 @@ export function deleteHistoryRecord(recordId: string): boolean {
 
     const record = history[index];
 
-    // 删除关联的文件
-    if (record.videoPath && fs.existsSync(record.videoPath)) {
-      fs.unlinkSync(record.videoPath);
-    }
-    if (record.audioPath && fs.existsSync(record.audioPath)) {
-      fs.unlinkSync(record.audioPath);
-    }
-    if (record.mergedPath && fs.existsSync(record.mergedPath)) {
-      fs.unlinkSync(record.mergedPath);
-    }
-    if (record.coverPath && fs.existsSync(record.coverPath)) {
-      fs.unlinkSync(record.coverPath);
+    // 获取视频所在目录
+    const fileDir = record.mergedPath
+      ? path.dirname(record.mergedPath)
+      : record.videoPath
+        ? path.dirname(record.videoPath)
+        : null;
+
+    if (fileDir && fs.existsSync(fileDir)) {
+      const downloadPath = getDownloadPath();
+      // 安全检查，确保要删除的目录在下载目录内
+      if (path.resolve(fileDir).startsWith(path.resolve(downloadPath))) {
+        fs.rmSync(fileDir, { recursive: true, force: true });
+      } else {
+        console.warn(
+          `拒绝删除目录 ${fileDir}，因为它不在下载目录 ${downloadPath} 中。`
+        );
+      }
+    } else {
+      // 降级处理：如果无法确定目录，则只删除单个文件
+      if (record.videoPath && fs.existsSync(record.videoPath)) {
+        fs.unlinkSync(record.videoPath);
+      }
+      if (record.audioPath && fs.existsSync(record.audioPath)) {
+        fs.unlinkSync(record.audioPath);
+      }
+      if (record.mergedPath && fs.existsSync(record.mergedPath)) {
+        fs.unlinkSync(record.mergedPath);
+      }
+      if (record.coverPath && fs.existsSync(record.coverPath)) {
+        fs.unlinkSync(record.coverPath);
+      }
     }
 
     history.splice(index, 1);

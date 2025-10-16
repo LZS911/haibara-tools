@@ -38,7 +38,9 @@ export const Route = createFileRoute('/bilibili-downloader/')({
 
 function BilibiliDownloader() {
   const { t } = useTranslation();
-  const [bvInput, setBvInput] = useState('');
+  const [bvInput, setBvInput] = useState(
+    'https://www.bilibili.com/video/BV1aJ411G7NV/?spm_id_from=333.788.videopod.episodes&vd_source=b417353ae21f344e37538da4502544fb&p=83'
+  );
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [loginStatus, setLoginStatus] = useState(LoginStatus.visitor);
   const [selectedQuality, setSelectedQuality] = useState(80);
@@ -153,7 +155,10 @@ function BilibiliDownloader() {
 
       if (result.success && result.taskIds) {
         toast.success(
-          t('download_started_multiple', `已创建 ${result.taskIds.length} 个下载任务`)
+          t(
+            'download_started_multiple',
+            `已创建 ${result.taskIds.length} 个下载任务`
+          )
         );
         // 激活第一个任务的进度订阅
         setActiveTaskId(result.taskIds[0]);
@@ -288,7 +293,9 @@ function BilibiliDownloader() {
               />
               <Button
                 onClick={handleDownload}
-                disabled={downloadVideoMutation.isPending || selectedPages.length === 0}
+                disabled={
+                  downloadVideoMutation.isPending || selectedPages.length === 0
+                }
                 className="w-full"
               >
                 {downloadVideoMutation.isPending ? (

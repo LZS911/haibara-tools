@@ -10,10 +10,13 @@ import {
   getDownloadList,
   checkLogin
 } from './core/bilibili';
-import type { SettingData, VideoData } from '../../types/bilibili';
+import {
+  LoginStatus,
+  type SettingData,
+  type VideoData
+} from '@/types/bilibili';
 import { downloadManager } from './download-manager';
-import path from 'path';
-import { getConfig, getUserDataPath } from '../lib/config';
+import { getConfig, getDownloadPath } from '../lib/config';
 import {
   getDownloadHistory,
   deleteHistoryRecord,
@@ -22,20 +25,6 @@ import {
 import { UA } from './core/data/ua';
 
 const t = initTRPC.context<TRPCContext>().create();
-
-// 从配置文件或环境变量获取下载路径
-function getDownloadPath(): string {
-  const config = getConfig();
-  // 优先使用用户配置的路径
-  if (config.BILIBILI_DOWNLOAD_PATH) {
-    return config.BILIBILI_DOWNLOAD_PATH;
-  }
-  const userDataPath = getUserDataPath();
-  if (userDataPath) {
-    return path.join(userDataPath, 'bilibili-downloads');
-  }
-  return path.join(process.cwd(), 'tmp', 'bilibili-downloads');
-}
 
 // 从配置或环境变量构建设置
 function buildSettings(
@@ -53,7 +42,7 @@ function buildSettings(
     isDanmaku: config.BILIBILI_IS_DANMAKU ?? false,
     isFolder: config.BILIBILI_IS_FOLDER ?? true,
     isCover: config.BILIBILI_IS_COVER ?? true,
-    downloadingMaxSize: config.BILIBILI_DOWNLOADING_MAX_SIZE || 1
+    downloadingMaxSize: config.BILIBILI_DOWNLOADING_MAX_SIZE || 3
   };
 }
 
@@ -197,7 +186,13 @@ export const bilibiliRouter = t.router({
         const unsubscribe = downloadManager.subscribe(
           taskId,
           (id, progress, status, totalSize, downloadedSize) => {
-            emit.next({ taskId: id, progress, status, totalSize, downloadedSize });
+            emit.next({
+              taskId: id,
+              progress,
+              status,
+              totalSize,
+              downloadedSize
+            });
 
             // 任务完成或失败时结束订阅
             if (
@@ -238,8 +233,8 @@ export const bilibiliRouter = t.router({
   // 取消下载
   cancelDownload: t.procedure
     .input(z.object({ taskId: z.string() }))
-    .mutation(({ input }) => {
-      downloadManager.cancelTask(input.taskId);
+    .mutation(async ({ input }) => {
+      await downloadManager.cancelTask(input.taskId);
       return { success: true };
     }),
 
@@ -262,9 +257,9 @@ export const bilibiliRouter = t.router({
       return {
         loginStatus,
         statusText:
-          loginStatus === 2
+          loginStatus === LoginStatus.vip
             ? '大会员'
-            : loginStatus === 1
+            : loginStatus === LoginStatus.user
               ? '普通用户'
               : '未登录'
       };
