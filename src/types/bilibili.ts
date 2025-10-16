@@ -29,6 +29,13 @@ export enum LoginStatus {
   vip
 }
 
+export enum QualityEnum {
+  low = 16,
+  medium = 32,
+  high = 64,
+  ultra = 80
+}
+
 export interface UP {
   name: string;
   mid: number;

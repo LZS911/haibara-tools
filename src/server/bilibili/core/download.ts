@@ -1,13 +1,48 @@
-import axios from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 import { promises as fs, createWriteStream } from 'fs';
 import * as http from 'http';
 import * as https from 'https';
-import type { TaskData, SettingData } from '../../../types/bilibili';
+import type { TaskData, SettingData } from '@/types/bilibili';
 import { mergeVideoAudio } from './media';
 import { sleep } from './utils';
+import { UA } from './data/ua';
 
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36';
+/**
+ * Safely gets headers for a URL, falling back to a GET request if HEAD fails.
+ * This handles cases where a server/CDN does not support HEAD requests for a resource.
+ * @param url The URL to get headers from.
+ * @param options Axios request configuration.
+ * @returns A promise that resolves with the Axios response headers.
+ */
+async function getHeadersWithFallback(
+  url: string,
+  options: AxiosRequestConfig
+) {
+  try {
+    // 优先尝试高效的 HEAD 请求
+    const headResponse = await axios.head(url, options);
+    return headResponse.headers;
+  } catch (error) {
+    // 如果 HEAD 请求失败，打印警告并降级到 GET 请求
+    console.warn(
+      `axios.head failed for URL: ${url}. Falling back to axios.get. Error: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+
+    const getOptions: AxiosRequestConfig = {
+      ...options,
+      responseType: 'stream' // 必须是流式响应
+    };
+
+    const getResponse = await axios.get(url, getOptions);
+
+    // 关键：拿到 header 后立即销毁流，防止下载文件实体
+    getResponse.data.destroy();
+
+    return getResponse.headers;
+  }
+}
 
 export interface DownloadProgress {
   id: string;
@@ -77,20 +112,26 @@ export default async (
   }
 
   // 3. 获取文件总大小
-  const videoHead = await axios.head(videoInfo.downloadUrl.video, {
+  const requestOptions = {
     headers: downloadHeaders,
     httpAgent,
     httpsAgent,
     signal
-  });
-  const audioHead = await axios.head(videoInfo.downloadUrl.audio, {
-    headers: downloadHeaders,
-    httpAgent,
-    httpsAgent,
-    signal
-  });
-  const videoTotalLength = Number(videoHead.headers['content-length'] || 0);
-  const audioTotalLength = Number(audioHead.headers['content-length'] || 0);
+  };
+
+  // 获取 Audio 信息
+  const audioHeaders = await getHeadersWithFallback(
+    videoInfo.downloadUrl.audio,
+    requestOptions
+  );
+  const audioTotalLength = Number(audioHeaders['content-length'] || 0);
+
+  // 获取 Video 信息
+  const videoHeaders = await getHeadersWithFallback(
+    videoInfo.downloadUrl.video,
+    requestOptions
+  );
+  const videoTotalLength = Number(videoHeaders['content-length'] || 0);
   const totalSize = videoTotalLength + audioTotalLength;
 
   let downloadedSize = 0;

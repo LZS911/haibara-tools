@@ -9,7 +9,7 @@ import {
 } from '@/routes/-components/ui/select';
 interface QualitySelectorProps {
   options: Array<{ label: string; value: number }>;
-  value: number;
+  value?: number;
   onChange: (value: number) => void;
   loginStatus: LoginStatus;
 }
@@ -28,20 +28,13 @@ export function QualitySelector({
 }: QualitySelectorProps) {
   const { t } = useTranslation();
 
-  // 根据登录状态过滤可用清晰度
-  const availableOptions = options.filter((option) => {
-    if (loginStatus === LoginStatus.vip) return true; // 大会员可以选择所有清晰度
-    if (loginStatus === LoginStatus.user) return option.value <= 80; // 普通用户最高1080P
-    return option.value <= 64; // 未登录最高720P
-  });
-
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-slate-700">
         {t('quality_selector_label', '选择清晰度')}
       </label>
       <Select
-        value={value.toString()}
+        value={value?.toString() || ''}
         onValueChange={(e) => onChange(Number(e))}
       >
         <SelectTrigger className="w-full">
@@ -50,7 +43,7 @@ export function QualitySelector({
           />
         </SelectTrigger>
         <SelectContent>
-          {availableOptions.map((option) => (
+          {options.map((option) => (
             <SelectItem key={option.value} value={option.value.toString()}>
               {option.label}
             </SelectItem>

@@ -53,7 +53,7 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
           <div className="flex-1">
             <h4 className="text-sm font-medium text-slate-900">{task.title}</h4>
             <div className="mt-1 flex items-center gap-4 text-xs text-slate-500">
-              <span>BV{task.bvId}</span>
+              <span>{task.bvId}</span>
               <span className={getStatusText() ? getStatusColor() : ''}>
                 {getStatusText()}
               </span>

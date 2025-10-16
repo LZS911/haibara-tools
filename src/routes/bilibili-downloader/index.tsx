@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -29,7 +29,7 @@ import { toast } from 'sonner';
 import { Download } from 'lucide-react';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { LoginStatus } from '@/types/bilibili';
+import { LoginStatus, QualityEnum } from '@/types/bilibili';
 
 export const Route = createFileRoute('/bilibili-downloader/')({
   component: BilibiliDownloader,
@@ -38,10 +38,12 @@ export const Route = createFileRoute('/bilibili-downloader/')({
 
 function BilibiliDownloader() {
   const { t } = useTranslation();
-  const [bvInput, setBvInput] = useState('BVBV1EfxkzPEPx');
+  const [bvInput, setBvInput] = useState('BV11T4EzyEdF');
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [loginStatus, setLoginStatus] = useState(LoginStatus.visitor);
-  const [selectedQuality, setSelectedQuality] = useState(80);
+  const [selectedQuality, setSelectedQuality] = useState<number | undefined>(
+    undefined
+  );
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [isMerge, setIsMerge] = useState(true);
   const [isDelete, setIsDelete] = useState(true);
@@ -106,6 +108,30 @@ function BilibiliDownloader() {
     }
   }, [subscribeProgress.data]);
 
+  const availableQualityOptions = useMemo(() => {
+    const getQualityOptionsWithLoginStatus = (
+      videoInfo: VideoInfo,
+      loginStatus: LoginStatus
+    ) => {
+      if (loginStatus === LoginStatus.vip) {
+        return videoInfo.qualityOptions;
+      }
+      if (loginStatus === LoginStatus.user) {
+        return videoInfo.qualityOptions.filter(
+          (option) => option.value <= QualityEnum.ultra
+        );
+      }
+
+      return videoInfo.qualityOptions.filter(
+        (option) => option.value <= QualityEnum.medium
+      ); // 未登录最高480P
+    };
+    if (videoInfo) {
+      return getQualityOptionsWithLoginStatus(videoInfo, loginStatus);
+    }
+    return [];
+  }, [videoInfo, loginStatus]);
+
   const handleGetVideoInfo = async () => {
     if (!bvInput.trim()) {
       toast.error(t('please_input_bv_id', '请输入 BV 号或视频链接'));
@@ -124,10 +150,6 @@ function BilibiliDownloader() {
         if (result.videoInfo.page.length > 0) {
           setSelectedPages(result.videoInfo.page.map((p) => p.page));
         }
-        // 设置默认清晰度为第一个可用选项
-        if (result.videoInfo.qualityOptions.length > 0) {
-          setSelectedQuality(result.videoInfo.qualityOptions[0].value);
-        }
       }
     } catch (error) {
       toast.error(
@@ -140,6 +162,11 @@ function BilibiliDownloader() {
 
   const handleDownload = async () => {
     if (!videoInfo || selectedPages.length === 0) return;
+
+    if (!selectedQuality) {
+      toast.error(t('please_select_quality', '请选择清晰度'));
+      return;
+    }
 
     try {
       const result = await downloadVideoMutation.mutateAsync({
@@ -203,6 +230,12 @@ function BilibiliDownloader() {
       );
     }
   };
+
+  useEffect(() => {
+    if (availableQualityOptions.length > 0) {
+      setSelectedQuality(availableQualityOptions[0].value);
+    }
+  }, [availableQualityOptions]);
 
   return (
     <div className="space-y-6">
@@ -278,7 +311,7 @@ function BilibiliDownloader() {
                 />
               )}
               <QualitySelector
-                options={videoInfo.qualityOptions}
+                options={availableQualityOptions}
                 value={selectedQuality}
                 onChange={setSelectedQuality}
                 loginStatus={loginStatus}

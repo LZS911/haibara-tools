@@ -68,13 +68,13 @@ export const bilibiliRouter = t.router({
 
         const { body: html, url } = await checkUrlRedirect(videoUrl, settings);
         const videoInfo = await parseHtml(html, urlType, url, settings);
-        console.log(videoInfo);
         if (videoInfo === -1 || !('page' in videoInfo)) {
           throw new Error('Failed to parse video information');
         }
 
         // 检查登录状态
         const loginStatus = await checkLogin(settings.SESSDATA);
+        console.log('loginStatus', loginStatus);
         return {
           success: true,
           videoInfo: videoInfo as VideoData,
@@ -101,7 +101,6 @@ export const bilibiliRouter = t.router({
     )
     .mutation(async ({ input }) => {
       const { bvId, videoUrl, quality, pages, isMerge, isDelete } = input;
-
       const settings = buildSettings(isMerge, isDelete);
 
       try {

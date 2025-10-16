@@ -1,4 +1,4 @@
-const qualityMap = {
+const qualityMap: Record<number, string> = {
   127: '8K超高清',
   126: '杜比视界',
   125: 'HDR真彩',

@@ -1,8 +1,9 @@
 import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
 import type { DownloadHistoryItem as HistoryItem } from '../-types';
-import { Trash2, Calendar, Video } from 'lucide-react';
-import { CONSTANT } from '../../../data/constant';
+import { Trash2, Calendar, Video, Folder } from 'lucide-react';
+import { CONSTANT } from '@/data/constant';
+import { qualityMap } from '@/data/quality';
 
 interface DownloadHistoryItemProps {
   item: HistoryItem;
@@ -21,18 +22,6 @@ export function DownloadHistoryItem({
 
   // 获取清晰度文本
   const getQualityText = (quality: number) => {
-    const qualityMap: Record<number, string> = {
-      127: '8K 超高清',
-      126: '杜比视界',
-      125: 'HDR 真彩',
-      120: '4K 超清',
-      116: '1080P 60帧',
-      112: '1080P 高码率',
-      80: '1080P 高清',
-      64: '720P 高清',
-      32: '480P 清晰',
-      16: '360P 流畅'
-    };
     return qualityMap[quality] || `${quality}P`;
   };
 
@@ -47,6 +36,14 @@ export function DownloadHistoryItem({
     }
     // Web 环境可能需要通过服务器提供静态文件
     return item.coverPath;
+  };
+
+  const handleOpenFolder = () => {
+    const path = item.mergedPath || item.videoPath;
+    if (path && CONSTANT.IS_ELECTRON && window.electronAPI) {
+      const folderPath = path.substring(0, path.lastIndexOf('/'));
+      window.electronAPI.openPath(folderPath);
+    }
   };
 
   const coverUrl = getCoverUrl();
@@ -82,7 +79,7 @@ export function DownloadHistoryItem({
               {item.title}
             </h4>
             <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
-              <span>BV{item.bvId}</span>
+              <span>{item.bvId}</span>
               <span>{getQualityText(item.quality)}</span>
             </div>
           </div>
@@ -91,14 +88,26 @@ export function DownloadHistoryItem({
               <Calendar className="h-3 w-3" />
               <span>{formatDate(item.downloadedAt)}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(item.id)}
-              className="h-8 px-2"
-            >
-              <Trash2 className="h-4 w-4 text-slate-500" />
-            </Button>
+            <div className="flex items-center">
+              {CONSTANT.IS_ELECTRON && (item.mergedPath || item.videoPath) ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleOpenFolder}
+                  className="h-8 px-2"
+                >
+                  <Folder className="h-4 w-4 text-slate-500" />
+                </Button>
+              ) : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(item.id)}
+                className="h-8 px-2"
+              >
+                <Trash2 className="h-4 w-4 text-slate-500" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

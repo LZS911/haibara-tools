@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { customAlphabet } from 'nanoid';
 import { formatSeconed, filterTitle, sleep } from './utils';
-import { qualityMap } from './data/quality';
 import alphabet from './data/alphabet';
 import {
   type VideoData,
@@ -12,6 +11,7 @@ import {
   LoginStatus
 } from '../../../types/bilibili';
 import { UA } from './data/ua';
+import { qualityMap } from '@/data/quality';
 
 // 自定义uuid
 const nanoid = customAlphabet(alphabet, 16);

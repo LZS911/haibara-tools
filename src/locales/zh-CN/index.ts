@@ -302,7 +302,7 @@ export default {
   // Bilibili 下载器
   bilibili_downloader_title: 'Bilibili 视频下载',
   bilibili_downloader_desc: '下载 Bilibili 视频到本地',
-  bilibili_input_placeholder: '例如：BV1xx411c7mD 或视频链接',
+  bilibili_input_placeholder: '例如：BV11T4EzyEdF 或视频链接',
   input_bv_id: '输入视频信息',
   input_bv_id_desc_tips: '输入 BV 号或完整的视频链接',
   get_video_info: '获取信息',
