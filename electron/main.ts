@@ -113,14 +113,11 @@ async function createWindow() {
   console.log('[Electron] Creating main window...');
 
   const preloadPath = path.join(__dirname, 'preload.cjs');
-  const iconPath = path.join(__dirname, '..', '..', 'build', 'icon.png');
 
   console.log('[Electron] Preload path:', preloadPath);
   console.log('[Electron] Preload exists:', fs.existsSync(preloadPath));
-  console.log('[Electron] Icon path:', iconPath);
-  console.log('[Electron] Icon exists:', fs.existsSync(iconPath));
 
-  mainWindow = new BrowserWindow({
+  const browserWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1400,
     height: 900,
     webPreferences: {
@@ -131,9 +128,29 @@ async function createWindow() {
     },
     title: 'Haibara Tools',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    frame: process.platform === 'darwin' ? false : true
+    frame: process.platform === 'darwin' ? false : true,
+    icon: path.join(__dirname, '..', '..', 'build', 'icon.icns')
     // frame: process.platform !== 'win32',
-  });
+  };
+
+  // Set icon only for Windows and Linux, not for macOS
+  // if (process.platform !== 'darwin') {
+  //   const iconPath = path.join(
+  //     __dirname,
+  //     '..',
+  //     '..',
+  //     'build',
+  //     process.platform === 'win32' ? 'icon.ico' : 'icon.png'
+  //   );
+  //   if (fs.existsSync(iconPath)) {
+  //     browserWindowOptions.icon = iconPath;
+  //     console.log('[Electron] Setting window icon for Win/Linux:', iconPath);
+  //   } else {
+  //     console.warn('[Electron] ⚠️ Window icon not found at:', iconPath);
+  //   }
+  // }
+
+  mainWindow = new BrowserWindow(browserWindowOptions);
 
   console.log('[Electron] Window created successfully');
 
@@ -469,22 +486,22 @@ app.whenReady().then(async () => {
     console.log('[Electron] ✅ Window created successfully');
 
     // 在 macOS 上设置 Dock 图标，确保在各种情况下（包括台前调度）都能正确显示
-    if (process.platform === 'darwin') {
-      const iconPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'build', 'icon.png') // 生产环境
-        : path.join(process.cwd(), 'build/icon.png'); // 开发环境
+    // if (process.platform === 'darwin') {
+    //   const iconPath = app.isPackaged
+    //     ? path.join(process.resourcesPath, 'build', 'icon.icns') // 生产环境
+    //     : path.join(process.cwd(), 'build', 'icon.icns'); // 开发环境
 
-      console.log(
-        `[Electron] Setting Dock icon for ${app.isPackaged ? 'production' : 'development'}...`
-      );
-      console.log('[Electron] Icon path:', iconPath);
+    //   console.log(
+    //     `[Electron] Setting Dock icon for ${app.isPackaged ? 'production' : 'development'}...`
+    //   );
+    //   console.log('[Electron] Icon path:', iconPath);
 
-      if (fs.existsSync(iconPath)) {
-        app.dock?.setIcon(iconPath);
-      } else {
-        console.warn('[Electron] ⚠️ Dock icon not found at:', iconPath);
-      }
-    }
+    //   if (fs.existsSync(iconPath)) {
+    //     app.dock?.setIcon(iconPath);
+    //   } else {
+    //     console.warn('[Electron] ⚠️ Dock icon not found at:', iconPath);
+    //   }
+    // }
 
     // 设置 IPC 通信
     console.log('[Electron] Setting up IPC handlers...');
