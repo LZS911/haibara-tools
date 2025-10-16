@@ -14,10 +14,7 @@
     "dist/server/**/*",
     "dist/electron/**/*",
     "build/**/*",
-    "package.json",
-    "!**/node_modules/pdf-parse/lib/pdf.js/**/cmaps/",
-    "!**/node_modules/pdf-parse/lib/pdf.js/**/web/locale/",
-    "!**/node_modules/@puppeteer/browsers/**"
+    "package.json"
   ],
   "asarUnpack": [
     "**/*.node",

@@ -38,9 +38,7 @@ export const Route = createFileRoute('/bilibili-downloader/')({
 
 function BilibiliDownloader() {
   const { t } = useTranslation();
-  const [bvInput, setBvInput] = useState(
-    'https://www.bilibili.com/video/BV1aJ411G7NV/?spm_id_from=333.788.videopod.episodes&vd_source=b417353ae21f344e37538da4502544fb&p=83'
-  );
+  const [bvInput, setBvInput] = useState('BVBV1EfxkzPEPx');
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [loginStatus, setLoginStatus] = useState(LoginStatus.visitor);
   const [selectedQuality, setSelectedQuality] = useState(80);

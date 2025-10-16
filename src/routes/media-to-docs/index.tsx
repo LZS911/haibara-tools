@@ -8,7 +8,6 @@ import {
 } from '@/routes/-components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
-import { StepIcon } from '@/routes/convert/-components';
 import { BvInput } from './-components/BvInput';
 import { OptionsSelector } from './-components/OptionsSelector';
 import { ProcessingSteps } from './-components/ProcessingSteps';
@@ -24,6 +23,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { TimelineView } from './-components/TimelineView';
 import { parseTimelineContent } from './-lib/utils';
 import { useAppStore } from '@/store/app';
+import { StepIcon } from './-components/Icons/StepIcon';
 
 export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert,

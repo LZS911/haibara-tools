@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
-import { Route as ConvertIndexRouteImport } from './routes/convert/index'
 import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
 
@@ -31,11 +30,6 @@ const MediaToDocsIndexRoute = MediaToDocsIndexRouteImport.update({
   path: '/media-to-docs/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConvertIndexRoute = ConvertIndexRouteImport.update({
-  id: '/convert/',
-  path: '/convert/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const BilibiliDownloaderIndexRoute = BilibiliDownloaderIndexRouteImport.update({
   id: '/bilibili-downloader/',
   path: '/bilibili-downloader/',
@@ -51,7 +45,6 @@ const MediaToDocsConvertHistoryIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
-  '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
@@ -59,7 +52,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
-  '/convert': typeof ConvertIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
@@ -68,7 +60,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bilibili-downloader/': typeof BilibiliDownloaderIndexRoute
-  '/convert/': typeof ConvertIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
@@ -78,7 +69,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bilibili-downloader'
-    | '/convert'
     | '/media-to-docs'
     | '/settings'
     | '/media-to-docs/convert-history'
@@ -86,7 +76,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bilibili-downloader'
-    | '/convert'
     | '/media-to-docs'
     | '/settings'
     | '/media-to-docs/convert-history'
@@ -94,7 +83,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bilibili-downloader/'
-    | '/convert/'
     | '/media-to-docs/'
     | '/settings/'
     | '/media-to-docs/convert-history/'
@@ -103,7 +91,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BilibiliDownloaderIndexRoute: typeof BilibiliDownloaderIndexRoute
-  ConvertIndexRoute: typeof ConvertIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
@@ -132,13 +119,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MediaToDocsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/convert/': {
-      id: '/convert/'
-      path: '/convert'
-      fullPath: '/convert'
-      preLoaderRoute: typeof ConvertIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/bilibili-downloader/': {
       id: '/bilibili-downloader/'
       path: '/bilibili-downloader'
@@ -159,7 +139,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BilibiliDownloaderIndexRoute: BilibiliDownloaderIndexRoute,
-  ConvertIndexRoute: ConvertIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,

@@ -2,6 +2,7 @@ import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
 import type { DownloadHistoryItem as HistoryItem } from '../-types';
 import { Trash2, Calendar, Video } from 'lucide-react';
+import { CONSTANT } from '../../../data/constant';
 
 interface DownloadHistoryItemProps {
   item: HistoryItem;
@@ -41,7 +42,7 @@ export function DownloadHistoryItem({
       return undefined;
     }
     // 如果是 Electron 环境，使用 file:// 协议
-    if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+    if (CONSTANT.IS_ELECTRON) {
       return `local-resource://${item.coverPath}`;
     }
     // Web 环境可能需要通过服务器提供静态文件

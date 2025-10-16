@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Download, RefreshCw, CheckCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CONSTANT } from '../../data/constant';
 
 interface UpdateState {
   available: boolean;
@@ -22,11 +23,8 @@ export function UpdateNotification() {
   });
   const [isVisible, setIsVisible] = useState(false);
 
-  const isElectron =
-    typeof window !== 'undefined' && window.electronAPI?.isElectron;
-
   useEffect(() => {
-    if (!isElectron || !window.electronAPI) return;
+    if (!CONSTANT.IS_ELECTRON || !window.electronAPI) return;
 
     // 监听更新可用
     const cleanupAvailable = window.electronAPI.onUpdateAvailable((info) => {
@@ -74,7 +72,7 @@ export function UpdateNotification() {
       cleanupDownloaded();
       cleanupError();
     };
-  }, [isElectron]);
+  }, []);
 
   const handleDownload = async () => {
     if (!window.electronAPI) return;
@@ -101,7 +99,7 @@ export function UpdateNotification() {
     setIsVisible(false);
   };
 
-  if (!isElectron || !isVisible) {
+  if (!CONSTANT.IS_ELECTRON || !isVisible) {
     return null;
   }
 

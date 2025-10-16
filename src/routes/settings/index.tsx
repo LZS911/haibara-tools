@@ -10,23 +10,18 @@ import {
   TabsList,
   TabsTrigger
 } from '@/routes/-components/ui/tabs';
+import { trpc } from '@/router';
 import type { AppConfig } from '@/electron';
 import { Save, RefreshCw, Info, ChevronRight, FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { CONSTANT } from '../../data/constant';
+import { cn } from '../-lib/utils';
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
   staticData: { keepAlive: true }
 });
-
-interface LLMProvider {
-  id: string;
-  name: string;
-  description: string;
-  apiKeyField: keyof AppConfig;
-  modelNameField: keyof AppConfig;
-  defaultModel?: string;
-}
 
 function Settings() {
   const { t } = useTranslation();
@@ -42,71 +37,10 @@ function Settings() {
   } | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
 
-  const LLM_PROVIDERS: LLMProvider[] = [
-    {
-      id: 'openai',
-      name: 'OpenAI',
-      description: t('settings_openai_desc', 'GPT-4, GPT-3.5 等模型'),
-      apiKeyField: 'OPENAI_API_KEY',
-      modelNameField: 'OPENAI_MODEL_NAME',
-      defaultModel: 'gpt-4o'
-    },
-    {
-      id: 'deepseek',
-      name: 'DeepSeek',
-      description: t('settings_deepseek_desc', '中文优化，性价比高'),
-      apiKeyField: 'DEEPSEEK_API_KEY',
-      modelNameField: 'DEEPSEEK_MODEL_NAME',
-      defaultModel: 'deepseek-chat'
-    },
-    {
-      id: 'gemini',
-      name: 'Google Gemini',
-      description: t('settings_gemini_desc', '有免费额度，适合开发测试'),
-      apiKeyField: 'GEMINI_API_KEY',
-      modelNameField: 'GEMINI_MODEL_NAME',
-      defaultModel: 'gemini-2.0-flash-exp'
-    },
-    {
-      id: 'claude',
-      name: 'Anthropic Claude',
-      description: t('settings_claude_desc', '长上下文，高质量输出'),
-      apiKeyField: 'ANTHROPIC_API_KEY',
-      modelNameField: 'ANTHROPIC_MODEL_NAME',
-      defaultModel: 'claude-3-5-sonnet-20241022'
-    },
-    {
-      id: 'openrouter',
-      name: 'OpenRouter',
-      description: t('settings_openrouter_desc', '统一访问多个模型'),
-      apiKeyField: 'OPENROUTER_API_KEY',
-      modelNameField: 'OPENROUTER_MODEL_NAME',
-      defaultModel: 'anthropic/claude-3.5-sonnet'
-    },
-    {
-      id: 'groq',
-      name: 'Groq',
-      description: t('settings_groq_desc', '超快推理速度'),
-      apiKeyField: 'GROQ_API_KEY',
-      modelNameField: 'GROQ_MODEL_NAME',
-      defaultModel: 'llama-3.3-70b-versatile'
-    },
-    {
-      id: 'cohere',
-      name: 'Cohere',
-      description: t('settings_cohere_desc', '企业级 AI'),
-      apiKeyField: 'COHERE_API_KEY',
-      modelNameField: 'COHERE_MODEL_NAME',
-      defaultModel: 'command-r-plus-08-2024'
-    }
-  ];
-
-  // 检查是否在 Electron 环境
-  const isElectron =
-    typeof window !== 'undefined' && window.electronAPI?.isElectron;
+  const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
 
   useEffect(() => {
-    if (!isElectron) {
+    if (!CONSTANT.IS_ELECTRON) {
       navigate({ to: '/' });
       return;
     }
@@ -114,7 +48,7 @@ function Settings() {
     loadConfig();
     loadAppInfo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isElectron, navigate]);
+  }, [navigate]);
 
   const loadConfig = async () => {
     if (!window.electronAPI) return;
@@ -196,16 +130,11 @@ function Settings() {
     }
   };
 
-  // 检查提供商是否已配置
-  const isProviderConfigured = (provider: LLMProvider) => {
-    return !!(config[provider.apiKeyField] || config[provider.modelNameField]);
-  };
-
-  if (!isElectron) {
+  if (!CONSTANT.IS_ELECTRON) {
     return null;
   }
 
-  if (loading) {
+  if (loading || llmProvidersQuery.isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <RefreshCw className="h-8 w-8 animate-spin text-slate-600" />
@@ -262,8 +191,19 @@ function Settings() {
               {t('settings_config_location', '配置文件位置')}
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <p className="break-all text-slate-600 flex-1">{userDataPath}</p>
-              {isElectron && userDataPath && (
+              <p
+                onClick={async () => {
+                  if (window.electronAPI) {
+                    await window.electronAPI.openPath(userDataPath);
+                  }
+                }}
+                className={cn('break-all text-slate-600 flex-1', {
+                  'text-blue-500 cursor-pointer': CONSTANT.IS_ELECTRON
+                })}
+              >
+                {userDataPath}
+              </p>
+              {CONSTANT.IS_ELECTRON && userDataPath && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -303,7 +243,7 @@ function Settings() {
           {!selectedProvider ? (
             /* 提供商选择列表 */
             <div className="space-y-2">
-              {LLM_PROVIDERS.map((provider) => (
+              {llmProvidersQuery.data?.map((provider) => (
                 <Card
                   key={provider.id}
                   className="cursor-pointer border-slate-200 bg-white transition-all hover:border-slate-300 hover:shadow-sm"
@@ -315,7 +255,7 @@ function Settings() {
                         <h3 className="font-medium text-slate-900">
                           {provider.name}
                         </h3>
-                        {isProviderConfigured(provider) && (
+                        {provider.isConfigured && (
                           <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                             {t('settings_provider_configured', '已配置')}
                           </span>
@@ -343,7 +283,7 @@ function Settings() {
 
               <Card className="border-slate-200 bg-white p-6">
                 {(() => {
-                  const provider = LLM_PROVIDERS.find(
+                  const provider = llmProvidersQuery.data?.find(
                     (p) => p.id === selectedProvider
                   );
                   if (!provider) return null;

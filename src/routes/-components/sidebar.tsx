@@ -1,6 +1,5 @@
 import { Link, useRouterState, type LinkProps } from '@tanstack/react-router';
 import {
-  RefreshCw,
   Video,
   Settings,
   Database,
@@ -14,6 +13,7 @@ import { useAppStore } from '../../store/app';
 import { cn } from '../-lib/utils';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { CONSTANT } from '../../data/constant';
 
 interface NavItem {
   path: LinkProps['to'];
@@ -32,21 +32,19 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const { t } = useTranslation();
   const router = useRouterState();
   const currentPath = router.location.pathname;
-  const isElectron =
-    typeof window !== 'undefined' && window.electronAPI?.isElectron;
 
   const { isTaskRunning } = useAppStore();
   const [appVersion, setAppVersion] = useState('');
   const [isCheckingForUpdate, setIsCheckingForUpdate] = useState(false);
 
   useEffect(() => {
-    if (isElectron && window.electronAPI) {
+    if (CONSTANT.IS_ELECTRON && window.electronAPI) {
       window.electronAPI.getAppVersion().then(setAppVersion);
     }
-  }, [isElectron]);
+  }, []);
 
   const handleCheckForUpdate = async () => {
-    if (isElectron && window.electronAPI) {
+    if (CONSTANT.IS_ELECTRON && window.electronAPI) {
       setIsCheckingForUpdate(true);
       try {
         const result = await window.electronAPI.checkForUpdates();
@@ -80,12 +78,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
   const navItems: NavItem[] = [
     {
-      path: '/convert',
-      label: t('nav_convert', '文件转换'),
-      icon: RefreshCw,
-      category: 'tools'
-    },
-    {
       path: '/media-to-docs',
       label: t('nav_media_to_docs', 'AI 转文档'),
       icon: Video,
@@ -113,7 +105,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   ];
 
   const filteredNavItems = navItems.filter(
-    (item) => !item.electronOnly || isElectron
+    (item) => !item.electronOnly || CONSTANT.IS_ELECTRON
   );
 
   const renderNavLink = (item: NavItem) => {
@@ -165,8 +157,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         isCollapsed ? 'w-16 p-1' : 'w-52'
       )}
       style={{
-        top: isElectron ? '44px' : '0',
-        height: isElectron ? 'calc(100vh - 44px)' : '100vh'
+        top: CONSTANT.IS_ELECTRON ? '44px' : '0',
+        height: CONSTANT.IS_ELECTRON ? 'calc(100vh - 44px)' : '100vh'
       }}
     >
       <nav className="relative flex h-full flex-col p-2">
@@ -233,7 +225,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
         {/* 底部信息 */}
         <div className="mt-auto space-y-2 border-t border-slate-200 pt-3">
-          {isElectron && (
+          {CONSTANT.IS_ELECTRON && (
             <div
               className={cn(
                 'flex items-center rounded-lg py-1 text-sm text-slate-500',
