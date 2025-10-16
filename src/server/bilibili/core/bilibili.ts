@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { customAlphabet } from 'nanoid';
 import { formatSeconed, filterTitle, sleep } from './utils';
