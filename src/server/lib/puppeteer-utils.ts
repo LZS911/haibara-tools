@@ -28,7 +28,7 @@ const getBrowser = async (): Promise<PuppeteerBrowser> => {
       });
 
       return browserInstance;
-    } catch (error) {
+    } catch {
       console.warn(
         `[Puppeteer] Connection attempt ${i + 1} failed. Retrying in ${
           retryDelay / 1000

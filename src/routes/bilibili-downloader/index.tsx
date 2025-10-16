@@ -22,7 +22,7 @@ import { DownloadOptions } from './-components/DownloadOptions';
 import { DownloadQueue } from './-components/DownloadQueue';
 import { DownloadHistory } from './-components/DownloadHistory';
 import { PageSelector } from './-components/PageSelector';
-import type { VideoInfo, DownloadTask, Page } from './-types';
+import type { VideoInfo, DownloadTask } from './-types';
 import { trpc } from '@/router';
 import { Spinner } from '@/routes/-components/spinner';
 import { toast } from 'sonner';

@@ -116,7 +116,8 @@ class DownloadManager {
       if (controller.signal.aborted) {
         this.updateTaskStatus(taskId, 'cancelled', task.progress);
       } else {
-        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        const errorMessage =
+          error instanceof Error ? error.message : '未知错误';
         task.error = errorMessage;
         this.updateTaskStatus(taskId, 'failed', task.progress);
         throw error;
@@ -207,7 +208,13 @@ class DownloadManager {
       task.progress = progress;
       task.totalSize = totalSize;
       task.downloadedSize = downloadedSize;
-      this.notifyProgress(taskId, progress, task.status, totalSize, downloadedSize);
+      this.notifyProgress(
+        taskId,
+        progress,
+        task.status,
+        totalSize,
+        downloadedSize
+      );
     }
   }
 

@@ -578,10 +578,7 @@ function Settings() {
                   htmlFor="BILIBILI_DOWNLOADING_MAX_SIZE"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  {t(
-                    'settings_bilibili_max_download_size',
-                    '最大同时下载数'
-                  )}
+                  {t('settings_bilibili_max_download_size', '最大同时下载数')}
                 </label>
                 <Input
                   id="BILIBILI_DOWNLOADING_MAX_SIZE"

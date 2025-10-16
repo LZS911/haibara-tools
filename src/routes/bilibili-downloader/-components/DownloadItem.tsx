@@ -131,7 +131,8 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
               <p className="text-xs text-slate-500">{task.progress}%</p>
               {task.downloadedSize && task.totalSize ? (
                 <p className="text-xs text-slate-500">
-                  {formatBytes(task.downloadedSize)} / {formatBytes(task.totalSize)}
+                  {formatBytes(task.downloadedSize)} /{' '}
+                  {formatBytes(task.totalSize)}
                 </p>
               ) : null}
             </div>

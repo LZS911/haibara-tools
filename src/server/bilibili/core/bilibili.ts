@@ -74,8 +74,7 @@ const getDownloadList = async (
       filePathList: handleFilePathList(
         selected.length === 1 ? 0 : currentPage,
         currentPageData.title,
-        fileDir,
-        settings
+        fileDir
       ),
       fileDir,
       subtitle
@@ -412,8 +411,7 @@ const getSubtitle = async (
 const handleFilePathList = (
   page: number,
   partTitle: string,
-  fileDir: string,
-  settings: SettingData
+  fileDir: string
 ): string[] => {
   const baseName = `${page ? `[P${page}]` : ''}${filterTitle(partTitle)}`;
   return [
