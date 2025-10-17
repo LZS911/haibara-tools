@@ -10,5 +10,5 @@
   },
   "react-i18n-prompt.language-package-exclude-path": "src/locales/zh-CN/index.ts",
   "react-i18n-prompt.language-package-path": "src/locales/zh-CN/routes/*.ts",
-  "cSpell.words": ["bilibili"]
+  "cSpell.words": ["bilibili", "Danmaku"]
 }

@@ -1,7 +1,5 @@
 export default {
   check_for_updates: '检查更新',
-  common_cancel: '取消',
-  common_confirm: '确认',
   nav_history_management: '历史记录',
   nav_settings: '设置',
   sidebar_dashboard: '仪表板',

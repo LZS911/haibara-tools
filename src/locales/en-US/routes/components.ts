@@ -1,7 +1,5 @@
 export default {
   check_for_updates: 'Check for Updates',
-  common_cancel: 'Cancel',
-  common_confirm: 'Confirm',
   nav_history_management: 'History',
   nav_settings: 'Settings',
   sidebar_dashboard: 'Dashboard',

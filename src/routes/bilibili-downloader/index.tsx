@@ -337,7 +337,7 @@ function BilibiliDownloader() {
           <Card className="border-slate-200 bg-white">
             <CardHeader>
               <CardTitle className="text-base font-medium text-slate-900">
-                {t('download_options', '下载选项')}
+                {t('bilibili_downloader.download_options')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-6 pt-0">
@@ -384,7 +384,6 @@ function BilibiliDownloader() {
         </div>
       )}
 
-      {/* 下载队列和历史记录 */}
       <Tabs defaultValue="queue" className="w-full">
         <TabsList>
           <TabsTrigger value="queue">

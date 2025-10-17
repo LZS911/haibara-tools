@@ -52,7 +52,7 @@ export function useConfirmationDialog() {
         {options.content}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => handleClose(false)}>
-            {options.cancelText || t('common_cancel')}
+            {options.cancelText || t('common.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
@@ -60,7 +60,7 @@ export function useConfirmationDialog() {
               options.onConfirm && options.onConfirm();
             }}
           >
-            {options.confirmText || t('common_confirm')}
+            {options.confirmText || t('common.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

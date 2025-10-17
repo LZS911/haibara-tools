@@ -1,9 +1,10 @@
 import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
 import type { DownloadTask } from '../-types';
-import { Trash2 } from 'lucide-react';
+import { Folder, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatBytes } from '@/routes/-lib/utils';
+import { CONSTANT } from '@/data/constant';
 
 interface DownloadItemProps {
   task: DownloadTask;
@@ -43,6 +44,14 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
         return 'text-slate-500';
       default:
         return 'text-slate-600';
+    }
+  };
+
+  const handleOpenFolder = () => {
+    const path = task.mergedPath || task.videoPath;
+    if (path && CONSTANT.IS_ELECTRON && window.electronAPI) {
+      const folderPath = path.substring(0, path.lastIndexOf('/'));
+      window.electronAPI.openPath(folderPath);
     }
   };
 
@@ -104,6 +113,17 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
                 {t('bilibili_downloader.cancel')}
               </Button>
             )}
+
+            {task.status === 'completed' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenFolder()}
+              >
+                <Folder className="h-4 w-4" />
+              </Button>
+            )}
+
             {(task.status === 'completed' ||
               task.status === 'failed' ||
               task.status === 'cancelled') && (
