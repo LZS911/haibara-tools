@@ -1,9 +1,10 @@
 import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
 import type { DownloadTask } from '../-types';
-import { Trash2 } from 'lucide-react';
+import { Folder, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatBytes } from '@/routes/-lib/utils';
+import { CONSTANT } from '@/data/constant';
 
 interface DownloadItemProps {
   task: DownloadTask;
@@ -17,15 +18,15 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
   const getStatusText = () => {
     switch (task.status) {
       case 'pending':
-        return t('download_status_pending', '等待中');
+        return t('bilibili_downloader.download_status_pending');
       case 'downloading':
-        return t('download_status_downloading', '下载中');
+        return t('bilibili_downloader.download_status_downloading');
       case 'completed':
-        return t('download_status_completed', '已完成');
+        return t('bilibili_downloader.download_status_completed');
       case 'failed':
-        return t('download_status_failed', '失败');
+        return t('bilibili_downloader.download_status_failed');
       case 'cancelled':
-        return t('download_status_cancelled', '已取消');
+        return t('bilibili_downloader.download_status_cancelled');
       default:
         return '';
     }
@@ -43,6 +44,14 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
         return 'text-slate-500';
       default:
         return 'text-slate-600';
+    }
+  };
+
+  const handleOpenFolder = () => {
+    const path = task.mergedPath || task.videoPath;
+    if (path && CONSTANT.IS_ELECTRON && window.electronAPI) {
+      const folderPath = path.substring(0, path.lastIndexOf('/'));
+      window.electronAPI.openPath(folderPath);
     }
   };
 
@@ -101,9 +110,20 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
                 size="sm"
                 onClick={() => onCancel(task.id)}
               >
-                {t('cancel', '取消')}
+                {t('bilibili_downloader.cancel')}
               </Button>
             )}
+
+            {task.status === 'completed' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleOpenFolder()}
+              >
+                <Folder className="h-4 w-4" />
+              </Button>
+            )}
+
             {(task.status === 'completed' ||
               task.status === 'failed' ||
               task.status === 'cancelled') && (

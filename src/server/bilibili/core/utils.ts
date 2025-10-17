@@ -1,3 +1,5 @@
+import path from 'path';
+
 /* eslint-disable no-irregular-whitespace */
 export const formatSeconed = (duration: number) => {
   const hours = Math.floor(duration / 3600);
@@ -17,3 +19,12 @@ export const sleep = (timeountMS: number) =>
   new Promise((resolve) => {
     setTimeout(resolve, timeountMS);
   });
+
+export const handleFilePath = (
+  title: string,
+  dir: string,
+  ext: string
+): string => {
+  const filteredTitle = filterTitle(title);
+  return path.join(dir, `${filteredTitle}${ext}`);
+};

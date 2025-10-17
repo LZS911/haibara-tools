@@ -23,6 +23,8 @@ import {
   clearHistory
 } from './storage';
 import { UA } from './core/data/ua';
+import fs from 'fs';
+import { handleFileDir, handleFilePathList } from './core/bilibili';
 
 const t = initTRPC.context<TRPCContext>().create();
 
@@ -321,5 +323,42 @@ export const bilibiliRouter = t.router({
         }
         throw new Error('An unknown error occurred while fetching the image.');
       }
+    }),
+
+  checkFileExists: t.procedure
+    .input(
+      z.object({
+        bvId: z.string(),
+        title: z.string(),
+        pages: z.array(
+          z.object({
+            page: z.number(),
+            title: z.string()
+          })
+        )
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { bvId, title, pages } = input;
+      const settings = buildSettings();
+      const fileDir = handleFileDir(title, bvId, settings);
+      const existingFiles: string[] = [];
+
+      for (const page of pages) {
+        const filePathList = handleFilePathList(
+          pages.length === 1 ? 0 : page.page,
+          page.title,
+          fileDir
+        );
+        const mergedPath = filePathList[0];
+        if (fs.existsSync(mergedPath)) {
+          existingFiles.push(mergedPath);
+        }
+      }
+
+      return {
+        exists: existingFiles.length > 0,
+        existingFiles
+      };
     })
 });

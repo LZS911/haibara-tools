@@ -30,6 +30,7 @@ import { Download } from 'lucide-react';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { LoginStatus, QualityEnum } from '@/types/bilibili';
+import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 
 export const Route = createFileRoute('/bilibili-downloader/')({
   component: BilibiliDownloader,
@@ -49,6 +50,7 @@ function BilibiliDownloader() {
   const [isDelete, setIsDelete] = useState(true);
   const [tasks, setTasks] = useState<DownloadTask[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   // 加载下载任务列表
   const { data: downloadTasks, refetch: refetchTasks } = useQuery(
@@ -71,6 +73,10 @@ function BilibiliDownloader() {
   // 下载视频
   const downloadVideoMutation = useMutation(
     trpc.bilibili.downloadVideo.mutationOptions()
+  );
+
+  const checkFileExistsMutation = useMutation(
+    trpc.bilibili.checkFileExists.mutationOptions()
   );
 
   // 取消下载
@@ -134,7 +140,7 @@ function BilibiliDownloader() {
 
   const handleGetVideoInfo = async () => {
     if (!bvInput.trim()) {
-      toast.error(t('please_input_bv_id', '请输入 BV 号或视频链接'));
+      toast.error(t('bilibili_downloader.please_input_bv_id'));
       return;
     }
 
@@ -155,8 +161,36 @@ function BilibiliDownloader() {
       toast.error(
         error instanceof Error
           ? error.message
-          : t('get_video_info_failed', '获取视频信息失败')
+          : t('bilibili_downloader.get_video_info_failed')
       );
+    }
+  };
+
+  const executeDownload = async () => {
+    if (!videoInfo || !selectedQuality) return;
+    const result = await downloadVideoMutation.mutateAsync({
+      bvId: videoInfo.bvid,
+      videoUrl: videoInfo.url,
+      quality: selectedQuality,
+      pages: selectedPages,
+      isMerge,
+      isDelete
+    });
+
+    if (result.success && result.taskIds) {
+      toast.success(
+        t('bilibili_downloader.download_started_multiple', {
+          count: result.taskIds.length
+        })
+      );
+      // 激活第一个任务的进度订阅
+      setActiveTaskId(result.taskIds[0]);
+      // 重置输入
+      setBvInput('');
+      setVideoInfo(null);
+      setSelectedPages([]);
+      // 刷新任务列表
+      refetchTasks();
     }
   };
 
@@ -164,41 +198,48 @@ function BilibiliDownloader() {
     if (!videoInfo || selectedPages.length === 0) return;
 
     if (!selectedQuality) {
-      toast.error(t('please_select_quality', '请选择清晰度'));
+      toast.error(t('bilibili_downloader.please_select_quality'));
       return;
     }
 
     try {
-      const result = await downloadVideoMutation.mutateAsync({
+      const pagesToDownload = videoInfo.page.filter((p) =>
+        selectedPages.includes(p.page)
+      );
+
+      const existingFilesResult = await checkFileExistsMutation.mutateAsync({
         bvId: videoInfo.bvid,
-        videoUrl: videoInfo.url,
-        quality: selectedQuality,
-        pages: selectedPages,
-        isMerge,
-        isDelete
+        title: videoInfo.title,
+        pages: pagesToDownload.map((p) => ({
+          page: p.page,
+          title: p.title
+        }))
       });
 
-      if (result.success && result.taskIds) {
-        toast.success(
-          t(
-            'download_started_multiple',
-            `已创建 ${result.taskIds.length} 个下载任务`
-          )
-        );
-        // 激活第一个任务的进度订阅
-        setActiveTaskId(result.taskIds[0]);
-        // 重置输入
-        setBvInput('');
-        setVideoInfo(null);
-        setSelectedPages([]);
-        // 刷新任务列表
-        refetchTasks();
+      if (existingFilesResult.exists) {
+        const confirmed = await confirm({
+          title: t('bilibili_downloader.overwrite_confirmation'),
+          description: t(
+            'bilibili_downloader.files_exist_overwrite_confirm_desc'
+          ),
+          content: (
+            <div className="max-h-40 overflow-auto rounded-md bg-muted p-2">
+              <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                {existingFilesResult.existingFiles.join('\n')}
+              </p>
+            </div>
+          ),
+          confirmText: t('bilibili_downloader.overwrite')
+        });
+        if (!confirmed) return;
       }
+
+      await executeDownload();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : t('download_failed', '下载失败')
+          : t('bilibili_downloader.download_failed')
       );
     }
   };
@@ -206,13 +247,13 @@ function BilibiliDownloader() {
   const handleDeleteTask = async (taskId: string) => {
     try {
       await deleteTaskMutation.mutateAsync({ taskId });
-      toast.success(t('task_deleted', '任务已删除'));
+      toast.success(t('bilibili_downloader.task_deleted'));
       refetchTasks();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : t('delete_task_failed', '删除任务失败')
+          : t('bilibili_downloader.delete_task_failed')
       );
     }
   };
@@ -220,13 +261,13 @@ function BilibiliDownloader() {
   const handleCancelTask = async (taskId: string) => {
     try {
       await cancelDownloadMutation.mutateAsync({ taskId });
-      toast.success(t('task_cancelled', '任务已取消'));
+      toast.success(t('bilibili_downloader.task_cancelled'));
       refetchTasks();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : t('cancel_task_failed', '取消任务失败')
+          : t('bilibili_downloader.cancel_task_failed')
       );
     }
   };
@@ -241,10 +282,10 @@ function BilibiliDownloader() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          {t('bilibili_downloader_title', 'Bilibili 视频下载')}
+          {t('bilibili_downloader.bilibili_downloader_title')}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          {t('bilibili_downloader_desc', '下载 Bilibili 视频到本地')}
+          {t('bilibili_downloader.bilibili_downloader_desc')}
         </p>
       </div>
 
@@ -252,19 +293,16 @@ function BilibiliDownloader() {
       <Card className="border-slate-200 bg-white">
         <CardHeader>
           <CardTitle className="text-base font-medium text-slate-900">
-            {t('input_bv_id', '输入视频信息')}
+            {t('bilibili_downloader.input_bv_id')}
           </CardTitle>
           <CardDescription>
-            {t('input_bv_id_desc_tips', '输入 BV 号或完整的视频链接')}
+            {t('bilibili_downloader.input_bv_id_desc_tips')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="flex gap-2">
             <Input
-              placeholder={t(
-                'bilibili_input_placeholder',
-                '例如：BV1xx411c7mD 或视频链接'
-              )}
+              placeholder={t('bilibili_downloader.bilibili_input_placeholder')}
               value={bvInput}
               onChange={(e) => setBvInput(e.target.value)}
               onKeyDown={(e) => {
@@ -281,10 +319,10 @@ function BilibiliDownloader() {
               {getVideoInfoMutation.isPending ? (
                 <>
                   <Spinner className="mr-2 h-4 w-4" />
-                  {t('loading', '加载中...')}
+                  {t('bilibili_downloader.loading')}
                 </>
               ) : (
-                t('get_video_info', '获取信息')
+                t('bilibili_downloader.get_video_info')
               )}
             </Button>
           </div>
@@ -299,7 +337,7 @@ function BilibiliDownloader() {
           <Card className="border-slate-200 bg-white">
             <CardHeader>
               <CardTitle className="text-base font-medium text-slate-900">
-                {t('download_options', '下载选项')}
+                {t('bilibili_downloader.download_options')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-6 pt-0">
@@ -332,12 +370,12 @@ function BilibiliDownloader() {
                 {downloadVideoMutation.isPending ? (
                   <>
                     <Spinner className="mr-2 h-4 w-4" />
-                    {t('downloading', '下载中...')}
+                    {t('bilibili_downloader.downloading')}
                   </>
                 ) : (
                   <>
                     <Download className="mr-2 h-4 w-4" />
-                    {t('start_download', '开始下载')}
+                    {t('bilibili_downloader.start_download')}
                   </>
                 )}
               </Button>
@@ -346,14 +384,13 @@ function BilibiliDownloader() {
         </div>
       )}
 
-      {/* 下载队列和历史记录 */}
       <Tabs defaultValue="queue" className="w-full">
         <TabsList>
           <TabsTrigger value="queue">
-            {t('download_queue', '下载队列')}
+            {t('bilibili_downloader.download_queue')}
           </TabsTrigger>
           <TabsTrigger value="history">
-            {t('download_history', '已下载列表')}
+            {t('bilibili_downloader.download_history')}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="queue" className="mt-4">
@@ -367,6 +404,8 @@ function BilibiliDownloader() {
           <DownloadHistory onDelete={refetchTasks} />
         </TabsContent>
       </Tabs>
+
+      {ConfirmationDialog}
     </div>
   );
 }

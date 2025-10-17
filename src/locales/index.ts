@@ -6,14 +6,10 @@ import enUS from './en-US';
 
 const resources: Record<
   SupportLanguage,
-  Record<'translation', Record<string, string>>
+  Record<'translation', Record<string, Record<string, string>>>
 > = {
-  en: {
-    translation: enUS
-  },
-  zh: {
-    translation: zhCN
-  }
+  en: enUS,
+  zh: zhCN
 };
 
 i18n.use(initReactI18next).init({

@@ -1,7 +1,10 @@
 import { promises as fs } from 'fs';
+import path from 'path';
 import { nanoid } from 'nanoid';
 import type { SettingData, VideoData } from '../../types/bilibili';
 import download, { type DownloadProgress } from './core/download';
+import { downloadAndConvertDanmaku } from './core/danmaku';
+import { downloadAllSubtitles } from './core/subtitle';
 import { addDownloadRecord } from './storage';
 
 interface DownloadTask {
@@ -99,6 +102,26 @@ class DownloadManager {
         },
         controller.signal
       );
+
+      const outputDir = path.dirname(videoData.filePathList[0]);
+
+      // 下载并转换弹幕为 .ass 文件
+      if (settings.isDanmaku) {
+        await downloadAndConvertDanmaku({
+          cid: videoData.cid,
+          title: videoData.title,
+          outputDir
+        });
+      }
+
+      // 下载所有可用的字幕
+      if (settings.isSubtitle) {
+        await downloadAllSubtitles(
+          videoData.title, // 使用分P标题作为字幕文件名的一部分
+          outputDir,
+          videoData.subtitle // 从 videoData 中获取字幕列表
+        );
+      }
 
       this.updateTaskStatus(taskId, 'completed', 100);
 

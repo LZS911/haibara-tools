@@ -94,6 +94,7 @@ export interface VideoData {
   qualityOptions: QualityItem[];
   page: Page[];
   subtitle: Subtitle[];
+  danmakuUrl?: string;
   video: Video[];
   audio: Audio[];
   filePathList: string[];

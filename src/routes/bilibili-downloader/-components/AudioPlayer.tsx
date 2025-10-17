@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/routes/-components/ui/button';
 import { Card } from '@/routes/-components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 interface AudioPlayerProps {
   audioPath: string;
@@ -11,6 +12,7 @@ interface AudioPlayerProps {
 
 export function AudioPlayer({ audioPath, title, onClose }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -41,7 +43,7 @@ export function AudioPlayer({ audioPath, title, onClose }: AudioPlayerProps) {
           autoPlay
           className="w-full"
         >
-          您的浏览器不支持音频播放
+          {t('bilibili_downloader.browser_not_support_audio_playback')}
         </audio>
       </Card>
     </div>

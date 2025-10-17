@@ -49,27 +49,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       try {
         const result = await window.electronAPI.checkForUpdates();
         if (result?.isLatest) {
-          toast(t('update_check_title', '检查更新'), {
-            description: t(
-              'update_latest_message',
-              '您当前使用的已是最新版本。'
-            )
+          toast.info(t('components.check_for_updates'), {
+            description: t('components.update_latest_message')
           });
         }
       } catch (error) {
         console.error('Failed to check for updates:', error);
-        toast(
-          t(
-            'update_check_failed_message',
-            '无法连接到更新服务器，请稍后重试。'
-          ),
-          {
-            description: t(
-              'update_check_failed_message',
-              '无法连接到更新服务器，请稍后重试。'
-            )
-          }
-        );
+        toast.error(t('components.update_check_failed_message'), {
+          description: t('components.update_check_failed_message')
+        });
       } finally {
         setIsCheckingForUpdate(false);
       }
@@ -79,25 +67,25 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const navItems: NavItem[] = [
     {
       path: '/media-to-docs',
-      label: t('nav_media_to_docs', 'AI 转文档'),
+      label: t('common.nav_media_to_docs'),
       icon: Video,
       category: 'tools'
     },
     {
       path: '/bilibili-downloader',
-      label: t('nav_bilibili_downloader', 'B站下载'),
+      label: t('common.nav_bilibili_downloader'),
       icon: Download,
       category: 'tools'
     },
     {
       path: '/media-to-docs/convert-history',
-      label: t('nav_cache_management', '缓存管理'),
+      label: t('components.nav_history_management'),
       icon: Database,
       category: 'manage'
     },
     {
       path: '/settings',
-      label: t('nav_settings', '设置'),
+      label: t('components.nav_settings'),
       icon: Settings,
       electronOnly: true,
       category: 'system'
@@ -183,7 +171,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <div className="mb-4">
           {!isCollapsed && (
             <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {t('sidebar_tools', '工具')}
+              {t('components.sidebar_tools')}
             </p>
           )}
           <div className="space-y-1">
@@ -197,7 +185,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <div className="mb-4">
           {!isCollapsed && (
             <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {t('sidebar_manage', '管理')}
+              {t('components.sidebar_manage', '管理')}
             </p>
           )}
           <div className="space-y-1">
@@ -212,7 +200,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           <div className="mb-4">
             {!isCollapsed && (
               <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                {t('sidebar_system', '系统')}
+                {t('components.sidebar_system', '系统')}
               </p>
             )}
             <div className="space-y-1">
@@ -240,7 +228,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 })}
               >
                 <p className="whitespace-nowrap text-xs font-medium">
-                  {t('version', '版本')} {appVersion}
+                  {t('components.version')} {appVersion}
                 </p>
               </div>
               <Button
@@ -248,7 +236,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 onClick={handleCheckForUpdate}
                 disabled={isCheckingForUpdate}
                 className="h-8 w-8 flex-shrink-0 cursor-pointer"
-                title={t('check_for_updates', '检查更新')}
+                title={t('components.check_for_updates')}
               >
                 <CloudUpload
                   className={cn('h-4 w-4 cursor-pointer!', {
@@ -280,10 +268,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 })}
               >
                 <p className="whitespace-nowrap text-xs font-medium">
-                  Haibara Tools
+                  {t('common.app_title')}
                 </p>
                 <p className="whitespace-nowrap text-xs text-slate-400">
-                  {t('sidebar_dashboard', '仪表板')}
+                  {t('components.sidebar_dashboard')}
                 </p>
               </div>
             </div>

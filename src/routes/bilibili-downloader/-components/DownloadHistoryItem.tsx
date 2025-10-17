@@ -59,7 +59,6 @@ export function DownloadHistoryItem({
               alt={item.title}
               className="h-24 w-36 rounded-lg object-cover"
               onError={(e) => {
-                // 如果图片加载失败，显示默认占位符
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}

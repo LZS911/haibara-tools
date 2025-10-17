@@ -484,4 +484,12 @@ const getHighQualityAudio = (audioArray: any[]) => {
   return audioArray.sort((a, b) => b.id - a.id)[0];
 };
 
-export { checkLogin, checkUrl, checkUrlRedirect, parseHtml, getDownloadList };
+export {
+  checkLogin,
+  checkUrl,
+  checkUrlRedirect,
+  parseHtml,
+  getDownloadList,
+  handleFileDir,
+  handleFilePathList
+};

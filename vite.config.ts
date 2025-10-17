@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import type { BuildEnvironmentOptions } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 import tailwindcss from '@tailwindcss/vite';
 
 const __filename = url.fileURLToPath(import.meta.url);
@@ -79,8 +80,15 @@ export default defineConfig((configEnv) => {
         autoCodeSplitting: true
       }),
       tailwindcss(),
-      react()
-    ],
+      react(),
+      process.env.ANALYZE === 'true' &&
+        visualizer({
+          open: false,
+          filename: 'stats.html',
+          gzipSize: true,
+          brotliSize: true
+        })
+    ].filter(Boolean),
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src')

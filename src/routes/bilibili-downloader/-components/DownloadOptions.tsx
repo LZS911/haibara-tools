@@ -21,10 +21,10 @@ export function DownloadOptions({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-900">
-            {t('merge_audio_video', '合并音视频')}
+            {t('bilibili_downloader.merge_audio_video')}
           </p>
           <p className="text-xs text-slate-500">
-            {t('merge_audio_video_desc', '将分离的视频和音频合并为一个文件')}
+            {t('bilibili_downloader.merge_audio_video_desc')}
           </p>
         </div>
         <Switch checked={isMerge} onCheckedChange={onMergeChange} />
@@ -34,10 +34,10 @@ export function DownloadOptions({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-900">
-              {t('delete_source_files', '删除源文件')}
+              {t('bilibili_downloader.delete_source_files')}
             </p>
             <p className="text-xs text-slate-500">
-              {t('delete_source_files_desc', '合并后删除原始的视频和音频文件')}
+              {t('bilibili_downloader.delete_source_files_desc')}
             </p>
           </div>
           <Switch checked={isDelete} onCheckedChange={onDeleteChange} />

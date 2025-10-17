@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { CONSTANT } from '../../data/constant';
+import { CONSTANT } from '@/data/constant';
+import { useTranslation } from 'react-i18next';
 
 export function Titlebar() {
   const [appVersion, setAppVersion] = useState('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (CONSTANT.IS_ELECTRON && window.electronAPI) {
@@ -33,7 +35,7 @@ export function Titlebar() {
       <div className="flex items-center gap-2">
         <img src="/icon.svg" alt="Haibara Tools" className="h-5 w-5" />
         <span className="text-[13px] font-medium text-slate-700">
-          Haibara Tools
+          {t('common.app_title')}
         </span>
         {appVersion && (
           <span className="text-[11px] text-slate-400">v{appVersion}</span>

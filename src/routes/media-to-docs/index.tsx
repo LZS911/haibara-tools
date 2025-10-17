@@ -104,7 +104,7 @@ function AiConvert() {
             setVideoPath(data.videoPath || null);
             setCurrentStep('select-style');
           } else {
-            setErrorMessage(t('download_failed_check_bv'));
+            setErrorMessage(t('media_to_docs.download_failed_check_bv'));
           }
         },
         onError: (error) => {
@@ -181,10 +181,8 @@ function AiConvert() {
   };
 
   const getTitleForStyle = (style: string | null) => {
-    if (!style) return t('generated_content_title');
-    const key = `style_${style}`;
-    // Assuming you have translations like style_note, style_summary, etc.
-    return t(key, style.charAt(0).toUpperCase() + style.slice(1));
+    if (!style) return t('media_to_docs.generated_content_title');
+    return style.charAt(0).toUpperCase() + style.slice(1);
   };
 
   return (
@@ -192,9 +190,11 @@ function AiConvert() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {t('ai_convert_title')}
+            {t('media_to_docs.ai_convert_title')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t('ai_convert_desc')}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('media_to_docs.ai_convert_desc')}
+          </p>
         </div>
       </div>
 
@@ -209,10 +209,10 @@ function AiConvert() {
                   className="text-slate-700"
                   size={20}
                 />
-                {t('step1_input_bv_id')}
+                {t('media_to_docs.step1_input_bv_id')}
               </CardTitle>
               <CardDescription className="text-sm">
-                {t('input_bv_id_desc')}
+                {t('media_to_docs.input_bv_id_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -233,7 +233,9 @@ function AiConvert() {
                   ) : (
                     <div className="flex items-center justify-center text-slate-600">
                       <Spinner className="w-5 h-5 mr-2" />
-                      <span className="text-sm">{t('downloading_video')}</span>
+                      <span className="text-sm">
+                        {t('media_to_docs.downloading_video')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -252,10 +254,10 @@ function AiConvert() {
                   className="text-slate-700"
                   size={20}
                 />
-                {t('step2_select_style')}
+                {t('media_to_docs.step2_select_style')}
               </CardTitle>
               <CardDescription className="text-sm">
-                {t('select_style_desc')}
+                {t('media_to_docs.select_style_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 pt-0">
@@ -283,10 +285,10 @@ function AiConvert() {
                     className="text-slate-700"
                     size={20}
                   />
-                  {t('step3_processing')}
+                  {t('media_to_docs.step3_processing')}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  {t('processing_desc')}
+                  {t('media_to_docs.processing_desc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -312,10 +314,10 @@ function AiConvert() {
                   />
                   <div>
                     <CardTitle className="text-base font-medium text-slate-900">
-                      {t('step4_completed')}
+                      {t('media_to_docs.step4_completed')}
                     </CardTitle>
                     <CardDescription className="text-sm">
-                      {t('completed_desc')}
+                      {t('media_to_docs.completed_desc')}
                     </CardDescription>
                   </div>
                 </div>
@@ -329,7 +331,7 @@ function AiConvert() {
                       size="sm"
                       onClick={() => setDisplayMode('timeline')}
                     >
-                      {t('timeline_view')}
+                      {t('media_to_docs.timeline_view')}
                     </Button>
                     <Button
                       variant={
@@ -338,7 +340,7 @@ function AiConvert() {
                       size="sm"
                       onClick={() => setDisplayMode('markdown')}
                     >
-                      {t('document_view')}
+                      {t('media_to_docs.document_view')}
                     </Button>
                   </div>
                 )}
@@ -374,7 +376,7 @@ function AiConvert() {
                 <StepIcon step="error" className="text-red-600" size={20} />
                 <div>
                   <div className="font-medium text-sm">
-                    {t('conversion_failed')}
+                    {t('media_to_docs.conversion_failed')}
                   </div>
                   <div className="text-xs">
                     {errorMessage ||
@@ -385,7 +387,7 @@ function AiConvert() {
                 </div>
               </div>
               <Button variant="destructive" size="sm" onClick={handleReset}>
-                {t('reset', '重置')}
+                {t('media_to_docs.reset')}
               </Button>
             </div>
           </div>

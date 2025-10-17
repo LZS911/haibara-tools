@@ -20,7 +20,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
     const textContent = items
       .map(
         (item) =>
-          `[${item.time}] ${item.title}\n\n画面描述：${item.sceneDescription}\n\n内容要点：\n${item.keyPoints.map((p) => `- ${p}`).join('\n')}\n\n`
+          `[${item.time}] ${item.title}\n\n${t('media_to_docs.scene_description')}: ${item.sceneDescription}\n\n${t('media_to_docs.content_points')}: \n${item.keyPoints.map((p) => `- ${p}`).join('\n')}\n\n`
       )
       .join('---\n\n');
 
@@ -34,7 +34,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
     const textContent = items
       .map(
         (item) =>
-          `## [${item.time}] ${item.title}\n\n**画面描述**：${item.sceneDescription}\n\n**内容要点**：\n${item.keyPoints.map((p) => `- ${p}`).join('\n')}\n\n`
+          `## [${item.time}] ${item.title}\n\n${t('media_to_docs.scene_description')}: ${item.sceneDescription}\n\n${t('media_to_docs.content_points')}: \n${item.keyPoints.map((p) => `- ${p}`).join('\n')}\n\n`
       )
       .join('');
 
@@ -52,7 +52,9 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">暂无时间轴内容</p>
+        <p className="text-gray-500">
+          {t('media_to_docs.no_timeline_content')}
+        </p>
       </div>
     );
   }
@@ -62,7 +64,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
       {/* 操作按钮 */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-bold text-gray-800">
-          视频时间轴 ({items.length} 个时间点)
+          {t('media_to_docs.video_timeline', { count: items.length })}
         </h2>
         <div className="flex gap-2">
           <Button onClick={handleCopy} variant="outline" size="sm">
@@ -71,11 +73,11 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
             ) : (
               <Copy className="w-4 h-4 mr-1" />
             )}
-            {isCopied ? '已复制' : '复制'}
+            {isCopied ? t('media_to_docs.copied') : t('media_to_docs.copy')}
           </Button>
           <Button onClick={handleDownload} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-1" />
-            下载
+            {t('media_to_docs.download')}
           </Button>
         </div>
       </div>
@@ -117,7 +119,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
                     <div className="mb-2">
                       <img
                         src={item.imageUrl}
-                        alt={`关键帧 ${item.time}`}
+                        alt={`${t('media_to_docs.keyframe')} ${item.time}`}
                         className="keyframe-image"
                         loading="lazy"
                       />
@@ -128,7 +130,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
                   {item.sceneDescription && (
                     <div className="mb-2">
                       <div className="text-xs font-semibold text-gray-600 mb-1">
-                        📷 画面描述
+                        {t('media_to_docs.scene_description_title')}
                       </div>
                       <p className="text-gray-700 leading-relaxed text-sm">
                         {item.sceneDescription}
@@ -140,7 +142,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
                   {item.keyPoints.length > 0 && (
                     <div>
                       <div className="text-xs font-semibold text-gray-600 mb-1">
-                        📝 内容要点
+                        {t('media_to_docs.content_points_title')}
                       </div>
                       <ul className="space-y-1">
                         {item.keyPoints.map((point, idx) => (
@@ -165,7 +167,7 @@ export function TimelineView({ items, onReset }: TimelineViewProps) {
       {/* 底部操作 */}
       <div className="text-center pt-4">
         <Button onClick={onReset} variant="outline">
-          {t('try_again_button', '再试一次')}
+          {t('media_to_docs.try_again_button')}
         </Button>
       </div>
     </div>
