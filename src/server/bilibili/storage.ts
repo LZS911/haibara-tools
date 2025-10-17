@@ -74,20 +74,40 @@ export function addDownloadRecord(
   coverPath?: string
 ): DownloadHistoryItem {
   const history = readHistory();
-  const record: DownloadHistoryItem = {
-    id: nanoid(),
-    bvId,
-    title,
-    quality,
-    videoPath,
-    audioPath,
-    mergedPath,
-    coverPath,
-    downloadedAt: Date.now()
-  };
+  const existingRecordIndex = history.findIndex((item) => item.bvId === bvId);
 
-  // 添加到列表开头（最新的在前面）
-  history.unshift(record);
+  let record: DownloadHistoryItem;
+
+  if (existingRecordIndex !== -1) {
+    // 更新现有记录
+    record = {
+      ...history[existingRecordIndex],
+      title,
+      quality,
+      videoPath,
+      audioPath,
+      mergedPath,
+      coverPath,
+      downloadedAt: Date.now()
+    };
+    // 将其移动到历史记录的开头
+    history.splice(existingRecordIndex, 1);
+    history.unshift(record);
+  } else {
+    // 创建新记录
+    record = {
+      id: nanoid(),
+      bvId,
+      title,
+      quality,
+      videoPath,
+      audioPath,
+      mergedPath,
+      coverPath,
+      downloadedAt: Date.now()
+    };
+    history.unshift(record);
+  }
 
   // 限制历史记录数量，保留最近 500 条
   if (history.length > 500) {

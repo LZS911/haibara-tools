@@ -1,3 +1,4 @@
+import { t } from 'i18next';
 /**
  * 格式化时间戳为 MM:SS 格式
  */
@@ -41,7 +42,7 @@ export function parseTimelineContent(
 
     // 提取标题（第一行）
     const lines = content.trim().split('\n');
-    const title = lines[0]?.trim() || '未命名段落';
+    const title = lines[0]?.trim() || t('media_to_docs.unnamed_paragraph');
 
     // 提取画面描述（**画面描述**：后面的内容）
     let sceneDescription = '';

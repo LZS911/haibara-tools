@@ -23,19 +23,16 @@ function Dashboard() {
 
   const quickActions = [
     {
-      title: t('nav_bilibili_downloader', 'Bilibili 下载'),
-      desc: t(
-        'dashboard_quick_action_bilibili_downloader_desc',
-        '下载 Bilibili 视频和音频'
-      ),
+      title: t('common.nav_bilibili_downloader'),
+      desc: t('home.dashboard_quick_action_bilibili_downloader_desc'),
       icon: Download,
       to: '/bilibili-downloader',
       color: 'bg-green-500',
       hoverColor: 'hover:bg-green-600'
     },
     {
-      title: t('nav_media_to_docs', 'AI 转文档'),
-      desc: t('dashboard_quick_action_media_to_docs_desc', '智能视频转文档'),
+      title: t('common.nav_media_to_docs'),
+      desc: t('home.dashboard_quick_action_media_to_docs_desc'),
       icon: Video,
       to: '/media-to-docs',
       color: 'bg-purple-500',
@@ -49,7 +46,7 @@ function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {t('dashboard_welcome', '欢迎使用 Haibara Tools')}
+            {t('home.dashboard_welcome')}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             {currentTime.toLocaleDateString('zh-CN', {
@@ -68,7 +65,7 @@ function Dashboard() {
         {CONSTANT.IS_ELECTRON && CONSTANT.IS_DEV && (
           <div className="text-xs text-slate-400">
             <Clock className="inline h-4 w-4" />{' '}
-            {t('dashboard_electron_mode', 'Electron 模式')}
+            {t('home.dashboard_electron_mode')}
           </div>
         )}
       </div>
@@ -76,7 +73,7 @@ function Dashboard() {
       {/* 快速操作 */}
       <div>
         <h2 className="mb-3 text-sm font-medium text-slate-700">
-          {t('dashboard_quick_actions', '快速操作')}
+          {t('home.dashboard_quick_actions')}
         </h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {quickActions.map((action) => {
@@ -116,13 +113,10 @@ function Dashboard() {
             </div>
             <div className="flex-1 text-sm">
               <p className="font-medium text-blue-900">
-                {t('dashboard_config_tip_title', '配置提示')}
+                {t('home.dashboard_config_tip_title')}
               </p>
               <p className="mt-1 text-blue-700">
-                {t(
-                  'dashboard_config_tip_desc',
-                  '首次使用？请前往设置页面配置您的 API Keys，以使用 AI 相关功能。'
-                )}
+                {t('home.dashboard_config_tip_desc')}
               </p>
               <Link to="/settings">
                 <Button
@@ -130,7 +124,7 @@ function Dashboard() {
                   size="sm"
                   className="mt-2 border-blue-300 text-blue-700 hover:bg-blue-100"
                 >
-                  {t('dashboard_go_to_settings', '前往设置')}
+                  {t('home.dashboard_go_to_settings')}
                 </Button>
               </Link>
             </div>

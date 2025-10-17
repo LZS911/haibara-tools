@@ -12,7 +12,8 @@ export default [
       'src/routeTree.gen.ts',
       'node_modules/**',
       'dist/**',
-      'release/**'
+      'release/**',
+      'scripts/**'
     ]
   },
 

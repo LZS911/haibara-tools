@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/routes/-components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface VideoPlayerProps {
   videoPath: string;
@@ -10,7 +11,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ videoPath, title, onClose }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
+  const { t } = useTranslation();
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -45,7 +46,7 @@ export function VideoPlayer({ videoPath, title, onClose }: VideoPlayerProps) {
           autoPlay
           className="w-full rounded-lg"
         >
-          您的浏览器不支持视频播放
+          {t('bilibili_downloader.browser_not_support_video_playback')}
         </video>
       </div>
     </div>

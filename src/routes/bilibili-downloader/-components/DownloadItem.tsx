@@ -17,15 +17,15 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
   const getStatusText = () => {
     switch (task.status) {
       case 'pending':
-        return t('download_status_pending', '等待中');
+        return t('bilibili_downloader.download_status_pending');
       case 'downloading':
-        return t('download_status_downloading', '下载中');
+        return t('bilibili_downloader.download_status_downloading');
       case 'completed':
-        return t('download_status_completed', '已完成');
+        return t('bilibili_downloader.download_status_completed');
       case 'failed':
-        return t('download_status_failed', '失败');
+        return t('bilibili_downloader.download_status_failed');
       case 'cancelled':
-        return t('download_status_cancelled', '已取消');
+        return t('bilibili_downloader.download_status_cancelled');
       default:
         return '';
     }
@@ -101,7 +101,7 @@ export function DownloadItem({ task, onDelete, onCancel }: DownloadItemProps) {
                 size="sm"
                 onClick={() => onCancel(task.id)}
               >
-                {t('cancel', '取消')}
+                {t('bilibili_downloader.cancel')}
               </Button>
             )}
             {(task.status === 'completed' ||
