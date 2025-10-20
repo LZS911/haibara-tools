@@ -1,4 +1,4 @@
-import type { LLMProvider } from '@/routes/media-to-docs/-types';
+import type { LLMProvider } from '@/types/media-to-docs';
 import type { AppConfig } from '../../electron';
 
 export const LLM_PROVIDERS: {

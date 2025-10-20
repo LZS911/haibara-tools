@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Spinner } from '@/routes/-components/spinner';
-import type { ProgressStage } from '../-types';
+import type { ProgressStage } from '@/types/media-to-docs';
 
 interface ProcessingStepsProps {
   stage: ProgressStage;

@@ -1,6 +1,6 @@
 export default {
   check_for_updates: '检查更新',
-  nav_history_management: '历史记录',
+  nav_history_management: '图文历史记录',
   nav_settings: '设置',
   sidebar_dashboard: '仪表板',
   sidebar_manage: '管理',

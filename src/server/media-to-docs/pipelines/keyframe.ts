@@ -4,7 +4,11 @@ import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import path from 'path';
 import fs from 'fs/promises';
 import { promisify } from 'util';
+import { exec } from 'child_process';
 import { progressManager } from '../progress-manager';
+import type { KeyframeStrategy } from '@/types/media-to-docs';
+
+const execAsync = promisify(exec);
 
 const isPackaged = process.env.IS_PACKAGED === 'true';
 
@@ -33,6 +37,58 @@ export interface Keyframe {
   text: string; // 该时间段对应的文字
 }
 
+// --- Utility Functions ---
+
+/**
+ * 调整时间戳数组的数量以匹配目标数量
+ * @param timestamps - 原始时间戳数组
+ * @param targetCount - 目标数量
+ * @param duration - 视频总时长（用于补充）
+ * @returns 调整后的时间戳数组
+ */
+function adjustTimestampsCount(
+  timestamps: number[],
+  targetCount: number,
+  duration: number
+): number[] {
+  let adjustedTimestamps = Array.from(new Set(timestamps)).sort(
+    (a, b) => a - b
+  );
+
+  // 如果数量不足，通过均匀分布补充
+  if (adjustedTimestamps.length < targetCount) {
+    const missing = targetCount - adjustedTimestamps.length;
+    const interval = duration / (missing + 1);
+    const existingTimestampsSet = new Set(adjustedTimestamps);
+    const additionalTimestamps: number[] = [];
+
+    for (let i = 1; i <= missing; i++) {
+      const newTimestamp = Math.round(i * interval);
+      // 避免添加太接近的帧
+      if (
+        !existingTimestampsSet.has(newTimestamp) &&
+        !adjustedTimestamps.some((ts) => Math.abs(ts - newTimestamp) < 2)
+      ) {
+        additionalTimestamps.push(newTimestamp);
+      }
+    }
+    adjustedTimestamps = [...adjustedTimestamps, ...additionalTimestamps].sort(
+      (a, b) => a - b
+    );
+  }
+
+  // 如果数量过多，进行均匀抽样
+  if (adjustedTimestamps.length > targetCount) {
+    const step = adjustedTimestamps.length / targetCount;
+    adjustedTimestamps = Array.from(
+      { length: targetCount },
+      (_, i) => adjustedTimestamps[Math.floor(i * step)]
+    );
+  }
+
+  return Array.from(new Set(adjustedTimestamps)).sort((a, b) => a - b);
+}
+
 /**
  * 获取视频时长（秒）
  */
@@ -43,43 +99,39 @@ async function getVideoDuration(videoPath: string): Promise<number> {
   return metadata.format.duration || 0;
 }
 
+// --- Strategy Implementations ---
+
 /**
- * 基于 utterances 智能分段，计算关键帧提取时间点
- * 策略：根据视频时长按每分钟 2.5 帧的密度分配
+ * 策略 1: 均匀分布
  */
-function calculateKeyframeTimestamps(
-  utterances: AsrUtterance[],
+function getUniformTimestamps(
+  targetFrameCount: number,
   duration: number
 ): number[] {
-  // 过滤掉无效的 utterances（start_time 或 end_time 为负数）
+  const interval = duration / (targetFrameCount + 1);
+  return Array.from({ length: targetFrameCount }, (_, i) =>
+    Math.round((i + 1) * interval)
+  );
+}
+
+/**
+ * 策略 2: 基于 ASR 语义分段
+ */
+function getSemanticTimestamps(
+  utterances: AsrUtterance[],
+  duration: number,
+  targetFrameCount: number
+): number[] {
   const validUtterances = utterances.filter(
     (utt) => utt.start_time >= 0 && utt.end_time >= 0
   );
 
   if (validUtterances.length === 0) {
-    // 如果没有 utterances，均匀分布
-    const durationMinutes = duration / 60;
-    const targetFrameCount = Math.max(
-      8,
-      Math.min(30, Math.round(durationMinutes * 2.5))
-    );
-    const interval = duration / (targetFrameCount + 1);
-    return Array.from({ length: targetFrameCount }, (_, i) =>
-      Math.round((i + 1) * interval)
-    );
+    return getUniformTimestamps(targetFrameCount, duration);
   }
 
-  // 计算目标帧数
-  const durationMinutes = duration / 60;
-  const targetFrameCount = Math.max(
-    8,
-    Math.min(30, Math.round(durationMinutes * 2.5))
-  );
-
-  // 按语义分段：每 20-40 秒为一段
-  const segments: { start: number; end: number; text: string }[] = [];
-  let currentSegmentStart = validUtterances[0].start_time / 1000; // 转换为秒
-  let currentSegmentText = '';
+  const segments: { start: number; end: number }[] = [];
+  let currentSegmentStart = validUtterances[0].start_time / 1000;
   const segmentDuration = Math.max(
     20,
     Math.min(40, duration / targetFrameCount)
@@ -87,53 +139,120 @@ function calculateKeyframeTimestamps(
 
   for (let i = 0; i < validUtterances.length; i++) {
     const utt = validUtterances[i];
-    currentSegmentText += utt.text + ' ';
+    const uttEndTime = utt.end_time / 1000;
 
-    const uttEndTime = utt.end_time / 1000; // 转换为秒
-
-    // 判断是否结束当前段
     const shouldEndSegment =
-      i === validUtterances.length - 1 || // 最后一个
-      uttEndTime - currentSegmentStart >= segmentDuration; // 超过段时长
+      i === validUtterances.length - 1 ||
+      uttEndTime - currentSegmentStart >= segmentDuration;
 
     if (shouldEndSegment) {
       segments.push({
         start: currentSegmentStart,
-        end: uttEndTime,
-        text: currentSegmentText.trim()
+        end: uttEndTime
       });
-
       if (i < validUtterances.length - 1) {
-        currentSegmentStart = validUtterances[i + 1].start_time / 1000; // 转换为秒
-        currentSegmentText = '';
+        currentSegmentStart = validUtterances[i + 1].start_time / 1000;
       }
     }
   }
 
-  // 从每段中选取中间时间点
-  let timestamps = segments.map((seg) => Math.round((seg.start + seg.end) / 2));
+  const semanticTimestamps = segments.map((seg) =>
+    Math.round((seg.start + seg.end) / 2)
+  );
 
-  // 如果帧数不足，补充均匀分布的时间点
-  if (timestamps.length < targetFrameCount) {
-    const missing = targetFrameCount - timestamps.length;
-    const interval = duration / (missing + 1);
-    const additionalTimestamps = Array.from({ length: missing }, (_, i) =>
-      Math.round((i + 1) * interval)
+  return adjustTimestampsCount(semanticTimestamps, targetFrameCount, duration);
+}
+
+/**
+ * 策略 3: 基于视觉变化的场景检测
+ * @param sensitivity - 场景检测灵敏度 (0.1 - 1.0)
+ */
+async function getVisualTimestamps(
+  videoPath: string,
+  duration: number,
+  targetFrameCount: number,
+  sensitivity = 0.4
+): Promise<number[]> {
+  console.log(`Starting scene detection for ${videoPath}`);
+  const command = `"${ffmpegPath}" -i "${videoPath}" -filter:v "select='gt(scene,${sensitivity})',metadata=print" -f null -`;
+
+  try {
+    const { stderr } = await execAsync(command, {
+      maxBuffer: 1024 * 1024 * 10
+    }); // 10MB buffer
+    const sceneChangeLines = stderr.match(/pts_time:([0-9.]+)/g) || [];
+    const visualTimestamps = sceneChangeLines.map((line) =>
+      parseFloat(line.split(':')[1])
     );
-    timestamps = [...timestamps, ...additionalTimestamps].sort((a, b) => a - b);
-  }
 
-  // 如果帧数过多，均匀抽样
-  if (timestamps.length > targetFrameCount) {
-    const step = timestamps.length / targetFrameCount;
-    timestamps = Array.from(
-      { length: targetFrameCount },
-      (_, i) => timestamps[Math.floor(i * step)]
-    );
+    console.log(`Detected ${visualTimestamps.length} potential scene changes.`);
+    return adjustTimestampsCount(visualTimestamps, targetFrameCount, duration);
+  } catch (error) {
+    console.error('Error during scene detection:', error);
+    // 如果场景检测失败，回退到均匀分布
+    return getUniformTimestamps(targetFrameCount, duration);
   }
+}
 
-  // 去重并排序
-  return Array.from(new Set(timestamps)).sort((a, b) => a - b);
+/**
+ * 计算关键帧提取时间点
+ */
+async function calculateKeyframeTimestamps(
+  utterances: AsrUtterance[],
+  duration: number,
+  strategy: KeyframeStrategy,
+  videoPath: string
+): Promise<number[]> {
+  const durationMinutes = duration / 60;
+  const targetFrameCount = Math.max(
+    8,
+    Math.min(30, Math.round(durationMinutes * 2.5))
+  );
+
+  switch (strategy) {
+    case 'uniform':
+      return getUniformTimestamps(targetFrameCount, duration);
+
+    case 'semantic':
+      return getSemanticTimestamps(utterances, duration, targetFrameCount);
+
+    case 'visual':
+      return await getVisualTimestamps(videoPath, duration, targetFrameCount);
+
+    case 'hybrid': {
+      const semantic = getSemanticTimestamps(
+        utterances,
+        duration,
+        targetFrameCount
+      );
+      const visual = await getVisualTimestamps(
+        videoPath,
+        duration,
+        targetFrameCount
+      );
+      const combined = [...semantic, ...visual];
+      // 去除 2 秒内重复的帧
+      const uniqueTimestamps: number[] = [];
+      const sorted = Array.from(new Set(combined)).sort((a, b) => a - b);
+      if (sorted.length > 0) {
+        uniqueTimestamps.push(sorted[0]);
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i] - uniqueTimestamps[uniqueTimestamps.length - 1] > 2) {
+            uniqueTimestamps.push(sorted[i]);
+          }
+        }
+      }
+      return adjustTimestampsCount(
+        uniqueTimestamps,
+        targetFrameCount,
+        duration
+      );
+    }
+
+    default:
+      // 默认回退到 semantic
+      return getSemanticTimestamps(utterances, duration, targetFrameCount);
+  }
 }
 
 /**
@@ -159,11 +278,7 @@ function extractSingleFrame(
       })
       .on('end', async () => {
         console.log(`FFmpeg process ended for ${outputPath}`);
-
-        // 等待一小段时间确保文件系统完成写入
         await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // 验证文件是否真的被创建
         try {
           await fs.access(outputPath);
           const stats = await fs.stat(outputPath);
@@ -203,9 +318,8 @@ function associateTextWithTimestamp(
   timestamp: number, // 秒
   utterances: AsrUtterance[]
 ): string {
-  // 找到该时间戳附近的 utterances（前后 15 秒）
   const contextWindow = 15;
-  const timestampMs = timestamp * 1000; // 转换为毫秒以匹配 utterances
+  const timestampMs = timestamp * 1000;
 
   const relevantUtterances = utterances.filter(
     (utt) =>
@@ -227,26 +341,28 @@ export async function extractKeyframes(
   videoPath: string,
   utterances: AsrUtterance[],
   outputDir: string,
+  strategy: KeyframeStrategy = 'semantic',
   jobId?: string
 ): Promise<Keyframe[]> {
   try {
-    // 1. 获取视频时长
     const duration = await getVideoDuration(videoPath);
     console.log(`Video duration: ${duration} seconds`);
+    if (duration === 0) throw new Error('Failed to get video duration');
 
-    if (duration === 0) {
-      throw new Error('Failed to get video duration');
-    }
+    const timestamps = await calculateKeyframeTimestamps(
+      utterances,
+      duration,
+      strategy,
+      videoPath
+    );
+    console.log(
+      `Extracting ${timestamps.length} keyframes with '${strategy}' strategy at:`,
+      timestamps
+    );
 
-    // 2. 计算关键帧时间点
-    const timestamps = calculateKeyframeTimestamps(utterances, duration);
-    console.log(`Extracting ${timestamps.length} keyframes at:`, timestamps);
-
-    // 3. 创建输出目录
     const keyframesDir = path.join(outputDir, 'keyframes');
     await fs.mkdir(keyframesDir, { recursive: true });
 
-    // 4. 提取每一帧
     const keyframes: Keyframe[] = [];
     for (let i = 0; i < timestamps.length; i++) {
       const timestamp = timestamps[i];
@@ -255,7 +371,6 @@ export async function extractKeyframes(
         `frame_${String(i + 1).padStart(3, '0')}.jpg`
       );
 
-      // 更新进度
       if (jobId) {
         const progress = Math.round(((i + 1) / timestamps.length) * 100);
         progressManager.updateKeyframeProgress(
@@ -265,10 +380,7 @@ export async function extractKeyframes(
         );
       }
 
-      // 提取帧
       await extractSingleFrame(videoPath, timestamp, outputPath);
-
-      // 关联文字
       const text = associateTextWithTimestamp(timestamp, utterances);
 
       keyframes.push({
@@ -282,7 +394,6 @@ export async function extractKeyframes(
       );
     }
 
-    // 5. 保存关键帧信息到 JSON
     const keyframesInfoPath = path.join(outputDir, 'keyframes.json');
     await fs.writeFile(
       keyframesInfoPath,
@@ -297,6 +408,13 @@ export async function extractKeyframes(
     return keyframes;
   } catch (error) {
     console.error('Error extracting keyframes:', error);
+    if (jobId) {
+      progressManager.updateKeyframeProgress(
+        jobId,
+        -1,
+        `提取失败: ${error instanceof Error ? error.message : '未知错误'}`
+      );
+    }
     throw error;
   }
 }

@@ -59,3 +59,12 @@ export const SummaryStyleSchema = z.enum([
   'social-media-post',
   'table'
 ]);
+
+export const KeyframeStrategySchema = z.enum([
+  'semantic',
+  'uniform',
+  'visual',
+  'hybrid'
+]);
+
+export type KeyframeStrategy = z.infer<typeof KeyframeStrategySchema>;

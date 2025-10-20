@@ -87,5 +87,7 @@ export default {
   copy: '复制',
   download: '下载',
   content_points_title: '内容要点',
-  unnamed_paragraph: '未命名段落'
+  unnamed_paragraph: '未命名段落',
+  keyframe_strategy_title: '关键帧提取策略',
+  keyframe_strategy_hint: '策略说明'
 };

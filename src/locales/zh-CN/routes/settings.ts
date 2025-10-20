@@ -34,9 +34,9 @@ export default {
   save_success: '配置保存成功！',
   saving: '保存中...',
   select_folder: '选择文件夹',
-  tab_bilibili: 'Bilibili 下载',
+  tab_bilibili: 'Bilibili 视频下载',
   tab_llm: 'LLM 配置',
-  tab_media_to_docs: '视频转文档',
+  tab_media_to_docs: '视频转图文',
   title: '应用设置',
   volc_asr_desc: '用于视频转文档功能的语音识别',
   volc_asr_title: '语音识别服务'

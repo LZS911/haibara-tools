@@ -4,6 +4,7 @@ import url from 'node:url';
 import * as fs from 'node:fs';
 import express from 'express';
 import { trpcMiddleWare } from './trpc';
+import { getMediaRoot } from './media-to-docs/cache';
 
 const PORT =
   typeof process.env.PORT !== 'undefined'
@@ -36,10 +37,8 @@ export const createServer = async (
   // Serve media files (audio, video, keyframes) for media-to-docs service
   // 动态获取路径，确保在运行时使用正确的 userData 路径
   app.use('/media-files', (req, res, next) => {
-    const baseDir = process.env.USER_DATA_PATH || process.cwd();
-    const mediaPath = path.join(baseDir, 'tmp/media-to-docs-jobs');
-    console.log('[Server] Serving media files from:', mediaPath);
-    express.static(mediaPath)(req, res, next);
+    console.log('[Server] Serving media files from:', getMediaRoot());
+    express.static(getMediaRoot())(req, res, next);
   });
 
   // Use media-to-docs routes

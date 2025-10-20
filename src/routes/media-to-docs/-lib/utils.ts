@@ -1,4 +1,5 @@
 import { t } from 'i18next';
+import type { Keyframe } from '@/types/media-to-docs';
 /**
  * 格式化时间戳为 MM:SS 格式
  */
@@ -24,7 +25,7 @@ export interface TimelineItem {
 
 export function parseTimelineContent(
   markdownContent: string,
-  keyframes: Array<{ timestamp: number; imageUrl?: string }>
+  keyframes: Keyframe[]
 ): TimelineItem[] {
   const items: TimelineItem[] = [];
 

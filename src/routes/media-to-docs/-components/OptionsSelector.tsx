@@ -6,7 +6,11 @@ import { cn } from '@/routes/-lib/utils';
 import { trpc } from '@/router';
 import { CheckCircle, XCircle, Loader, ChevronsUpDown } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { SummaryStyle, LLMProvider } from '../-types';
+import type {
+  SummaryStyle,
+  LLMProvider,
+  KeyframeStrategy
+} from '@/types/media-to-docs';
 import { Switch } from '@/routes/-components/ui/switch';
 
 type TestStatus = 'idle' | 'testing' | 'success' | 'error';
@@ -15,7 +19,8 @@ interface OptionsSelectorProps {
   onStart: (
     style: SummaryStyle,
     provider: LLMProvider,
-    enableVision: boolean
+    enableVision: boolean,
+    keyframeStrategy: KeyframeStrategy
   ) => void;
   disabled?: boolean;
   hasVideo?: boolean;
@@ -35,6 +40,8 @@ export function OptionsSelector({
   const [selectedProvider, setSelectedProvider] =
     useState<LLMProvider>('openai');
   const [enableVision, setEnableVision] = useState(true);
+  const [selectedKeyframeStrategy, setSelectedKeyframeStrategy] =
+    useState<KeyframeStrategy>('semantic');
   const [isProvidersExpanded, setIsProvidersExpanded] = useState(false);
   const [testStatus, setTestStatus] = useState<Record<string, TestStatus>>({});
 
@@ -114,7 +121,8 @@ export function OptionsSelector({
     );
   }
 
-  const { styles, providers, providerStatuses } = optionsData;
+  const { styles, providers, providerStatuses, keyframeStrategies } =
+    optionsData;
 
   const visibleProviders = isProvidersExpanded
     ? providers
@@ -240,13 +248,59 @@ export function OptionsSelector({
           </div>
         )}
 
+        {/* -- Keyframe Strategy -- */}
+        {hasVideo && keyframeStrategies && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              {t('media_to_docs.keyframe_strategy_title')}
+            </label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {keyframeStrategies.map((strategy) => (
+                <Button
+                  key={strategy.value}
+                  title={strategy.hint}
+                  variant={
+                    selectedKeyframeStrategy === strategy.value
+                      ? 'default'
+                      : 'outline'
+                  }
+                  size="sm"
+                  className="text-xs"
+                  onClick={() =>
+                    setSelectedKeyframeStrategy(
+                      strategy.value as KeyframeStrategy
+                    )
+                  }
+                >
+                  {strategy.label}
+                </Button>
+              ))}
+            </div>
+            <label className="text-xs text-gray-500 mt-1">
+              {t('media_to_docs.keyframe_strategy_hint')}
+            </label>
+            <div className="text-xs text-gray-500 mt-1">
+              {
+                keyframeStrategies.find(
+                  (v) => v.value === selectedKeyframeStrategy
+                )?.hint
+              }
+            </div>
+          </div>
+        )}
+
         {/* -- Start Button -- */}
         <div className="text-center pt-2">
           <Button
             size="lg"
             className="w-full"
             onClick={() => {
-              onStart(selectedStyle, selectedProvider, enableVision);
+              onStart(
+                selectedStyle,
+                selectedProvider,
+                enableVision,
+                selectedKeyframeStrategy
+              );
             }}
             disabled={disabled}
           >

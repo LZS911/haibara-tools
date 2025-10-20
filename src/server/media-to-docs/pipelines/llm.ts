@@ -11,7 +11,7 @@ import type {
   LLMProvider,
   SummaryStyle,
   Keyframe
-} from '@/routes/media-to-docs/-types';
+} from '@/types/media-to-docs';
 import fs from 'fs';
 import { getConfig } from '../../lib/config';
 

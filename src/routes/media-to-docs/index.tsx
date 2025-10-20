@@ -12,11 +12,9 @@ import { BvInput } from './-components/BvInput';
 import { OptionsSelector } from './-components/OptionsSelector';
 import { ProcessingSteps } from './-components/ProcessingSteps';
 import { ContentPreview } from './-components/ContentPreview';
-import type { AiConvertStep } from './-types';
 import { trpc } from '@/router';
 import { Spinner } from '@/routes/-components/spinner';
 import { useMutation, skipToken } from '@tanstack/react-query';
-import type { LLMProvider, SummaryStyle, Keyframe } from './-types';
 import { nanoid } from 'nanoid';
 import { Button } from '../-components/ui/button';
 import { useSubscription } from '@trpc/tanstack-react-query';
@@ -24,6 +22,13 @@ import { TimelineView } from './-components/TimelineView';
 import { parseTimelineContent } from './-lib/utils';
 import { useAppStore } from '@/store/app';
 import { StepIcon } from './-components/Icons/StepIcon';
+import type {
+  AiConvertStep,
+  SummaryStyle,
+  LLMProvider,
+  KeyframeStrategy,
+  Keyframe
+} from '@/types/media-to-docs';
 
 export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert,
@@ -120,7 +125,8 @@ function AiConvert() {
   const handleStartProcessing = (
     style: SummaryStyle,
     provider: LLMProvider,
-    enableVision: boolean
+    enableVision: boolean,
+    keyframeStrategy: KeyframeStrategy
   ) => {
     if (!audioPath) return;
 
@@ -140,6 +146,7 @@ function AiConvert() {
         style,
         provider,
         enableVision,
+        keyframeStrategy,
         skipAsr: false, // 🧪 测试模式：如需跳过 ASR，取消注释
         jobId: currentJobId
       },
