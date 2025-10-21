@@ -293,6 +293,7 @@ haibara-tools/
 - [Tailwind CSS](https://tailwindcss.com/) - CSS 框架
 - [Vite](https://vitejs.dev/) - 现代化构建工具
 - [FFmpeg](https://ffmpeg.org/) - 多媒体处理框架
+- [BilibiliVideoDownload](https://github.com/BilibiliVideoDownload/BilibiliVideoDownload) - Bilibili 视频下载
 
 ---
 

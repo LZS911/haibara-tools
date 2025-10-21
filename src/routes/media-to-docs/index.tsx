@@ -25,10 +25,10 @@ import { StepIcon } from './-components/Icons/StepIcon';
 import type {
   AiConvertStep,
   SummaryStyle,
-  LLMProvider,
   KeyframeStrategy,
   Keyframe
 } from '@/types/media-to-docs';
+import type { LLMProvider } from '@/types/llm';
 
 export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert,
@@ -39,8 +39,7 @@ function AiConvert() {
   const { t } = useTranslation();
   const { setIsTaskRunning, jobToLoadFromHistory, setJobToLoadFromHistory } =
     useAppStore();
-  //BV11T4EzyEdF
-  const [bvId, setBvId] = useState('BV1Zm4y197t6');
+  const [bvId, setBvId] = useState('BV11T4EzyEdF');
   const [currentStep, setCurrentStep] = useState<AiConvertStep>('input-bv-id');
   const [jobId, setJobId] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -122,13 +121,26 @@ function AiConvert() {
     );
   };
 
-  const handleStartProcessing = (
-    style: SummaryStyle,
-    provider: LLMProvider,
-    enableVision: boolean,
-    keyframeStrategy: KeyframeStrategy
-  ) => {
+  const handleStartProcessing = (params: {
+    style: SummaryStyle;
+    provider: LLMProvider;
+    enableVision: boolean;
+    keyframeStrategy: KeyframeStrategy;
+    forceAsr: boolean;
+    forceKeyframeGeneration: boolean;
+    keywords?: string;
+  }) => {
     if (!audioPath) return;
+
+    const {
+      style,
+      provider,
+      enableVision,
+      keyframeStrategy,
+      forceAsr,
+      forceKeyframeGeneration,
+      keywords
+    } = params;
 
     setSelectedStyle(style);
     setCurrentStep('processing');
@@ -147,8 +159,10 @@ function AiConvert() {
         provider,
         enableVision,
         keyframeStrategy,
-        skipAsr: false, // 🧪 测试模式：如需跳过 ASR，取消注释
-        jobId: currentJobId
+        jobId: currentJobId,
+        keywords,
+        forceAsr,
+        forceKeyframeGeneration
       },
       {
         onSuccess: (data) => {

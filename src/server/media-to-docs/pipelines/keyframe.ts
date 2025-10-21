@@ -2,7 +2,8 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import path from 'path';
-import fs from 'fs/promises';
+import fsp from 'fs/promises';
+import * as fs from 'fs';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import { progressManager } from '../progress-manager';
@@ -280,8 +281,8 @@ function extractSingleFrame(
         console.log(`FFmpeg process ended for ${outputPath}`);
         await new Promise((resolve) => setTimeout(resolve, 100));
         try {
-          await fs.access(outputPath);
-          const stats = await fs.stat(outputPath);
+          await fsp.access(outputPath);
+          const stats = await fsp.stat(outputPath);
           if (stats.size > 0) {
             console.log(
               `Successfully extracted frame to ${outputPath} (${stats.size} bytes)`
@@ -342,9 +343,75 @@ export async function extractKeyframes(
   utterances: AsrUtterance[],
   outputDir: string,
   strategy: KeyframeStrategy = 'semantic',
-  jobId?: string
+  jobId?: string,
+  keywords?: string
 ): Promise<Keyframe[]> {
   try {
+    const keyframesDir = path.join(outputDir, 'keyframes', strategy);
+    if (!fs.existsSync(keyframesDir)) {
+      await fsp.mkdir(keyframesDir, { recursive: true });
+    }
+    if (strategy === 'keyword') {
+      if (!keywords || keywords.trim() === '') {
+        console.log(
+          'Keyword strategy selected but no keywords provided. Returning empty array.'
+        );
+        return [];
+      }
+      const keywordList = keywords
+        .split(/[,\s，]+/)
+        .filter((k) => k.trim() !== '');
+      console.log(`Keyword strategy with keywords: ${keywordList.join(', ')}`);
+
+      const matchedFrames: Omit<Keyframe, 'imagePath'>[] = [];
+      for (const utt of utterances) {
+        for (const keyword of keywordList) {
+          if (utt.text.toLowerCase().includes(keyword.toLowerCase())) {
+            matchedFrames.push({
+              timestamp: (utt.start_time + utt.end_time) / 2 / 1000,
+              text: utt.text
+            });
+            break; // Move to the next utterance after finding one match
+          }
+        }
+      }
+
+      console.log(
+        `Found ${matchedFrames.length} matched utterances for keywords.`
+      );
+      if (matchedFrames.length === 0) return [];
+
+      const keyframes: Keyframe[] = [];
+
+      for (let i = 0; i < matchedFrames.length; i++) {
+        const frame = matchedFrames[i];
+        const outputPath = path.join(
+          keyframesDir,
+          `frame_${String(i + 1).padStart(3, '0')}.jpg`
+        );
+
+        if (jobId) {
+          const progress = Math.round(((i + 1) / matchedFrames.length) * 100);
+          progressManager.updateKeyframeProgress(
+            jobId,
+            progress,
+            `提取关键字帧 ${i + 1}/${matchedFrames.length}`
+          );
+        }
+
+        await extractSingleFrame(videoPath, frame.timestamp, outputPath);
+        keyframes.push({
+          ...frame,
+          imagePath: outputPath
+        });
+      }
+
+      if (jobId) {
+        progressManager.updateKeyframeProgress(jobId, 100, '关键字帧提取完成');
+      }
+      return keyframes;
+    }
+
     const duration = await getVideoDuration(videoPath);
     console.log(`Video duration: ${duration} seconds`);
     if (duration === 0) throw new Error('Failed to get video duration');
@@ -359,9 +426,6 @@ export async function extractKeyframes(
       `Extracting ${timestamps.length} keyframes with '${strategy}' strategy at:`,
       timestamps
     );
-
-    const keyframesDir = path.join(outputDir, 'keyframes');
-    await fs.mkdir(keyframesDir, { recursive: true });
 
     const keyframes: Keyframe[] = [];
     for (let i = 0; i < timestamps.length; i++) {
@@ -395,7 +459,7 @@ export async function extractKeyframes(
     }
 
     const keyframesInfoPath = path.join(outputDir, 'keyframes.json');
-    await fs.writeFile(
+    await fsp.writeFile(
       keyframesInfoPath,
       JSON.stringify(keyframes, null, 2),
       'utf-8'

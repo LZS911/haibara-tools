@@ -14,11 +14,7 @@ import {
 } from '../bilibili/core/bilibili';
 import download from '../bilibili/core/download';
 import type { SettingData } from '../../types/bilibili';
-import {
-  checkModelAvailability,
-  getCompletion,
-  getCompletionWithImages
-} from './pipelines/llm';
+import { checkModelAvailability } from '../llm/lib';
 import {
   getMediaRoot,
   checkDownloadCache,
@@ -29,17 +25,17 @@ import {
 import { progressManager } from './progress-manager';
 import { nanoid } from 'nanoid';
 import {
-  LLMProviderSchema,
   SummaryStyleSchema,
   type ProgressUpdate,
   type Keyframe,
   KeyframeStrategySchema
 } from '@/types/media-to-docs';
 import { extractKeyframes } from './pipelines/keyframe';
-import { LLM_PROVIDERS } from '../llm/providers';
+import { LLM_PROVIDERS, VISION_PROVIDERS } from '../llm/providers';
 import { KEYFRAME_STRATEGIES, STYLES } from './data';
+import { LLMProviderSchema } from '@/types/llm';
+import { getCompletionWithImages, getCompletion } from './pipelines/llm';
 
-// BV1BxnPzCESt
 const t = initTRPC.context<TRPCContext>().create();
 
 export const mediaToDocsRouter = t.router({
@@ -184,11 +180,13 @@ export const mediaToDocsRouter = t.router({
         style: SummaryStyleSchema,
         provider: LLMProviderSchema,
         enableVision: z.boolean().optional().default(true),
-        skipAsr: z.boolean().optional().default(false), // 测试模式：跳过 ASR
         jobId: z.string().optional(),
         keyframeStrategy: KeyframeStrategySchema.optional().default(
           KEYFRAME_STRATEGIES[0].value
-        )
+        ),
+        keywords: z.string().optional(),
+        forceAsr: z.boolean().optional().default(false),
+        forceKeyframeGeneration: z.boolean().optional().default(false)
       })
     )
     .mutation(async ({ input }) => {
@@ -198,8 +196,10 @@ export const mediaToDocsRouter = t.router({
         style,
         provider,
         enableVision,
-        skipAsr,
-        keyframeStrategy
+        keyframeStrategy,
+        keywords,
+        forceAsr,
+        forceKeyframeGeneration
       } = input;
       const jobId = input.jobId || nanoid();
 
@@ -221,21 +221,7 @@ export const mediaToDocsRouter = t.router({
           end_time: number;
         }> = [];
 
-        if (skipAsr) {
-          // 测试模式：使用模拟数据（时间戳使用毫秒，与真实 ASR 数据一致）
-          console.log('⚠️ TEST MODE: Skipping ASR, using mock data');
-          progressManager.updateTranscriptionProgress(
-            jobId,
-            100,
-            '测试模式：跳过语音识别'
-          );
-          fullText = '这是测试文本，用于跳过 ASR 流程直接测试关键帧提取功能。';
-          utterances = [
-            { text: '测试文本段落1', start_time: 0, end_time: 30000 },
-            { text: '测试文本段落2', start_time: 30000, end_time: 60000 },
-            { text: '测试文本段落3', start_time: 60000, end_time: 90000 }
-          ];
-        } else if (fs.existsSync(transcriptPath)) {
+        if (fs.existsSync(transcriptPath) && !forceAsr) {
           console.log('Found cached transcript, skipping ASR.');
           progressManager.updateTranscriptionProgress(
             jobId,
@@ -250,7 +236,11 @@ export const mediaToDocsRouter = t.router({
             utterances = JSON.parse(utterancesData);
           }
         } else {
-          console.log('No cached transcript found, running ASR...');
+          if (forceAsr) {
+            console.log('Force ASR is enabled, running ASR...');
+          } else {
+            console.log('No cached transcript found, running ASR...');
+          }
           progressManager.updateTranscriptionProgress(jobId, 0, '开始语音识别');
           const asrResult = await transcribeAudioFile(audioPath, jobId);
           fullText = asrResult.fullText;
@@ -274,20 +264,21 @@ export const mediaToDocsRouter = t.router({
         let summarizedContent: string;
 
         // 如果启用视觉模式且有视频文件
-        const visionProviders = ['openai', 'anthropic', 'gemini'];
         const useVision =
           enableVision &&
           videoPath &&
           fs.existsSync(videoPath) &&
-          visionProviders.includes(provider);
+          VISION_PROVIDERS.includes(provider);
 
         if (useVision && videoPath) {
           // 提取关键帧
-          const keyframesPath = path.join(outputDir, 'keyframes.json');
+          const keyframesPath = path.join(
+            outputDir,
+            `keyframes-${keyframeStrategy}.json`
+          );
 
-          if (fs.existsSync(keyframesPath)) {
-            // 使用缓存的关键帧
-            console.log('Found cached keyframes.');
+          if (fs.existsSync(keyframesPath) && !forceKeyframeGeneration) {
+            //使用缓存的关键帧
             progressManager.updateKeyframeProgress(
               jobId,
               100,
@@ -296,17 +287,40 @@ export const mediaToDocsRouter = t.router({
             const keyframesData = await fsp.readFile(keyframesPath, 'utf-8');
             keyframes = JSON.parse(keyframesData);
           } else {
+            if (forceKeyframeGeneration) {
+              console.log(
+                'Force keyframe generation is enabled, extracting new keyframes...'
+              );
+            } else {
+              console.log(
+                'No cached keyframes found, extracting new keyframes...'
+              );
+            }
             // 提取新的关键帧
-            console.log('Extracting keyframes from video...');
+            console.log(
+              `Extracting new keyframes with strategy: ${keyframeStrategy}`
+            );
             progressManager.updateKeyframeProgress(jobId, 0, '开始提取关键帧');
             keyframes = await extractKeyframes(
               videoPath,
               utterances,
               outputDir,
               keyframeStrategy,
-              jobId
+              jobId,
+              keywords
             );
+            await fsp.writeFile(
+              keyframesPath,
+              JSON.stringify(keyframes, null, 2)
+            );
+            console.log('Saved new keyframes and meta data.');
           }
+
+          // 如果是关键字策略，则只使用与关键字相关的文本
+          const textForLLM =
+            keyframeStrategy === 'keyword'
+              ? keyframes.map((kf) => kf.text).join('\n')
+              : fullText;
 
           // 使用多模态 LLM
           console.log('Generating content with vision...');
@@ -316,7 +330,7 @@ export const mediaToDocsRouter = t.router({
             '开始生成图文文档'
           );
           summarizedContent = await getCompletionWithImages(
-            fullText,
+            textForLLM,
             keyframes,
             provider,
             jobId
@@ -383,13 +397,6 @@ export const mediaToDocsRouter = t.router({
         progressManager.markError(jobId, errorMessage);
         throw error;
       }
-    }),
-  checkModelAvailability: t.procedure
-    .input(z.object({ provider: LLMProviderSchema }))
-    .mutation(async ({ input }) => {
-      const { provider } = input;
-      const isAvailable = await checkModelAvailability(provider);
-      return { isAvailable };
     }),
 
   getOptionsData: t.procedure.query(async () => {

@@ -20,6 +20,11 @@ export const KEYFRAME_STRATEGIES: {
     hint: '基于语音和语义，自动选择信息量最高的画面'
   },
   {
+    value: 'keyword',
+    label: '关键字匹配',
+    hint: '基于 ASR 结果匹配关键字，精准提取相关画面'
+  },
+  {
     value: 'uniform',
     label: '均匀采样',
     hint: '按固定时间间隔截图，适合风景或无对话视频'
