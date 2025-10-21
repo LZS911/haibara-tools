@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { CONSTANT } from '../../data/constant';
 import { cn } from '../-lib/utils';
+import { Label } from '../-components/ui/label';
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
@@ -299,12 +300,12 @@ function Settings() {
 
                       <div className="space-y-4">
                         <div>
-                          <label
+                          <Label
                             htmlFor={provider.apiKeyField}
                             className="mb-2 block text-sm font-medium text-slate-700"
                           >
                             API Key
-                          </label>
+                          </Label>
                           <Input
                             id={provider.apiKeyField}
                             type="password"
@@ -320,10 +321,10 @@ function Settings() {
                         </div>
 
                         <div>
-                          <label
+                          <Label
                             htmlFor={provider.modelNameField}
                             className="mb-2 block text-sm font-medium text-slate-700"
-                          ></label>
+                          ></Label>
                           <Input
                             id={provider.modelNameField}
                             type="text"
@@ -366,12 +367,12 @@ function Settings() {
             </div>
             <div className="space-y-4">
               <div>
-                <label
+                <Label
                   htmlFor="VOLC_APP_ID"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   App ID
-                </label>
+                </Label>
                 <Input
                   id="VOLC_APP_ID"
                   type="text"
@@ -383,12 +384,12 @@ function Settings() {
                 />
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="VOLC_ACCESS_TOKEN"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   Access Token
-                </label>
+                </Label>
                 <Input
                   id="VOLC_ACCESS_TOKEN"
                   type="password"
@@ -419,12 +420,12 @@ function Settings() {
             </div>
             <div className="space-y-4">
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_SESSDATA"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   SESSDATA
-                </label>
+                </Label>
                 <Input
                   id="BILIBILI_SESSDATA"
                   type="password"
@@ -439,12 +440,12 @@ function Settings() {
                 </p>
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_BFE_ID"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   BFE_ID {t('optional', '(可选)')}
-                </label>
+                </Label>
                 <Input
                   id="BILIBILI_BFE_ID"
                   type="text"
@@ -456,12 +457,12 @@ function Settings() {
                 />
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_DOWNLOAD_PATH"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   {t('settings.bilibili_download_path')}
-                </label>
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="BILIBILI_DOWNLOAD_PATH"
@@ -494,12 +495,12 @@ function Settings() {
                 </div>
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_DOWNLOADING_MAX_SIZE"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   {t('settings.bilibili_max_download_size')}
-                </label>
+                </Label>
                 <Input
                   id="BILIBILI_DOWNLOADING_MAX_SIZE"
                   type="number"
@@ -520,12 +521,12 @@ function Settings() {
               <div className="mt-6 space-y-4">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-danmaku"
                       className="font-medium text-slate-800"
                     >
                       {t('settings.bilibili_download_danmaku')}
-                    </label>
+                    </Label>
                     <p className="text-sm text-slate-500">
                       {t('settings.bilibili_download_danmaku_desc')}
                     </p>
@@ -540,12 +541,12 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-cover"
                       className="font-medium text-slate-800"
                     >
                       {t('settings.bilibili_download_cover')}
-                    </label>
+                    </Label>
                     <p className="text-sm text-slate-500">
                       {t('settings.bilibili_download_cover_desc')}
                     </p>
@@ -560,12 +561,12 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-subtitle"
                       className="font-medium text-slate-800"
                     >
                       {t('settings.bilibili_download_subtitle')}
-                    </label>
+                    </Label>
                     <p className="text-sm text-slate-500">
                       {t('settings.bilibili_download_subtitle_desc')}
                     </p>
@@ -580,12 +581,12 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-folder"
                       className="font-medium text-slate-800"
                     >
                       {t('settings.bilibili_create_folder')}
-                    </label>
+                    </Label>
                     <p className="text-sm text-slate-500">
                       {t('settings.bilibili_create_folder_desc')}
                     </p>

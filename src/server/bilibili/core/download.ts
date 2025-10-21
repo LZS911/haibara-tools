@@ -126,12 +126,15 @@ export default async (
   );
   const audioTotalLength = Number(audioHeaders['content-length'] || 0);
 
-  // 获取 Video 信息
-  const videoHeaders = await getHeadersWithFallback(
-    videoInfo.downloadUrl.video,
-    requestOptions
-  );
-  const videoTotalLength = Number(videoHeaders['content-length'] || 0);
+  // 获取 Video 信息（如果不是只下载音频）
+  let videoTotalLength = 0;
+  if (!setting.audioOnly) {
+    const videoHeaders = await getHeadersWithFallback(
+      videoInfo.downloadUrl.video,
+      requestOptions
+    );
+    videoTotalLength = Number(videoHeaders['content-length'] || 0);
+  }
   const totalSize = videoTotalLength + audioTotalLength;
 
   let downloadedSize = 0;
@@ -193,18 +196,20 @@ export default async (
   };
 
   // 5. 执行下载
-  await downloadInChunks(
-    videoInfo.downloadUrl.video,
-    videoInfo.filePathList[2],
-    videoTotalLength,
-    1
-  );
-  await sleep(500);
+  if (!setting.audioOnly) {
+    await downloadInChunks(
+      videoInfo.downloadUrl.video,
+      videoInfo.filePathList[2],
+      videoTotalLength,
+      1
+    );
+    await sleep(500);
+  }
   await downloadInChunks(
     videoInfo.downloadUrl.audio,
     videoInfo.filePathList[3],
     audioTotalLength,
-    2
+    setting.audioOnly ? 1 : 2
   );
   await sleep(500);
 

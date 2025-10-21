@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
 import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
+import { Route as VoiceCloningTrainingIndexRouteImport } from './routes/voice-cloning/training/index'
+import { Route as VoiceCloningSynthesisIndexRouteImport } from './routes/voice-cloning/synthesis/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +37,18 @@ const BilibiliDownloaderIndexRoute = BilibiliDownloaderIndexRouteImport.update({
   path: '/bilibili-downloader/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VoiceCloningTrainingIndexRoute =
+  VoiceCloningTrainingIndexRouteImport.update({
+    id: '/voice-cloning/training/',
+    path: '/voice-cloning/training/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const VoiceCloningSynthesisIndexRoute =
+  VoiceCloningSynthesisIndexRouteImport.update({
+    id: '/voice-cloning/synthesis/',
+    path: '/voice-cloning/synthesis/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MediaToDocsConvertHistoryIndexRoute =
   MediaToDocsConvertHistoryIndexRouteImport.update({
     id: '/media-to-docs/convert-history/',
@@ -48,6 +62,8 @@ export interface FileRoutesByFullPath {
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
+  '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
+  '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -55,6 +71,8 @@ export interface FileRoutesByTo {
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
+  '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
+  '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -63,6 +81,8 @@ export interface FileRoutesById {
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
+  '/voice-cloning/synthesis/': typeof VoiceCloningSynthesisIndexRoute
+  '/voice-cloning/training/': typeof VoiceCloningTrainingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -72,6 +92,8 @@ export interface FileRouteTypes {
     | '/media-to-docs'
     | '/settings'
     | '/media-to-docs/convert-history'
+    | '/voice-cloning/synthesis'
+    | '/voice-cloning/training'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -79,6 +101,8 @@ export interface FileRouteTypes {
     | '/media-to-docs'
     | '/settings'
     | '/media-to-docs/convert-history'
+    | '/voice-cloning/synthesis'
+    | '/voice-cloning/training'
   id:
     | '__root__'
     | '/'
@@ -86,6 +110,8 @@ export interface FileRouteTypes {
     | '/media-to-docs/'
     | '/settings/'
     | '/media-to-docs/convert-history/'
+    | '/voice-cloning/synthesis/'
+    | '/voice-cloning/training/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +120,8 @@ export interface RootRouteChildren {
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
+  VoiceCloningSynthesisIndexRoute: typeof VoiceCloningSynthesisIndexRoute
+  VoiceCloningTrainingIndexRoute: typeof VoiceCloningTrainingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -126,6 +154,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BilibiliDownloaderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/voice-cloning/training/': {
+      id: '/voice-cloning/training/'
+      path: '/voice-cloning/training'
+      fullPath: '/voice-cloning/training'
+      preLoaderRoute: typeof VoiceCloningTrainingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voice-cloning/synthesis/': {
+      id: '/voice-cloning/synthesis/'
+      path: '/voice-cloning/synthesis'
+      fullPath: '/voice-cloning/synthesis'
+      preLoaderRoute: typeof VoiceCloningSynthesisIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/media-to-docs/convert-history/': {
       id: '/media-to-docs/convert-history/'
       path: '/media-to-docs/convert-history'
@@ -142,6 +184,8 @@ const rootRouteChildren: RootRouteChildren = {
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,
+  VoiceCloningSynthesisIndexRoute: VoiceCloningSynthesisIndexRoute,
+  VoiceCloningTrainingIndexRoute: VoiceCloningTrainingIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

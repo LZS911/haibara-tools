@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/routes/-components/ui/select';
+import { Label } from '../../-components/ui/label';
 interface QualitySelectorProps {
   options: Array<{ label: string; value: number }>;
   value?: number;
@@ -30,9 +31,9 @@ export function QualitySelector({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-slate-700">
+      <Label className="block text-sm font-medium text-slate-700">
         {t('bilibili_downloader.quality_selector_label')}
-      </label>
+      </Label>
       <Select
         value={value?.toString() || ''}
         onValueChange={(e) => onChange(Number(e))}

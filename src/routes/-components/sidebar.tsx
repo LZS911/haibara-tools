@@ -5,7 +5,9 @@ import {
   Database,
   ChevronLeft,
   CloudUpload,
-  Download
+  Download,
+  Mic,
+  AudioLines
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
@@ -75,6 +77,18 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       path: '/bilibili-downloader',
       label: t('common.nav_bilibili_downloader'),
       icon: Download,
+      category: 'tools'
+    },
+    {
+      path: '/voice-cloning/training',
+      label: t('common.nav_voice_training'),
+      icon: Mic,
+      category: 'tools'
+    },
+    {
+      path: '/voice-cloning/synthesis',
+      label: t('common.nav_voice_synthesis'),
+      icon: AudioLines,
       category: 'tools'
     },
     {

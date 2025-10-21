@@ -5,6 +5,7 @@ import * as fs from 'node:fs';
 import express from 'express';
 import { trpcMiddleWare } from './trpc';
 import { getMediaRoot } from './media-to-docs/cache';
+import { getTtsRoot, getVoiceCloningRoot } from './voice-cloning/data';
 
 const PORT =
   typeof process.env.PORT !== 'undefined'
@@ -41,8 +42,20 @@ export const createServer = async (
     express.static(getMediaRoot())(req, res, next);
   });
 
-  // Use media-to-docs routes
-  // app.use('/api/media-to-docs', mediaToDocsRoutes);
+  // Serve voice cloning TTS audio files
+  app.use('/voice-cloning-files/tts', (req, res, next) => {
+    console.log('[Server] Serving TTS files from:', getTtsRoot());
+    express.static(getTtsRoot())(req, res, next);
+  });
+
+  // Serve voice cloning training files
+  app.use('/voice-cloning-files', (req, res, next) => {
+    console.log(
+      '[Server] Serving voice cloning files from:',
+      getVoiceCloningRoot()
+    );
+    express.static(getVoiceCloningRoot())(req, res, next);
+  });
 
   if (!isProd) {
     console.log('[Server] Setting up development mode with Vite...');

@@ -9,6 +9,7 @@ export interface SettingData {
   isFolder: boolean;
   isCover: boolean;
   downloadingMaxSize: number;
+  audioOnly?: boolean;
 }
 
 export interface SettingDataEasy {

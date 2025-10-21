@@ -10,6 +10,7 @@ import type { SummaryStyle, KeyframeStrategy } from '@/types/media-to-docs';
 import { Switch } from '@/routes/-components/ui/switch';
 import type { LLMProvider } from '@/types/llm';
 import { Input } from '@/routes/-components/ui/input';
+import { Label } from '../../-components/ui/label';
 
 type TestStatus = 'idle' | 'testing' | 'success' | 'error';
 
@@ -152,9 +153,9 @@ export function OptionsSelector({
       <div className="space-y-4">
         {/* -- Content Style -- */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">
+          <Label className="text-sm font-medium">
             {t('media_to_docs.select_style_title')}
-          </label>
+          </Label>
           <div className="flex flex-wrap gap-2 mt-2">
             {styles.map((style) => (
               <Button
@@ -172,9 +173,9 @@ export function OptionsSelector({
 
         {/* -- LLM Provider -- */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">
+          <Label className="text-sm font-medium">
             {t('media_to_docs.select_provider_title')}
-          </label>
+          </Label>
           <div className="space-y-2 mt-2">
             {visibleProviders.map((provider) => {
               const isSelectable = providerStatuses[provider.id] === 'success';
@@ -237,9 +238,9 @@ export function OptionsSelector({
         {/* -- Vision Mode -- */}
         {hasVideo && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <Label className="text-sm font-medium">
               {t('media_to_docs.vision_mode_title')}
-            </label>
+            </Label>
             <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
               <div className="flex-1">
                 <div className="font-medium text-sm">
@@ -268,9 +269,9 @@ export function OptionsSelector({
         {/* -- Keyframe Strategy -- */}
         {enableVision && supportVisionMode && keyframeStrategies && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <Label className="text-sm font-medium">
               {t('media_to_docs.keyframe_strategy_title')}
-            </label>
+            </Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {keyframeStrategies.map((strategy) => (
                 <Button
@@ -295,9 +296,9 @@ export function OptionsSelector({
             </div>
             {selectedKeyframeStrategy === 'keyword' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <Label className="text-sm font-medium">
                   {t('media_to_docs.keywords_title')}
-                </label>
+                </Label>
                 <Input
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
@@ -306,9 +307,9 @@ export function OptionsSelector({
                 />
               </div>
             )}
-            <label className="text-xs text-gray-500">
+            <Label className="text-xs text-gray-500">
               {t('media_to_docs.keyframe_strategy_hint')}
-            </label>
+            </Label>
             <div className="text-xs text-gray-500 mt-1">
               {
                 keyframeStrategies.find(
@@ -320,9 +321,9 @@ export function OptionsSelector({
         )}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">
+          <Label className="text-sm font-medium">
             {t('media_to_docs.force_asr_title')}
-          </label>
+          </Label>
 
           <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
             <div className="flex-1">
@@ -339,9 +340,9 @@ export function OptionsSelector({
 
           {enableVision && supportVisionMode && keyframeStrategies && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <Label className="text-sm font-medium">
                 {t('media_to_docs.force_keyframe_generation_title')}
-              </label>
+              </Label>
               <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
                 <div className="flex-1">
                   <div className="font-medium text-sm">
