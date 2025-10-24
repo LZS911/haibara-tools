@@ -42,7 +42,7 @@ export async function uploadAudioForTraining(
   const url = `${VOLCANO_ENGINE_HOST}/api/v1/mega_tts/audio/upload`;
   const headers = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer;${token}`,
+    Authorization: `Bearer; ${token}`,
     'Resource-Id': 'volc.megatts.voiceclone'
   };
 
@@ -82,7 +82,8 @@ export async function uploadAudioForTraining(
     audios: audios,
     source: 2,
     language: 0,
-    model_type: 1
+    model_type: 1,
+    extra_params: JSON.stringify({ voice_clone_enable_mss: true })
   };
 
   try {

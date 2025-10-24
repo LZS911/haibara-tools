@@ -60,6 +60,26 @@ export interface SynthesizeSpeechResponse {
   audioUrl: string;
 }
 
+export interface SynthesisRecord {
+  id: string;
+  speakerId: string;
+  text: string;
+  audioUrl: string;
+  audioPath: string;
+  createdAt: string;
+}
+
+// 音色 ID 类型
+export interface Speaker {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface SpeakerWithStatus extends Speaker {
+  status?: TrainingStatusEnum;
+}
+
 // 训练记录类型
 export interface TrainingRecord {
   speakerId: string;

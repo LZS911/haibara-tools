@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Card,
   CardContent,
@@ -10,7 +10,12 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { trpc } from '@/router';
 import { Spinner } from '@/routes/-components/spinner';
-import { useMutation, useQuery, skipToken } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  skipToken,
+  useQueryClient
+} from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { Button } from '@/routes/-components/ui/button';
 import { Input } from '@/routes/-components/ui/input';
@@ -18,22 +23,49 @@ import { Label } from '@/routes/-components/ui/label';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { TrainingStatusEnum } from '@/types/voice-cloning';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Mic } from 'lucide-react';
+import { RefreshCw, Trash2, Plus } from 'lucide-react';
 import { useConfirmationDialog } from '../../-components/ui/use-confirm-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '../../-components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/routes/-components/ui/dialog';
+import { SpeakerStatusItem } from './-components/SpeakerStatusItem';
 
 export const Route = createFileRoute('/voice-cloning/training/')({
-  component: VoiceTrainingPage
+  component: VoiceTrainingPage,
+  staticData: { keepAlive: true }
 });
 
 function VoiceTrainingPage() {
   const { t } = useTranslation();
   const { confirm } = useConfirmationDialog();
+  const queryClient = useQueryClient();
 
   // 下载状态
-  const [bvId, setBvId] = useState('BV1TSWmzZEDg');
-  const [speakerId, setSpeakerId] = useState('S_jxJkgn3H1');
+  const [bvIdOrUrl, setBvIdOrUrl] = useState('BV1dg41187wd');
+  const [selectedSpeakerId, setSelectedSpeakerId] = useState<string>('');
   const [jobId, setJobId] = useState<string>('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [refreshingSpeakerId, setRefreshingSpeakerId] = useState<string | null>(
+    null
+  );
+
+  // 新增音色 ID 状态
+  const [isAddSpeakerIDDialogOpen, setIsAddSpeakerIDDialogOpen] =
+    useState(false);
+  const [newSpeakerID, setNewSpeakerID] = useState('');
+  const [newSpeakerName, setNewSpeakerName] = useState('');
 
   // mutations
   const downloadMutation = useMutation(
@@ -44,16 +76,65 @@ function VoiceTrainingPage() {
     trpc.voiceCloning.startTraining.mutationOptions()
   );
 
-  const deleteTrainingMutation = useMutation(
-    trpc.voiceCloning.deleteTraining.mutationOptions()
-  );
+  const addSpeakerIDMutation = useMutation({
+    ...trpc.voiceCloning.addSpeakerID.mutationOptions(),
+    onSuccess: (data) => {
+      toast.success(t('voice_cloning.add_speaker_success'));
+      queryClient.invalidateQueries(
+        trpc.voiceCloning.listSpeakerIDs.queryOptions()
+      );
+      setNewSpeakerID('');
+      setNewSpeakerName('');
+      setIsAddSpeakerIDDialogOpen(false);
+      if (data.speaker) {
+        setSelectedSpeakerId(data.speaker.id);
+      }
+    },
+    onError: (error) => {
+      toast.error(t('voice_cloning.add_speaker_failed') + ': ' + error.message);
+    }
+  });
 
-  // 查询训练列表
+  const deleteSpeakerIDMutation = useMutation({
+    ...trpc.voiceCloning.deleteSpeakerID.mutationOptions(),
+    onSuccess: () => {
+      toast.success(t('voice_cloning.delete_speaker_success'));
+      queryClient.invalidateQueries(
+        trpc.voiceCloning.listSpeakerIDs.queryOptions()
+      );
+    },
+    onError: (error) => {
+      toast.error(
+        t('voice_cloning.delete_speaker_failed') + ': ' + error.message
+      );
+    }
+  });
+
+  const handleRefreshStatus = async (speakerId: string) => {
+    setRefreshingSpeakerId(speakerId);
+    try {
+      await queryClient.fetchQuery(
+        trpc.voiceCloning.getTrainingStatus.queryOptions({ speakerId })
+      );
+
+      // Invalidate the specific speaker's status query to refetch
+      queryClient.invalidateQueries(
+        trpc.voiceCloning.getTrainingStatus.queryOptions({ speakerId })
+      );
+      toast.success(t('voice_cloning.status_updated'));
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setRefreshingSpeakerId(null);
+    }
+  };
+
+  // 查询音色 ID 列表
   const {
-    data: trainings = [],
-    refetch: refetchTrainings,
-    isLoading: isLoadingTrainings
-  } = useQuery(trpc.voiceCloning.listTrainings.queryOptions());
+    data: speakerIDs = [],
+    refetch: refetchSpeakerIDs,
+    isLoading: isLoadingSpeakerIDs
+  } = useQuery(trpc.voiceCloning.listSpeakerIDs.queryOptions());
 
   // 订阅下载进度
   const subscribeProgress = useSubscription(
@@ -63,12 +144,12 @@ function VoiceTrainingPage() {
   );
 
   const handleDownloadAndTrain = async () => {
-    if (!bvId.trim()) {
-      toast.error(t('voice_cloning.error_no_speaker_id'));
+    if (!bvIdOrUrl.trim()) {
+      toast.error(t('voice_cloning.error_no_bv_id'));
       return;
     }
 
-    if (!speakerId.trim()) {
+    if (!selectedSpeakerId.trim()) {
       toast.error(t('voice_cloning.error_no_speaker_id'));
       return;
     }
@@ -77,38 +158,54 @@ function VoiceTrainingPage() {
     setJobId(newJobId);
     setIsDownloading(true);
 
+    const currentBvId = bvIdOrUrl;
+    const currentSpeakerId = selectedSpeakerId;
+
     // 第一步：下载音频
     downloadMutation.mutate(
-      { bvIdOrUrl: bvId, jobId: newJobId },
+      { bvIdOrUrl: currentBvId, jobId: newJobId },
       {
         onSuccess: async (data) => {
+          setIsDownloading(false);
           if (data.success && data.audioPath) {
-            setIsDownloading(false);
+            toast.info(t('voice_cloning.download_success_start_training'));
+            // 重置表单
+            setBvIdOrUrl('');
+            // selectedSpeakerId 不重置，保持选中状态
 
             // 第二步：启动训练
             startTrainingMutation.mutate(
               {
                 audioPath: data.audioPath,
-                speakerId: speakerId.trim(),
-                bvId: bvId,
-                title: data.title || bvId
+                speakerId: currentSpeakerId,
+                bvIdOrUrl: currentBvId,
+                title: data.title || currentBvId
               },
               {
                 onSuccess: () => {
-                  toast.success(t('voice_cloning.training_status_training'));
-                  // 重置表单
-                  setBvId('');
-                  setSpeakerId('');
-                  refetchTrainings();
+                  toast.success(t('voice_cloning.training_succeeded'));
+                  // 训练成功后，刷新音色状态
+                  queryClient.invalidateQueries(
+                    trpc.voiceCloning.getTrainingStatus.queryOptions({
+                      speakerId: currentSpeakerId
+                    })
+                  );
                 },
                 onError: (error) => {
-                  toast.error(error.message);
+                  toast.error(
+                    `${t('voice_cloning.training_failed')}: ${error.message}`
+                  );
+                  // 训练失败后，刷新音色状态
+                  queryClient.invalidateQueries(
+                    trpc.voiceCloning.getTrainingStatus.queryOptions({
+                      speakerId: currentSpeakerId
+                    })
+                  );
                 }
               }
             );
           } else {
             toast.error(t('voice_cloning.error_download_failed'));
-            setIsDownloading(false);
           }
         },
         onError: (error) => {
@@ -119,26 +216,23 @@ function VoiceTrainingPage() {
     );
   };
 
-  const handleDelete = async (speakerId: string) => {
+  const handleAddSpeakerID = () => {
+    if (!newSpeakerID.trim() || !newSpeakerName.trim()) {
+      toast.error(t('voice_cloning.error_speaker_id_name_required'));
+      return;
+    }
+    addSpeakerIDMutation.mutate({ id: newSpeakerID, name: newSpeakerName });
+  };
+
+  const handleDeleteSpeakerID = async (speakerId: string) => {
     const confirmed = await confirm({
-      title: t('voice_cloning.confirm_delete_title'),
-      description: t('voice_cloning.confirm_delete_desc')
+      title: t('voice_cloning.confirm_delete_speaker_title'),
+      description: t('voice_cloning.confirm_delete_speaker_desc')
     });
 
     if (!confirmed) return;
 
-    deleteTrainingMutation.mutate(
-      { speakerId },
-      {
-        onSuccess: () => {
-          toast.success(t('voice_cloning.delete_success'));
-          refetchTrainings();
-        },
-        onError: (error) => {
-          toast.error(t('voice_cloning.delete_failed') + ': ' + error.message);
-        }
-      }
-    );
+    deleteSpeakerIDMutation.mutate({ speakerId });
   };
 
   const getStatusText = (status: TrainingStatusEnum) => {
@@ -171,8 +265,7 @@ function VoiceTrainingPage() {
     }
   };
 
-  const isPending =
-    downloadMutation.isPending || startTrainingMutation.isPending;
+  const isSubmitting = downloadMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -187,6 +280,126 @@ function VoiceTrainingPage() {
         </div>
       </div>
 
+      {/* 音色管理 */}
+      <Card className="border-slate-200 bg-white">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-base font-medium text-slate-900">
+            {t('voice_cloning.speaker_management_title')}
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddSpeakerIDDialogOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t('voice_cloning.add_speaker_button')}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSpeakerIDs ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner className="h-6 w-6" />
+            </div>
+          ) : speakerIDs.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              {t('voice_cloning.no_speakers_added')}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {speakerIDs.map((speaker) => (
+                <div
+                  key={speaker.id}
+                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-slate-900 truncate">
+                      {speaker.name} ({speaker.id})
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {t('voice_cloning.added_on')}:{' '}
+                      {new Date(speaker.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteSpeakerID(speaker.id)}
+                    disabled={
+                      deleteSpeakerIDMutation.isPending &&
+                      deleteSpeakerIDMutation.variables?.speakerId ===
+                        speaker.id
+                    }
+                  >
+                    {deleteSpeakerIDMutation.isPending &&
+                    deleteSpeakerIDMutation.variables?.speakerId ===
+                      speaker.id ? (
+                      <Spinner className="h-4 w-4" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 添加音色 ID 对话框 */}
+      <Dialog
+        open={isAddSpeakerIDDialogOpen}
+        onOpenChange={setIsAddSpeakerIDDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('voice_cloning.add_speaker_title')}</DialogTitle>
+            <DialogDescription>
+              {t('voice_cloning.add_speaker_desc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="newSpeakerName" className="text-right">
+                {t('voice_cloning.speaker_name_label')}
+              </Label>
+              <Input
+                id="newSpeakerName"
+                value={newSpeakerName}
+                onChange={(e) => setNewSpeakerName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="newSpeakerID" className="text-right">
+                {t('voice_cloning.speaker_id_label')}
+              </Label>
+              <Input
+                id="newSpeakerID"
+                value={newSpeakerID}
+                onChange={(e) => setNewSpeakerID(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={handleAddSpeakerID}
+              disabled={
+                addSpeakerIDMutation.isPending ||
+                !newSpeakerID.trim() ||
+                !newSpeakerName.trim()
+              }
+            >
+              {addSpeakerIDMutation.isPending ? (
+                <Spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {t('voice_cloning.save_speaker_button')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* 训练表单 */}
       <Card className="border-slate-200 bg-white">
         <CardHeader>
@@ -199,14 +412,14 @@ function VoiceTrainingPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="bvId">BV ID / URL</Label>
+            <Label htmlFor="bvIdOrUrl">BV ID / URL</Label>
             <Input
-              id="bvId"
+              id="bvIdOrUrl"
               type="text"
               placeholder={t('voice_cloning.input_bv_placeholder')}
-              value={bvId}
-              onChange={(e) => setBvId(e.target.value)}
-              disabled={isPending}
+              value={bvIdOrUrl}
+              onChange={(e) => setBvIdOrUrl(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -214,30 +427,39 @@ function VoiceTrainingPage() {
             <Label htmlFor="speakerId">
               {t('voice_cloning.speaker_id_label')}
             </Label>
-            <Input
-              id="speakerId"
-              type="text"
-              placeholder={t('voice_cloning.speaker_id_placeholder')}
-              value={speakerId}
-              onChange={(e) => setSpeakerId(e.target.value)}
-              disabled={isPending}
-            />
-            <p className="text-xs text-slate-500">
-              {t('voice_cloning.speaker_id_help')}
-            </p>
+            <Select
+              value={selectedSpeakerId}
+              onValueChange={setSelectedSpeakerId}
+              disabled={
+                isSubmitting || isLoadingSpeakerIDs || speakerIDs.length === 0
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={t('voice_cloning.select_speaker_placeholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {speakerIDs.map((speaker) => (
+                  <SelectItem key={speaker.id} value={speaker.id}>
+                    {speaker.name} ({speaker.id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button
             onClick={handleDownloadAndTrain}
-            disabled={isPending || !bvId.trim() || !speakerId.trim()}
+            disabled={
+              isSubmitting || !bvIdOrUrl.trim() || !selectedSpeakerId.trim()
+            }
             className="w-full"
           >
-            {isPending ? (
+            {isSubmitting ? (
               <>
-                <Spinner className="mr-2 h-4 w-4" />
-                {isDownloading
-                  ? t('voice_cloning.downloading_audio')
-                  : t('voice_cloning.training_status_training')}
+                <Spinner className="mr-2 h-4 w-4 animate-spin" />
+                {t('voice_cloning.downloading_audio')}
               </>
             ) : (
               t('voice_cloning.start_training_button')
@@ -248,7 +470,6 @@ function VoiceTrainingPage() {
           {isDownloading && subscribeProgress.data && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2 text-sm text-blue-700">
-                <Spinner className="h-4 w-4" />
                 <span>
                   {subscribeProgress.data.message ||
                     t('voice_cloning.progress_downloading')}
@@ -268,80 +489,45 @@ function VoiceTrainingPage() {
         </CardContent>
       </Card>
 
-      {/* 训练列表 */}
+      {/* 音色状态列表 */}
       <Card className="border-slate-200 bg-white">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium text-slate-900">
-              {t('voice_cloning.training_list_title')}
+              {t('voice_cloning.speaker_status_list_title')}
             </CardTitle>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => refetchTrainings()}
-              disabled={isLoadingTrainings}
+              onClick={() => refetchSpeakerIDs()}
+              disabled={isLoadingSpeakerIDs}
             >
               <RefreshCw
-                className={`h-4 w-4 ${isLoadingTrainings ? 'animate-spin' : ''}`}
+                className={`h-4 w-4 ${isLoadingSpeakerIDs ? 'animate-spin' : ''}`}
               />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingTrainings ? (
+          {isLoadingSpeakerIDs ? (
             <div className="flex items-center justify-center py-8">
               <Spinner className="h-6 w-6" />
             </div>
-          ) : trainings.length === 0 ? (
+          ) : speakerIDs.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
-              {t('voice_cloning.training_list_empty')}
+              {t('voice_cloning.no_speakers_to_display')}
             </div>
           ) : (
             <div className="space-y-3">
-              {trainings.map((training) => (
-                <div
-                  key={training.speakerId}
-                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Mic className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                      <h3 className="font-medium text-slate-900 truncate">
-                        {training.title}
-                      </h3>
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-sm text-slate-500">
-                      <span>ID: {training.speakerId}</span>
-                      <span className={getStatusColor(training.status)}>
-                        {getStatusText(training.status)}
-                      </span>
-                      <span>
-                        {new Date(training.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    {training.status === TrainingStatusEnum.Success ||
-                    training.status === TrainingStatusEnum.Active ? (
-                      <Link
-                        to="/voice-cloning/synthesis"
-                        search={{ speakerId: training.speakerId }}
-                      >
-                        <Button size="sm" variant="default">
-                          {t('voice_cloning.use_for_synthesis')}
-                        </Button>
-                      </Link>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(training.speakerId)}
-                      disabled={deleteTrainingMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+              {speakerIDs.map((speaker) => (
+                <SpeakerStatusItem
+                  key={speaker.id}
+                  speaker={speaker}
+                  refreshingSpeakerId={refreshingSpeakerId}
+                  handleRefreshStatus={handleRefreshStatus}
+                  getStatusText={getStatusText}
+                  getStatusColor={getStatusColor}
+                />
               ))}
             </div>
           )}

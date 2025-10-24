@@ -6,5 +6,6 @@ export default {
   app_title: 'Haibara Tools',
   cancel: 'Cancel',
   confirm: 'Confirm',
-  select_all: 'Select All'
+  select_all: 'Select All',
+  close_button: 'Close'
 };

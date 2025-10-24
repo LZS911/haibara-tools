@@ -12,8 +12,20 @@ export default {
   // 训练表单
   speaker_id_label: '音色 ID',
   speaker_id_placeholder: '为这个音色设置一个唯一 ID',
-  speaker_id_help: '用于标识和管理您的音色，建议使用英文字母和数字',
   video_title_label: '视频标题',
+
+  // 音色管理
+  speaker_management_title: '音色管理',
+  add_speaker_button: '添加音色',
+  no_speakers_added: '暂未添加任何音色',
+  added_on: '添加于',
+  add_speaker_title: '添加新音色 ID',
+  add_speaker_desc: '输入音色 ID 和一个描述性名称。',
+  speaker_name_label: '音色名称',
+  save_speaker_button: '保存音色',
+  select_speaker_placeholder: '选择一个音色 ID',
+  speaker_status_list_title: '音色状态列表',
+  no_speakers_to_display: '暂无音色可显示',
 
   // 训练列表
   training_list_title: '训练列表',
@@ -23,6 +35,7 @@ export default {
   training_status_success: '训练完成',
   training_status_failed: '训练失败',
   training_status_active: '已激活',
+  training_status_uploading: '上传音频中',
 
   // 训练操作
   check_status: '查询状态',
@@ -32,6 +45,11 @@ export default {
   confirm_delete_desc: '确定要删除这个训练记录吗？',
   delete_success: '删除成功',
   delete_failed: '删除失败',
+  status_updated: '状态已更新',
+  confirm_delete_speaker_title: '确认删除音色',
+  confirm_delete_speaker_desc: '确定要删除这个音色 ID 吗？此操作无法撤销。',
+  delete_speaker_success: '音色删除成功',
+  delete_speaker_failed: '删除音色失败',
 
   // 合成页面
   synthesis_page_title: '语音合成',
@@ -60,13 +78,22 @@ export default {
   play_audio: '播放',
   pause_audio: '暂停',
 
+  // History
+  history_title: '合成历史',
+  history_desc: '查看您之前生成的音频。',
+  no_history: '暂无历史记录。',
+  delete_history_success: '历史记录删除成功。',
+
   // 错误消息
   error_download_failed: '下载失败',
   error_training_failed: '训练失败',
   error_synthesis_failed: '合成失败',
-  error_no_speaker_id: '请输入音色 ID',
+  error_no_bv_id: '请输入 BV 号或完整 URL',
+  error_no_speaker_id: '请选择一个音色 ID',
   error_no_text: '请输入要合成的文本',
   error_no_voice_selected: '请选择音色',
+  error_speaker_id_name_required: '音色 ID 和名称不能为空。',
+  error_add_speaker_failed: '添加音色失败',
 
   // 进度消息
   progress_downloading: '正在下载音频',
@@ -79,5 +106,9 @@ export default {
   reset: '重置',
   cancel: '取消',
   confirm: '确认',
-  loading: '加载中...'
+  loading: '加载中...',
+  voice_label: '音色',
+  play_history_tooltip: '播放',
+  download_history_tooltip: '下载',
+  open_folder_button: '打开所在目录'
 };

@@ -135,8 +135,8 @@ async function buildTtsRequest(
   const requestJson: TtsRequest = {
     app: {
       appid: appId,
-      token: 'access_token',
-      cluster: 'volcano_tts'
+      token: 'token',
+      cluster: 'volcano_icl'
     },
     user: {
       uid: '388808087185088'

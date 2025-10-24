@@ -6,5 +6,6 @@ export default {
   app_title: 'Haibara Tools',
   cancel: '取消',
   confirm: '确认',
-  select_all: '全选'
+  select_all: '全选',
+  close_button: '关闭'
 };

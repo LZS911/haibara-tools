@@ -1,8 +1,15 @@
 import { z } from 'zod';
 import path from 'path';
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
 import type { TRPCContext } from '../types';
+import { nanoid } from 'nanoid';
+import fs from 'fs';
+import fsp from 'fs/promises';
+import { getConfig } from '../lib/config';
+import { getTrainingRecordsPath, getVoiceCloningRoot } from './data';
+import { progressManager } from './progress-manager';
+import { checkDownloadCache } from './cache';
 import {
   checkUrl,
   checkUrlRedirect,
@@ -11,42 +18,151 @@ import {
 } from '../bilibili/core/bilibili';
 import download from '../bilibili/core/download';
 import type { SettingData } from '@/types/bilibili';
-import { nanoid } from 'nanoid';
-import fs from 'fs';
-import fsp from 'fs/promises';
 import { convertAudioFormat, needsConversion } from './audio-converter';
 import { uploadAudioForTraining, getTrainingStatus } from './engine';
-import { getConfig } from '../lib/config';
-import { getTrainingRecordsPath, getVoiceCloningRoot } from './data';
-import { progressManager } from './progress-manager';
 import { synthesizeSpeech as ttsEngineSynthesize } from './tts-engine';
 import {
   upsertTrainingRecord,
-  listAllTrainings,
-  deleteTrainingRecord
+  addSpeakerID as storageAddSpeakerID,
+  deleteSpeakerID as storageDeleteSpeakerID,
+  listSpeakerIDs as storageListSpeakerIDs,
+  addSynthesisRecord as storageAddSynthesisRecord,
+  listSynthesisRecords as storageListSynthesisRecords
 } from './storage';
-import { TrainingStatusEnum, type ProgressUpdate } from '@/types/voice-cloning';
+import {
+  TrainingStatusEnum,
+  type ProgressUpdate,
+  type Speaker,
+  type SpeakerWithStatus
+} from '@/types/voice-cloning';
 
 const t = initTRPC.context<TRPCContext>().create();
 
 // 获取音色复刻任务存储目录
 
 export const voiceCloningRouter = t.router({
+  // 列出所有音色 ID
+  listSpeakerIDs: t.procedure.query(async () => {
+    try {
+      const speakers = await storageListSpeakerIDs();
+      // 获取训练状态
+      const speakersWithStatus: SpeakerWithStatus[] = await Promise.all(
+        speakers.map(async (speaker) => {
+          const status = await getTrainingStatus(speaker.id);
+          return { ...speaker, status: status.status };
+        })
+      );
+      return speakersWithStatus;
+    } catch (error) {
+      console.error('获取音色 ID 列表失败:', error);
+      return [];
+    }
+  }),
+
+  // 添加音色 ID
+  addSpeakerID: t.procedure
+    .input(z.object({ id: z.string(), name: z.string() }))
+    .mutation(async ({ input }) => {
+      const { id, name } = input;
+      if (!id.trim()) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '音色 ID 不能为空'
+        });
+      }
+      if (!name.trim()) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '音色名称不能为空'
+        });
+      }
+      try {
+        const newSpeaker: Speaker = {
+          id: id.trim(),
+          name: name.trim(),
+          createdAt: new Date().toISOString()
+        };
+        await storageAddSpeakerID(newSpeaker);
+        return { success: true, speaker: newSpeaker };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : '未知错误';
+        console.error(`添加音色 ID 失败:`, error);
+        throw new Error(`添加音色 ID 失败: ${errorMessage}`);
+      }
+    }),
+
+  // 删除音色 ID
+  deleteSpeakerID: t.procedure
+    .input(z.object({ speakerId: z.string() }))
+    .mutation(async ({ input }) => {
+      const { speakerId } = input;
+      try {
+        await storageDeleteSpeakerID(speakerId);
+        return { success: true };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : '未知错误';
+        console.error(`删除音色 ID 失败:`, error);
+        throw new Error(`删除音色 ID 失败: ${errorMessage}`);
+      }
+    }),
+
   // 下载 B站视频音频
   downloadBvAudio: t.procedure
-    .input(z.object({ bvIdOrUrl: z.string(), jobId: z.string().optional() }))
+    .input(
+      z.object({
+        bvIdOrUrl: z.string(),
+        jobId: z.string().optional(),
+        forceDownloadAudit: z.boolean().optional().default(false)
+      })
+    )
     .mutation(async ({ input }) => {
-      const { bvIdOrUrl } = input;
+      const { bvIdOrUrl, forceDownloadAudit } = input;
       const jobId = input.jobId || nanoid();
+
+      const bvIdMatch = bvIdOrUrl.match(/BV[a-zA-Z0-9_]+/);
+      const bvId = bvIdMatch ? bvIdMatch[0] : bvIdOrUrl;
+
+      // 1. 检查缓存
+      if (!forceDownloadAudit) {
+        const cachedResult = await checkDownloadCache(bvId);
+        if (cachedResult.isCached && cachedResult.audioPath) {
+          progressManager.updateDownloadProgress(
+            jobId,
+            100,
+            '使用缓存的音频文件'
+          );
+          console.log('使用缓存音频数据:', cachedResult);
+          // 检查音频格式，如需要则转换
+          let finalAudioPath = cachedResult.audioPath;
+          if (needsConversion(cachedResult.audioPath)) {
+            console.log('缓存的音频格式需要转换，正在转换为 mp3...');
+            finalAudioPath = await convertAudioFormat(
+              cachedResult.audioPath,
+              'mp3'
+            );
+            console.log(`音频转换完成: ${finalAudioPath}`);
+          }
+
+          return {
+            success: true,
+            audioPath: finalAudioPath,
+            title: cachedResult.title || bvId,
+            jobId,
+            fromCache: true
+          };
+        }
+      }
 
       progressManager.updateDownloadProgress(jobId, 0, '开始下载音频');
 
       console.log(`开始下载 BV 号音频: ${bvIdOrUrl}`);
       const videoUrl = z.url().safeParse(bvIdOrUrl).success
         ? bvIdOrUrl
-        : `https://www.bilibili.com/video/${bvIdOrUrl}`;
+        : `https://www.bilibili.com/video/${bvId}`;
 
-      const outputDir = path.join(getVoiceCloningRoot(), bvIdOrUrl);
+      const outputDir = path.join(getVoiceCloningRoot(), bvId);
 
       const config = getConfig();
       const settings: SettingData = {
@@ -106,7 +222,7 @@ export const voiceCloningRouter = t.router({
         const audioPath = downloadedTask.filePathList[3]; // 音频文件路径
 
         if (!fs.existsSync(audioPath)) {
-          console.error(`下载失败: 未找到音频文件`);
+          console.error('下载失败: 未找到音频文件');
           progressManager.markError(jobId, '下载失败: 未找到音频文件');
           return {
             success: false,
@@ -118,7 +234,7 @@ export const voiceCloningRouter = t.router({
         // 检查音频格式，如需要则转换
         let finalAudioPath = audioPath;
         if (needsConversion(audioPath)) {
-          console.log(`音频格式需要转换，正在转换为 mp3...`);
+          console.log('音频格式需要转换，正在转换为 mp3...');
           finalAudioPath = await convertAudioFormat(audioPath, 'mp3');
           console.log(`音频转换完成: ${finalAudioPath}`);
         }
@@ -147,13 +263,19 @@ export const voiceCloningRouter = t.router({
       z.object({
         audioPath: z.string(),
         speakerId: z.string(),
-        bvId: z.string(),
+        bvIdOrUrl: z.string(),
         title: z.string()
       })
     )
     .mutation(async ({ input }) => {
-      const { audioPath, speakerId, bvId, title } = input;
-
+      const { audioPath, speakerId, bvIdOrUrl, title } = input;
+      const bvId = bvIdOrUrl.match(/BV[a-zA-Z0-9_]+/)?.[0];
+      if (!bvId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '无效的 BV 号或 URL'
+        });
+      }
       if (!fs.existsSync(getTrainingRecordsPath())) {
         await fsp.writeFile(getTrainingRecordsPath(), JSON.stringify([]));
       }
@@ -161,10 +283,13 @@ export const voiceCloningRouter = t.router({
       try {
         // 检查文件是否存在
         if (!fs.existsSync(audioPath)) {
-          throw new Error('音频文件不存在');
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '音频文件不存在'
+          });
         }
 
-        // 保存训练记录
+        // 保存训练记录 (作为历史日志)
         await upsertTrainingRecord({
           speakerId,
           bvId,
@@ -177,7 +302,7 @@ export const voiceCloningRouter = t.router({
         // 上传到火山引擎
         const status = await uploadAudioForTraining(audioPath, speakerId);
 
-        // 更新训练记录状态
+        // 更新训练记录状态 (作为历史日志)
         await upsertTrainingRecord({
           speakerId,
           bvId,
@@ -196,12 +321,12 @@ export const voiceCloningRouter = t.router({
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : '未知错误';
-        console.error(`启动训练失败:`, error);
+        console.error('启动训练失败:', error);
 
-        // 更新为失败状态
+        // 更新为失败状态 (作为历史日志)
         await upsertTrainingRecord({
           speakerId: input.speakerId,
-          bvId: input.bvId,
+          bvId: bvId,
           title: input.title,
           audioPath: input.audioPath,
           status: TrainingStatusEnum.Failed,
@@ -220,58 +345,12 @@ export const voiceCloningRouter = t.router({
 
       try {
         const status = await getTrainingStatus(speakerId);
-
-        // 如果状态是成功或激活，更新训练记录
-        if (
-          status.status === TrainingStatusEnum.Success ||
-          status.status === TrainingStatusEnum.Active
-        ) {
-          const record = await import('./storage').then((m) =>
-            m.getTrainingRecord(speakerId)
-          );
-          if (record && record.status !== TrainingStatusEnum.Success) {
-            await upsertTrainingRecord({
-              ...record,
-              status: TrainingStatusEnum.Success,
-              completedAt: new Date().toISOString()
-            });
-          }
-        }
-
         return status;
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : '未知错误';
         console.error(`查询训练状态失败:`, error);
         throw new Error(`查询训练状态失败: ${errorMessage}`);
-      }
-    }),
-
-  // 获取所有训练列表
-  listTrainings: t.procedure.query(async () => {
-    try {
-      const trainings = await listAllTrainings();
-      return trainings;
-    } catch (error) {
-      console.error('获取训练列表失败:', error);
-      return [];
-    }
-  }),
-
-  // 删除训练记录
-  deleteTraining: t.procedure
-    .input(z.object({ speakerId: z.string() }))
-    .mutation(async ({ input }) => {
-      const { speakerId } = input;
-
-      try {
-        await deleteTrainingRecord(speakerId);
-        return { success: true };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : '未知错误';
-        console.error(`删除训练记录失败:`, error);
-        throw new Error(`删除训练记录失败: ${errorMessage}`);
       }
     }),
 
@@ -283,6 +362,16 @@ export const voiceCloningRouter = t.router({
 
       try {
         const result = await ttsEngineSynthesize(text, speakerId);
+        if (result.audioUrl) {
+          await storageAddSynthesisRecord({
+            id: nanoid(),
+            speakerId,
+            text,
+            audioUrl: result.audioUrl,
+            audioPath: result.audioPath,
+            createdAt: new Date().toISOString()
+          });
+        }
         return {
           success: true,
           audioPath: result.audioPath,
@@ -295,6 +384,17 @@ export const voiceCloningRouter = t.router({
         throw new Error(`语音合成失败: ${errorMessage}`);
       }
     }),
+
+  // 列出语音合成历史
+  listSynthesisHistory: t.procedure.query(async () => {
+    try {
+      const records = await storageListSynthesisRecords();
+      return records;
+    } catch (error) {
+      console.error('获取语音合成历史失败:', error);
+      return [];
+    }
+  }),
 
   // 订阅下载进度
   subscribeProgress: t.procedure
