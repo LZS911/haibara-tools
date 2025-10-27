@@ -75,6 +75,9 @@ export default {
   please_generate_commit_message: 'Please generate commit message first',
   please_select_target_branch: 'Please select target branch',
 
+  pr_title: 'PR Title',
+  pr_title_placeholder: 'Optional, defaults to Commit Message',
+
   // Confirmation dialog
   confirm_commit_title: 'Confirm Commit',
   confirm_commit_desc: 'The following Git operations will be executed:',

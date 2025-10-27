@@ -71,6 +71,9 @@ export default {
   please_generate_commit_message: '请先生成 Commit Message',
   please_select_target_branch: '请选择目标分支',
 
+  pr_title: 'PR 标题',
+  pr_title_placeholder: '可选，默认为 Commit Message',
+
   // 确认对话框
   confirm_commit_title: '确认提交',
   confirm_commit_desc: '将执行以下 Git 操作:',

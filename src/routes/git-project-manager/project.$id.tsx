@@ -38,6 +38,7 @@ import type { FileChange } from './-types';
 import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 import { CONSTANT } from '../../data/constant';
 import { Spinner } from '../-components/spinner';
+import { Input } from '../-components/ui/input';
 
 export const Route = createFileRoute('/git-project-manager/project/$id')({
   component: ProjectDetail,
@@ -53,6 +54,7 @@ function ProjectDetail() {
   const [commitMessage, setCommitMessage] = useState('');
   const [targetBranch, setTargetBranch] = useState('');
   const [currentBranch, setCurrentBranch] = useState('');
+  const [prTitle, setPrTitle] = useState(''); // New state for PR title
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
   const [githubToken, setGithubToken] = useState('');
 
@@ -180,6 +182,7 @@ function ProjectDetail() {
       });
 
       setCommitMessage(result);
+      setPrTitle(result);
     } catch (error) {
       console.error('Failed to generate commit message:', error);
       toast.error(
@@ -262,7 +265,8 @@ function ProjectDetail() {
         head: currentBranch,
         base: targetBranch,
         changeDescription,
-        llmProvider: 'gemini'
+        llmProvider: 'gemini',
+        prTitle: prTitle.trim() === '' ? undefined : prTitle // Pass prTitle if not empty
       });
 
       // 同步 PR 记录
@@ -413,6 +417,19 @@ function ProjectDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pr-title">
+                      {t('git_project_manager.pr_title')}
+                    </Label>
+                    <Input
+                      id="pr-title"
+                      placeholder={t(
+                        'git_project_manager.pr_title_placeholder'
+                      )}
+                      value={prTitle}
+                      onChange={(e) => setPrTitle(e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label>
                       {t('git_project_manager.current_branch', {

@@ -92,7 +92,8 @@ export const gitRouter = t.router({
         head: z.string(),
         base: z.string(),
         changeDescription: z.string(), // Added for LLM
-        llmProvider: LLMProviderSchema // Added for LLM
+        llmProvider: LLMProviderSchema, // Added for LLM
+        prTitle: z.string().optional() // Optional PR title
       })
     )
     .mutation(async ({ input }) => {
@@ -100,6 +101,7 @@ export const gitRouter = t.router({
       const commitMessage = await gitAssistant.generateCommitMessage(
         input.changeDescription
       );
+      const prTitle = input.prTitle || commitMessage; // Use custom title if provided, else use commit message
 
       const github = new GitHubService(input.token);
 
@@ -117,7 +119,9 @@ export const gitRouter = t.router({
           input.changeDescription,
           commitMessage
         );
-        const updatedBody = `${existingPR.body}\n\n---\n\n${newPrDescription}`;
+        const updatedBody = existingPR.body
+          ? `${existingPR.body}\n\n---\n\n${newPrDescription}`
+          : newPrDescription;
         return github.updatePullRequest(
           input.owner,
           input.repo,
@@ -136,7 +140,7 @@ export const gitRouter = t.router({
           input.repo,
           input.head,
           input.base,
-          commitMessage, // Use generated commit message as PR title
+          prTitle, // Use custom title or generated commit message
           prDescription
         );
       }
