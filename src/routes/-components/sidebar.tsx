@@ -7,7 +7,8 @@ import {
   CloudUpload,
   Download,
   Mic,
-  AudioLines
+  AudioLines,
+  GitBranch
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
@@ -89,6 +90,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       path: '/voice-cloning/synthesis',
       label: t('common.nav_voice_synthesis'),
       icon: AudioLines,
+      category: 'tools'
+    },
+    {
+      path: '/git-project-manager',
+      label: t('common.nav_git_project_manager'),
+      icon: GitBranch,
+      electronOnly: true,
       category: 'tools'
     },
     {

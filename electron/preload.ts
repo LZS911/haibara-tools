@@ -122,5 +122,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 打开文件夹/文件
   openPath: (path: string): Promise<{ success: boolean; error?: string }> => {
     return ipcRenderer.invoke('open-path', path);
-  }
+  },
+
+  // 执行 Git 命令
+  executeGitCommand: (
+    command: string,
+    repoPath: string,
+    token?: string,
+  ): Promise<{ success: boolean; output?: string; stderr?: string; error?: string }> => {
+    return ipcRenderer.invoke('execute-git-command', command, repoPath, token);
+  },
 });

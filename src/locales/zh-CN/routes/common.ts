@@ -3,6 +3,7 @@ export default {
   nav_media_to_docs: 'Bilibili 视频转图文',
   nav_voice_training: '音色训练',
   nav_voice_synthesis: '语音合成',
+  nav_git_project_manager: 'Git 项目管理',
   app_title: 'Haibara Tools',
   cancel: '取消',
   confirm: '确认',

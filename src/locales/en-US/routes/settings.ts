@@ -40,5 +40,10 @@ export default {
   tab_media_to_docs: 'Media to Docs',
   title: 'Application Settings',
   volc_asr_desc: 'Used for speech recognition in the video to document feature',
-  volc_asr_title: 'Speech Recognition Service'
+  volc_asr_title: 'Speech Recognition Service',
+  tab_git: 'Git',
+  github_token_title: 'GitHub Personal Access Token',
+  github_token_desc:
+    'Configure your GitHub Personal Access Token (PAT) to enable Git integration features.',
+  github_token_placeholder: 'Enter your GitHub PAT'
 };

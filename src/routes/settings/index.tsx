@@ -227,7 +227,7 @@ function Settings() {
 
       {/* Tabs 区域 */}
       <Tabs defaultValue="llm" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="llm">{t('settings.tab_llm')}</TabsTrigger>
           <TabsTrigger value="media-to-docs">
             {t('settings.tab_media_to_docs')}
@@ -235,6 +235,7 @@ function Settings() {
           <TabsTrigger value="bilibili">
             {t('settings.tab_bilibili')}
           </TabsTrigger>
+          <TabsTrigger value="git">{t('settings.tab_git')}</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: LLM 配置 */}
@@ -599,6 +600,39 @@ function Settings() {
                     }
                   />
                 </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 4: Git 配置 */}
+        <TabsContent value="git" className="mt-6">
+          <Card className="border-slate-200 bg-white p-6">
+            <div className="mb-4">
+              <h3 className="text-base font-medium text-slate-900">
+                {t('settings.github_token_title')}
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                {t('settings.github_token_desc')}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="GITHUB_TOKEN"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  GitHub Token
+                </Label>
+                <Input
+                  id="GITHUB_TOKEN"
+                  type="password"
+                  placeholder={t('settings.github_token_placeholder')}
+                  value={config.GITHUB_TOKEN || ''}
+                  onChange={(e) =>
+                    handleInputChange('GITHUB_TOKEN', e.target.value)
+                  }
+                />
               </div>
             </div>
           </Card>

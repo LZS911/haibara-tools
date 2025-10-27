@@ -39,5 +39,9 @@ export default {
   tab_media_to_docs: '视频转图文',
   title: '应用设置',
   volc_asr_desc: '用于视频转文档功能的语音识别',
-  volc_asr_title: '语音识别服务'
+  volc_asr_title: '语音识别服务',
+  tab_git: 'Git',
+  github_token_title: 'GitHub 个人访问令牌',
+  github_token_desc: '配置您的 GitHub 个人访问令牌 (PAT) 以启用 Git 集成功能。',
+  github_token_placeholder: '输入您的 GitHub PAT'
 };

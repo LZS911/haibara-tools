@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
+import { Route as GitProjectManagerIndexRouteImport } from './routes/git-project-manager/index'
 import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
 import { Route as VoiceCloningTrainingIndexRouteImport } from './routes/voice-cloning/training/index'
 import { Route as VoiceCloningSynthesisIndexRouteImport } from './routes/voice-cloning/synthesis/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
+import { Route as GitProjectManagerProjectIdRouteImport } from './routes/git-project-manager/project.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +32,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
 const MediaToDocsIndexRoute = MediaToDocsIndexRouteImport.update({
   id: '/media-to-docs/',
   path: '/media-to-docs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GitProjectManagerIndexRoute = GitProjectManagerIndexRouteImport.update({
+  id: '/git-project-manager/',
+  path: '/git-project-manager/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BilibiliDownloaderIndexRoute = BilibiliDownloaderIndexRouteImport.update({
@@ -55,12 +62,20 @@ const MediaToDocsConvertHistoryIndexRoute =
     path: '/media-to-docs/convert-history/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const GitProjectManagerProjectIdRoute =
+  GitProjectManagerProjectIdRouteImport.update({
+    id: '/git-project-manager/project/$id',
+    path: '/git-project-manager/project/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
+  '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
@@ -68,8 +83,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
+  '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
@@ -78,8 +95,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bilibili-downloader/': typeof BilibiliDownloaderIndexRoute
+  '/git-project-manager/': typeof GitProjectManagerIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis/': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training/': typeof VoiceCloningTrainingIndexRoute
@@ -89,8 +108,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bilibili-downloader'
+    | '/git-project-manager'
     | '/media-to-docs'
     | '/settings'
+    | '/git-project-manager/project/$id'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
     | '/voice-cloning/training'
@@ -98,8 +119,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bilibili-downloader'
+    | '/git-project-manager'
     | '/media-to-docs'
     | '/settings'
+    | '/git-project-manager/project/$id'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
     | '/voice-cloning/training'
@@ -107,8 +130,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bilibili-downloader/'
+    | '/git-project-manager/'
     | '/media-to-docs/'
     | '/settings/'
+    | '/git-project-manager/project/$id'
     | '/media-to-docs/convert-history/'
     | '/voice-cloning/synthesis/'
     | '/voice-cloning/training/'
@@ -117,8 +142,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BilibiliDownloaderIndexRoute: typeof BilibiliDownloaderIndexRoute
+  GitProjectManagerIndexRoute: typeof GitProjectManagerIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  GitProjectManagerProjectIdRoute: typeof GitProjectManagerProjectIdRoute
   MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
   VoiceCloningSynthesisIndexRoute: typeof VoiceCloningSynthesisIndexRoute
   VoiceCloningTrainingIndexRoute: typeof VoiceCloningTrainingIndexRoute
@@ -145,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/media-to-docs'
       fullPath: '/media-to-docs'
       preLoaderRoute: typeof MediaToDocsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/git-project-manager/': {
+      id: '/git-project-manager/'
+      path: '/git-project-manager'
+      fullPath: '/git-project-manager'
+      preLoaderRoute: typeof GitProjectManagerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bilibili-downloader/': {
@@ -175,14 +209,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MediaToDocsConvertHistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/git-project-manager/project/$id': {
+      id: '/git-project-manager/project/$id'
+      path: '/git-project-manager/project/$id'
+      fullPath: '/git-project-manager/project/$id'
+      preLoaderRoute: typeof GitProjectManagerProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BilibiliDownloaderIndexRoute: BilibiliDownloaderIndexRoute,
+  GitProjectManagerIndexRoute: GitProjectManagerIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  GitProjectManagerProjectIdRoute: GitProjectManagerProjectIdRoute,
   MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,
   VoiceCloningSynthesisIndexRoute: VoiceCloningSynthesisIndexRoute,
   VoiceCloningTrainingIndexRoute: VoiceCloningTrainingIndexRoute,
