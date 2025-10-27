@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { createProvider } from './lib';
-import type { LLMProvider } from '../../types/llm';
+import type { LLMProvider, PRActivity } from '../../types/llm';
 
 export class GitAssistantService {
   constructor(private provider: LLMProvider) {}
@@ -26,7 +26,9 @@ export class GitAssistantService {
     return text;
   }
 
-  async generateWeeklyReportSummary(prActivities: any[]): Promise<string> {
+  async generateWeeklyReportSummary(
+    prActivities: PRActivity[]
+  ): Promise<string> {
     const llm = createProvider(this.provider);
     const { text } = await generateText({
       model: llm,

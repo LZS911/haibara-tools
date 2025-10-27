@@ -62,6 +62,7 @@ function ProjectDetail() {
   const [isPushing, setIsPushing] = useState(false);
   const [isCreatingPR, setIsCreatingPR] = useState(false);
   const [isSyncingPRs, setIsSyncingPRs] = useState(false);
+  const [isProcessingPR, setIsProcessingPR] = useState(false); // 新增状态，用于追踪 PR 处理流程
 
   useEffect(() => {
     if (CONSTANT.IS_ELECTRON) {
@@ -242,6 +243,9 @@ function ProjectDetail() {
 
     if (!confirmed) return;
 
+    // 开始处理 PR，设置标志以避免页面状态被清空
+    setIsProcessingPR(true);
+
     try {
       setIsAddingFiles(true);
       // 1. git add .
@@ -318,6 +322,7 @@ function ProjectDetail() {
       setIsPushing(false);
       setIsCreatingPR(false);
       setIsSyncingPRs(false);
+      setIsProcessingPR(false); // 重置处理标志
     }
   };
 
@@ -419,7 +424,7 @@ function ProjectDetail() {
           {/* 文件变更列表 */}
           <FileChangeList changes={fileChanges} />
 
-          {fileChanges.length > 0 && (
+          {(fileChanges.length > 0 || isProcessingPR) && (
             <>
               {/* 提交信息编辑器 */}
               <CommitMessageEditor

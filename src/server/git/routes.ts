@@ -1,7 +1,7 @@
 import { GitHubService } from './github-service';
 import { z } from 'zod';
 import { GitAssistantService } from '../llm/git-assistant';
-import { LLMProviderSchema } from '../../types/llm';
+import { LLMProviderSchema, PRActivitySchema } from '../../types/llm';
 import { initTRPC } from '@trpc/server';
 import * as storage from './storage';
 
@@ -33,18 +33,6 @@ const PRRecordSchema = z.object({
   author: z.string(),
   baseBranch: z.string(),
   headBranch: z.string()
-});
-
-// Basic schema for PR activities, can be expanded later
-const PRActivitySchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  html_url: z.string(),
-  user: z.object({
-    login: z.string()
-  }),
-  created_at: z.string(),
-  closed_at: z.string().nullable()
 });
 
 export const gitRouter = t.router({
@@ -115,13 +103,9 @@ export const gitRouter = t.router({
 
       if (existingPR) {
         // If PR exists, update its description
-        const newPrDescription = await gitAssistant.generatePRDescription(
-          input.changeDescription,
-          commitMessage
-        );
         const updatedBody = existingPR.body
-          ? `${existingPR.body}\n\n---\n\n${newPrDescription}`
-          : newPrDescription;
+          ? `${existingPR.body}\n\n---\n\n${input.changeDescription}`
+          : input.changeDescription;
         return github.updatePullRequest(
           input.owner,
           input.repo,
@@ -131,17 +115,13 @@ export const gitRouter = t.router({
         );
       } else {
         // If no PR exists, create a new one
-        const prDescription = await gitAssistant.generatePRDescription(
-          input.changeDescription,
-          commitMessage
-        );
         return github.createPR(
           input.owner,
           input.repo,
           input.head,
           input.base,
           prTitle, // Use custom title or generated commit message
-          prDescription
+          input.changeDescription
         );
       }
     }),
