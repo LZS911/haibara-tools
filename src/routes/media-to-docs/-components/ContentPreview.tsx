@@ -50,7 +50,7 @@ export function ContentPreview({
         <div className="flex flex-col items-center justify-center h-full">
           <Spinner className="text-3xl" />
           <p className="mt-2 text-muted-foreground">
-            {t('generating_content', '内容生成中...')}
+            {t('media_to_docs.generating_content')}
           </p>
         </div>
       );
@@ -59,7 +59,7 @@ export function ContentPreview({
     if (content === '') {
       return (
         <p className="text-muted-foreground">
-          {t('content_placeholder', '这里是AI生成的文档内容...')}
+          {t('media_to_docs.content_placeholder')}
         </p>
       );
     }
@@ -84,7 +84,7 @@ export function ContentPreview({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              <span className="sr-only">{t('copy_button', 'Copy')}</span>
+              <span className="sr-only">{t('media_to_docs.copy_button')}</span>
             </Button>
           )}
         </CardHeader>
@@ -97,7 +97,7 @@ export function ContentPreview({
 
       <div className="text-center">
         <Button onClick={onReset} variant="outline">
-          {t('try_again_button', '再试一次')}
+          {t('media_to_docs.try_again_button')}
         </Button>
       </div>
     </div>

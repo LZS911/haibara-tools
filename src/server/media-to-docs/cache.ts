@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import type { Keyframe } from '@/routes/media-to-docs/-types';
+import type { Keyframe } from '@/types/media-to-docs';
 import { getUserDataPath } from '../lib/config';
 
 // 媒体文件缓存根目录

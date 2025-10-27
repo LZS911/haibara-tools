@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import updater from 'electron-updater';
 import fs from 'node:fs';
 import type { AppConfig } from '../src/electron.d';
+import { exec } from 'node:child_process';
 
 const { autoUpdater } = updater;
 
@@ -151,6 +152,10 @@ async function createWindow() {
   // }
 
   mainWindow = new BrowserWindow(browserWindowOptions);
+
+  if (!isDev) {
+    mainWindow.setMenu(null);
+  }
 
   console.log('[Electron] Window created successfully');
 
@@ -421,6 +426,33 @@ function setupIPC() {
       };
     }
   });
+
+  // 执行 Git 命令
+  ipcMain.handle(
+    'execute-git-command',
+    async (_event, command: string, repoPath: string, token?: string) => {
+      return new Promise((resolve) => {
+        exec(
+          command,
+          { cwd: repoPath, env: { ...process.env, GITHUB_TOKEN: token || '' } },
+          (error, stdout, stderr) => {
+            if (error) {
+              console.error(
+                `[Electron] Git command failed: ${command} in ${repoPath}`,
+                error,
+              );
+              resolve({ success: false, error: error.message, stdout, stderr });
+            } else {
+              console.log(
+                `[Electron] Git command successful: ${command} in ${repoPath}`,
+              );
+              resolve({ success: true, output: stdout, stderr });
+            }
+          },
+        );
+      });
+    },
+  );
 }
 
 // 应用启动

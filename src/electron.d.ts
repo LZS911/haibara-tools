@@ -27,6 +27,7 @@ export interface AppConfig {
   BILIBILI_DOWNLOADING_MAX_SIZE?: number;
   PORT?: string;
   NODE_ENV?: string;
+  GITHUB_TOKEN?: string;
 }
 
 // Electron API 类型定义
@@ -91,6 +92,18 @@ export interface ElectronAPI {
 
   // 打开文件夹/文件
   openPath: (path: string) => Promise<{ success: boolean; error?: string }>;
+
+  // 执行 Git 命令
+  executeGitCommand: (
+    command: string,
+    repoPath: string,
+    token?: string
+  ) => Promise<{
+    success: boolean;
+    output?: string;
+    stderr?: string;
+    error?: string;
+  }>;
 }
 
 // 扩展 Window 接口

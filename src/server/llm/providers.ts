@@ -1,5 +1,5 @@
-import type { LLMProvider } from '@/routes/media-to-docs/-types';
 import type { AppConfig } from '../../electron';
+import type { LLMProvider } from '@/types/llm';
 
 export const LLM_PROVIDERS: {
   id: LLMProvider;
@@ -57,4 +57,10 @@ export const LLM_PROVIDERS: {
     modelNameField: 'COHERE_MODEL_NAME',
     defaultModel: 'command-r-plus'
   }
+];
+
+export const VISION_PROVIDERS: LLMProvider[] = [
+  'openai',
+  'anthropic',
+  'gemini'
 ];

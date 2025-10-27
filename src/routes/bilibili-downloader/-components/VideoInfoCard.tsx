@@ -88,9 +88,11 @@ export function VideoInfoCard({ videoInfo }: VideoInfoCardProps) {
           <div className="mt-2 text-sm text-slate-600">
             <p>UP主: {videoInfo.up.map((u) => u.name).join(', ')}</p>
             <p>
-              {t('video_duration', '时长')}: {videoInfo.duration}
+              {t('bilibili_downloader.video_duration')}: {videoInfo.duration}
             </p>
-            <p>BV号: {videoInfo.bvid}</p>
+            <p>
+              {t('bilibili_downloader.bv_id')}: {videoInfo.bvid}
+            </p>
           </div>
         </div>
       </div>

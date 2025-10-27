@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import type { ProgressUpdate } from '@/routes/media-to-docs/-types';
+import type { ProgressUpdate } from '@/types/media-to-docs';
 
 /**
  * 进度管理器

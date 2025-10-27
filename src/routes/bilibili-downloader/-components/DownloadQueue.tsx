@@ -19,7 +19,7 @@ export function DownloadQueue({
     return (
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
         <p className="text-sm text-slate-500">
-          {t('download_queue_empty', '暂无下载任务')}
+          {t('bilibili_downloader.download_queue_empty')}
         </p>
       </div>
     );

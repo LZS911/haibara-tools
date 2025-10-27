@@ -1,0 +1,20 @@
+export default {
+  check_for_updates: '检查更新',
+  nav_history_management: '图文历史记录',
+  nav_settings: '设置',
+  sidebar_dashboard: '仪表板',
+  sidebar_manage: '管理',
+  sidebar_system: '系统',
+  sidebar_tools: '工具',
+  update_available: '发现新版本',
+  update_check_failed_message: '无法连接到更新服务器，请稍后重试。',
+  update_download: '下载更新',
+  update_downloaded: '更新已下载',
+  update_downloading: '下载中...',
+  update_error: '更新失败，请稍后重试',
+  update_install: '重启并安装',
+  update_install_desc: '重启应用以安装版本 {{version}}',
+  update_latest_message: '您当前使用的已是最新版本。',
+  update_version_available: '版本 {{version}} 现已可用',
+  version: '版本'
+};

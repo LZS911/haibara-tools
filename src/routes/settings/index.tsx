@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { CONSTANT } from '../../data/constant';
 import { cn } from '../-lib/utils';
+import { Label } from '../-components/ui/label';
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
@@ -60,7 +61,7 @@ function Settings() {
       console.error('Failed to load config:', error);
       setMessage({
         type: 'error',
-        text: t('settings_load_fail', '加载配置失败')
+        text: t('load_fail', '加载配置失败')
       });
     } finally {
       setLoading(false);
@@ -93,20 +94,20 @@ function Settings() {
       if (result.success) {
         setMessage({
           type: 'success',
-          text: t('settings_save_success', '配置保存成功！')
+          text: t('save_success', '配置保存成功！')
         });
         setTimeout(() => setMessage(null), 3000);
       } else {
         setMessage({
           type: 'error',
-          text: t('settings_save_failed', { error: result.error })
+          text: t('save_failed', { error: result.error })
         });
       }
     } catch (error) {
       console.error('Failed to save config:', error);
       setMessage({
         type: 'error',
-        text: t('settings_save_fail_base', '保存配置失败')
+        text: t('save_fail_base', '保存配置失败')
       });
     } finally {
       setSaving(false);
@@ -147,22 +148,20 @@ function Settings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {t('settings_title', '设置')}
+            {t('settings.title')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {t('settings_desc', '配置 API Keys 和应用设置')}
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{t('settings.desc')}</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              {t('settings_saving', '保存中...')}
+              {t('settings.saving')}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              {t('settings_save', '保存配置')}
+              {t('settings.save')}
             </>
           )}
         </Button>
@@ -188,7 +187,7 @@ function Settings() {
           </div>
           <div className="flex-1 text-sm">
             <p className="font-medium text-slate-900">
-              {t('settings_config_location', '配置文件位置')}
+              {t('settings.config_location')}
             </p>
             <div className="mt-1 flex items-center gap-2">
               <p
@@ -213,14 +212,14 @@ function Settings() {
                       await window.electronAPI.openPath(userDataPath);
                     }
                   }}
-                  title={t('settings_open_folder', '打开文件夹')}
+                  title={t('settings.open_folder')}
                 >
                   <FolderOpen className="h-4 w-4" />
                 </Button>
               )}
             </div>
             <p className="mt-2 text-slate-600">
-              {t('settings_app_version', { appVersion })}
+              {t('settings.app_version', { appVersion })}
             </p>
           </div>
         </div>
@@ -228,14 +227,15 @@ function Settings() {
 
       {/* Tabs 区域 */}
       <Tabs defaultValue="llm" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="llm">{t('settings_tab_llm')}</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="llm">{t('settings.tab_llm')}</TabsTrigger>
           <TabsTrigger value="media-to-docs">
-            {t('settings_tab_media_to_docs')}
+            {t('settings.tab_media_to_docs')}
           </TabsTrigger>
           <TabsTrigger value="bilibili">
-            {t('settings_tab_bilibili')}
+            {t('settings.tab_bilibili')}
           </TabsTrigger>
+          <TabsTrigger value="git">{t('settings.tab_git')}</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: LLM 配置 */}
@@ -257,7 +257,7 @@ function Settings() {
                         </h3>
                         {provider.isConfigured && (
                           <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                            {t('settings_provider_configured', '已配置')}
+                            {t('settings.provider_configured')}
                           </span>
                         )}
                       </div>
@@ -278,7 +278,7 @@ function Settings() {
                 size="sm"
                 onClick={() => setSelectedProvider(null)}
               >
-                {t('settings_back_to_providers', '← 返回提供商列表')}
+                {t('settings.back_to_providers')}
               </Button>
 
               <Card className="border-slate-200 bg-white p-6">
@@ -301,19 +301,16 @@ function Settings() {
 
                       <div className="space-y-4">
                         <div>
-                          <label
+                          <Label
                             htmlFor={provider.apiKeyField}
                             className="mb-2 block text-sm font-medium text-slate-700"
                           >
                             API Key
-                          </label>
+                          </Label>
                           <Input
                             id={provider.apiKeyField}
                             type="password"
-                            placeholder={t(
-                              'settings_api_key_placeholder',
-                              '输入 API Key'
-                            )}
+                            placeholder={t('settings.api_key_placeholder')}
                             value={config[provider.apiKeyField] as string}
                             onChange={(e) =>
                               handleInputChange(
@@ -325,12 +322,10 @@ function Settings() {
                         </div>
 
                         <div>
-                          <label
+                          <Label
                             htmlFor={provider.modelNameField}
                             className="mb-2 block text-sm font-medium text-slate-700"
-                          >
-                            Model Name
-                          </label>
+                          ></Label>
                           <Input
                             id={provider.modelNameField}
                             type="text"
@@ -345,7 +340,7 @@ function Settings() {
                           />
                           {provider.defaultModel && (
                             <p className="mt-1 text-xs text-slate-500">
-                              {t('settings_default_model', {
+                              {t('default_model', {
                                 model: provider.defaultModel
                               })}
                             </p>
@@ -365,24 +360,24 @@ function Settings() {
           <Card className="border-slate-200 bg-white p-6">
             <div className="mb-4">
               <h3 className="text-base font-medium text-slate-900">
-                {t('settings_volc_asr_title', '语音识别服务')}
+                {t('settings.volc_asr_title')}
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                {t('settings_volc_asr_desc', '用于视频转文档功能的语音识别')}
+                {t('settings.volc_asr_desc')}
               </p>
             </div>
             <div className="space-y-4">
               <div>
-                <label
+                <Label
                   htmlFor="VOLC_APP_ID"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   App ID
-                </label>
+                </Label>
                 <Input
                   id="VOLC_APP_ID"
                   type="text"
-                  placeholder={t('settings_app_id_placeholder', '输入 App ID')}
+                  placeholder={t('settings.app_id_placeholder')}
                   value={config.VOLC_APP_ID || ''}
                   onChange={(e) =>
                     handleInputChange('VOLC_APP_ID', e.target.value)
@@ -390,17 +385,17 @@ function Settings() {
                 />
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="VOLC_ACCESS_TOKEN"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   Access Token
-                </label>
+                </Label>
                 <Input
                   id="VOLC_ACCESS_TOKEN"
                   type="password"
                   placeholder={t(
-                    'settings_access_token_placeholder',
+                    'access_token_placeholder',
                     '输入 Access Token'
                   )}
                   value={config.VOLC_ACCESS_TOKEN || ''}
@@ -418,56 +413,44 @@ function Settings() {
           <Card className="border-slate-200 bg-white p-6">
             <div className="mb-4">
               <h3 className="text-base font-medium text-slate-900">
-                {t('settings_bilibili_title', '视频下载服务')}
+                {t('settings.bilibili_title')}
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                {t(
-                  'settings_bilibili_desc',
-                  '配置 Bilibili 账号信息和下载路径'
-                )}
+                {t('settings.bilibili_desc')}
               </p>
             </div>
             <div className="space-y-4">
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_SESSDATA"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   SESSDATA
-                </label>
+                </Label>
                 <Input
                   id="BILIBILI_SESSDATA"
                   type="password"
-                  placeholder={t(
-                    'settings_bilibili_sessdata_placeholder',
-                    '输入 SESSDATA Cookie'
-                  )}
+                  placeholder={t('settings.bilibili_sessdata_placeholder')}
                   value={config.BILIBILI_SESSDATA || ''}
                   onChange={(e) =>
                     handleInputChange('BILIBILI_SESSDATA', e.target.value)
                   }
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  {t(
-                    'settings_bilibili_sessdata_tip',
-                    '登录后可下载更高清晰度的视频'
-                  )}
+                  {t('settings.bilibili_sessdata_tip')}
                 </p>
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_BFE_ID"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
                   BFE_ID {t('optional', '(可选)')}
-                </label>
+                </Label>
                 <Input
                   id="BILIBILI_BFE_ID"
                   type="text"
-                  placeholder={t(
-                    'settings_bilibili_bfe_id_placeholder',
-                    '输入 BFE_ID Cookie'
-                  )}
+                  placeholder={t('settings.bilibili_bfe_id_placeholder')}
                   value={config.BILIBILI_BFE_ID || ''}
                   onChange={(e) =>
                     handleInputChange('BILIBILI_BFE_ID', e.target.value)
@@ -475,19 +458,18 @@ function Settings() {
                 />
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_DOWNLOAD_PATH"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  {t('settings_bilibili_download_path', '下载路径')}
-                </label>
+                  {t('settings.bilibili_download_path')}
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="BILIBILI_DOWNLOAD_PATH"
                     type="text"
                     placeholder={t(
-                      'settings_bilibili_download_path_placeholder',
-                      '选择视频下载保存路径'
+                      'settings.bilibili_download_path_placeholder'
                     )}
                     value={config.BILIBILI_DOWNLOAD_PATH || ''}
                     onChange={(e) =>
@@ -509,17 +491,17 @@ function Settings() {
                       }
                     }}
                   >
-                    {t('settings_select_folder', '选择文件夹')}
+                    {t('settings.select_folder')}
                   </Button>
                 </div>
               </div>
               <div>
-                <label
+                <Label
                   htmlFor="BILIBILI_DOWNLOADING_MAX_SIZE"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  {t('settings_bilibili_max_download_size', '最大同时下载数')}
-                </label>
+                  {t('settings.bilibili_max_download_size')}
+                </Label>
                 <Input
                   id="BILIBILI_DOWNLOADING_MAX_SIZE"
                   type="number"
@@ -533,27 +515,21 @@ function Settings() {
                   }
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  {t(
-                    'settings_bilibili_max_download_size_tip',
-                    '建议不要设置过高，以免被B站限制'
-                  )}
+                  {t('settings.bilibili_max_download_size_tip')}
                 </p>
               </div>
               {/* Download Options */}
               <div className="mt-6 space-y-4">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-danmaku"
                       className="font-medium text-slate-800"
                     >
-                      {t('settings_bilibili_download_danmaku', '下载弹幕')}
-                    </label>
+                      {t('settings.bilibili_download_danmaku')}
+                    </Label>
                     <p className="text-sm text-slate-500">
-                      {t(
-                        'settings_bilibili_download_danmaku_desc',
-                        '将弹幕保存为 .xml 文件'
-                      )}
+                      {t('settings.bilibili_download_danmaku_desc')}
                     </p>
                   </div>
                   <Switch
@@ -566,17 +542,14 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-cover"
                       className="font-medium text-slate-800"
                     >
-                      {t('settings_bilibili_download_cover', '下载封面')}
-                    </label>
+                      {t('settings.bilibili_download_cover')}
+                    </Label>
                     <p className="text-sm text-slate-500">
-                      {t(
-                        'settings_bilibili_download_cover_desc',
-                        '将视频封面保存为 .jpg 文件'
-                      )}
+                      {t('settings.bilibili_download_cover_desc')}
                     </p>
                   </div>
                   <Switch
@@ -589,17 +562,14 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-subtitle"
                       className="font-medium text-slate-800"
                     >
-                      {t('settings_bilibili_download_subtitle', '下载字幕')}
-                    </label>
+                      {t('settings.bilibili_download_subtitle')}
+                    </Label>
                     <p className="text-sm text-slate-500">
-                      {t(
-                        'settings_bilibili_download_subtitle_desc',
-                        '将字幕保存为 .srt 文件'
-                      )}
+                      {t('settings.bilibili_download_subtitle_desc')}
                     </p>
                   </div>
                   <Switch
@@ -612,20 +582,14 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <label
+                    <Label
                       htmlFor="bili-is-folder"
                       className="font-medium text-slate-800"
                     >
-                      {t(
-                        'settings_bilibili_create_folder',
-                        '为每个视频创建文件夹'
-                      )}
-                    </label>
+                      {t('settings.bilibili_create_folder')}
+                    </Label>
                     <p className="text-sm text-slate-500">
-                      {t(
-                        'settings_bilibili_create_folder_desc',
-                        '使用视频标题作为文件夹名称'
-                      )}
+                      {t('settings.bilibili_create_folder_desc')}
                     </p>
                   </div>
                   <Switch
@@ -636,6 +600,39 @@ function Settings() {
                     }
                   />
                 </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 4: Git 配置 */}
+        <TabsContent value="git" className="mt-6">
+          <Card className="border-slate-200 bg-white p-6">
+            <div className="mb-4">
+              <h3 className="text-base font-medium text-slate-900">
+                {t('settings.github_token_title')}
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                {t('settings.github_token_desc')}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="GITHUB_TOKEN"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  GitHub Token
+                </Label>
+                <Input
+                  id="GITHUB_TOKEN"
+                  type="password"
+                  placeholder={t('settings.github_token_placeholder')}
+                  value={config.GITHUB_TOKEN || ''}
+                  onChange={(e) =>
+                    handleInputChange('GITHUB_TOKEN', e.target.value)
+                  }
+                />
               </div>
             </div>
           </Card>

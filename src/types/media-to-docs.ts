@@ -37,19 +37,7 @@ export interface Keyframe {
   text: string; // 该时间段对应的文字
 }
 
-export type LLMProvider = z.infer<typeof LLMProviderSchema>;
-
 export type SummaryStyle = z.infer<typeof SummaryStyleSchema>;
-
-export const LLMProviderSchema = z.enum([
-  'openai',
-  'deepseek',
-  'gemini',
-  'anthropic',
-  'openrouter',
-  'groq',
-  'cohere'
-]);
 
 export const SummaryStyleSchema = z.enum([
   'note',
@@ -59,3 +47,13 @@ export const SummaryStyleSchema = z.enum([
   'social-media-post',
   'table'
 ]);
+
+export const KeyframeStrategySchema = z.enum([
+  'semantic',
+  'uniform',
+  'visual',
+  'hybrid',
+  'keyword'
+]);
+
+export type KeyframeStrategy = z.infer<typeof KeyframeStrategySchema>;

@@ -13,11 +13,15 @@ const t = initTRPC.context<TRPCContext>().create();
 import { mediaToDocsRouter } from './media-to-docs';
 import { bilibiliRouter } from './bilibili';
 import { llmRouter } from './llm';
+import { voiceCloningRouter } from './voice-cloning';
+import { gitRouter } from './git/routes';
 
 export const appRouter = t.router({
   mediaToDoc: mediaToDocsRouter,
   bilibili: bilibiliRouter,
-  llm: llmRouter
+  llm: llmRouter,
+  voiceCloning: voiceCloningRouter,
+  git: gitRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({

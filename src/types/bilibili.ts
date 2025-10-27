@@ -9,6 +9,7 @@ export interface SettingData {
   isFolder: boolean;
   isCover: boolean;
   downloadingMaxSize: number;
+  audioOnly?: boolean;
 }
 
 export interface SettingDataEasy {
@@ -94,6 +95,7 @@ export interface VideoData {
   qualityOptions: QualityItem[];
   page: Page[];
   subtitle: Subtitle[];
+  danmakuUrl?: string;
   video: Video[];
   audio: Audio[];
   filePathList: string[];

@@ -6,17 +6,24 @@ import { cn } from '@/routes/-lib/utils';
 import { trpc } from '@/router';
 import { CheckCircle, XCircle, Loader, ChevronsUpDown } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { SummaryStyle, LLMProvider } from '../-types';
+import type { SummaryStyle, KeyframeStrategy } from '@/types/media-to-docs';
 import { Switch } from '@/routes/-components/ui/switch';
+import type { LLMProvider } from '@/types/llm';
+import { Input } from '@/routes/-components/ui/input';
+import { Label } from '../../-components/ui/label';
 
 type TestStatus = 'idle' | 'testing' | 'success' | 'error';
 
 interface OptionsSelectorProps {
-  onStart: (
-    style: SummaryStyle,
-    provider: LLMProvider,
-    enableVision: boolean
-  ) => void;
+  onStart: (params: {
+    style: SummaryStyle;
+    provider: LLMProvider;
+    enableVision: boolean;
+    keyframeStrategy: KeyframeStrategy;
+    forceAsr: boolean;
+    forceKeyframeGeneration: boolean;
+    keywords: string;
+  }) => void;
   disabled?: boolean;
   hasVideo?: boolean;
 }
@@ -35,10 +42,13 @@ export function OptionsSelector({
   const [selectedProvider, setSelectedProvider] =
     useState<LLMProvider>('openai');
   const [enableVision, setEnableVision] = useState(true);
+  const [selectedKeyframeStrategy, setSelectedKeyframeStrategy] =
+    useState<KeyframeStrategy>('semantic');
   const [isProvidersExpanded, setIsProvidersExpanded] = useState(false);
   const [testStatus, setTestStatus] = useState<Record<string, TestStatus>>({});
-
-  const visionProviders: LLMProvider[] = ['openai', 'anthropic', 'gemini'];
+  const [keywords, setKeywords] = useState<string>('');
+  const [forceAsr, setForceAsr] = useState(false);
+  const [forceKeyframeGeneration, setForceKeyframeGeneration] = useState(false);
 
   useEffect(() => {
     if (optionsData) {
@@ -58,7 +68,14 @@ export function OptionsSelector({
   }, [optionsData, selectedProvider]);
 
   const checkModelMutation = useMutation(
-    trpc.mediaToDoc.checkModelAvailability.mutationOptions()
+    trpc.llm.checkModelAvailability.mutationOptions()
+  );
+
+  const visionProvidersQuery = useQuery(
+    trpc.llm.getVisionProviders.queryOptions()
+  );
+  const visionProviders = visionProvidersQuery.data?.map(
+    (provider) => provider.id
   );
 
   const handleTestProvider = (provider: LLMProvider) => {
@@ -109,25 +126,36 @@ export function OptionsSelector({
   if (isError || !optionsData) {
     return (
       <Card className="bg-transparent shadow-none p-4 text-center text-red-500">
-        {t('error_loading_options', 'Error loading options.')}
+        {t('media_to_docs.error_loading_options')}
       </Card>
     );
   }
 
-  const { styles, providers, providerStatuses } = optionsData;
+  const { styles, providers, providerStatuses, keyframeStrategies } =
+    optionsData;
 
   const visibleProviders = isProvidersExpanded
     ? providers
     : providers.slice(0, 3);
+
+  const supportVisionMode = visionProviders?.includes(selectedProvider);
+
+  const handleChangeEnableVision = (checked: boolean) => {
+    setEnableVision(checked);
+    if (!checked) {
+      setForceKeyframeGeneration(false);
+      setSelectedKeyframeStrategy('semantic');
+    }
+  };
 
   return (
     <Card className="bg-transparent shadow-none p-4">
       <div className="space-y-4">
         {/* -- Content Style -- */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">
-            {t('select_style_title', '1. 内容风格')}
-          </label>
+          <Label className="text-sm font-medium">
+            {t('media_to_docs.select_style_title')}
+          </Label>
           <div className="flex flex-wrap gap-2 mt-2">
             {styles.map((style) => (
               <Button
@@ -145,9 +173,9 @@ export function OptionsSelector({
 
         {/* -- LLM Provider -- */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">
-            {t('select_provider_title', '2. 大语言模型')}
-          </label>
+          <Label className="text-sm font-medium">
+            {t('media_to_docs.select_provider_title')}
+          </Label>
           <div className="space-y-2 mt-2">
             {visibleProviders.map((provider) => {
               const isSelectable = providerStatuses[provider.id] === 'success';
@@ -188,7 +216,7 @@ export function OptionsSelector({
                     className="flex items-center gap-1 text-gray-500 hover:text-gray-800 text-xs pr-0"
                   >
                     {renderStatusIcon(provider.id as LLMProvider)}
-                    <span>{t('test_connectivity', '测试')}</span>
+                    <span>{t('media_to_docs.test_connectivity')}</span>
                   </Button>
                 </div>
               );
@@ -202,49 +230,136 @@ export function OptionsSelector({
           >
             <ChevronsUpDown className="w-3 h-3 mr-1" />
             {isProvidersExpanded
-              ? t('collapse', '收起')
-              : t('show_all', '查看所有模型')}
+              ? t('media_to_docs.collapse')
+              : t('media_to_docs.show_all')}
           </Button>
         </div>
 
         {/* -- Vision Mode -- */}
         {hasVideo && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              {t('vision_mode_title', '3. 视觉增强模式')}
-            </label>
+            <Label className="text-sm font-medium">
+              {t('media_to_docs.vision_mode_title')}
+            </Label>
             <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
               <div className="flex-1">
                 <div className="font-medium text-sm">
-                  {t('enable_vision_mode', '启用视觉模式')}
+                  {t('media_to_docs.enable_vision_mode')}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {visionProviders.includes(selectedProvider)
-                    ? t('support_vision_mode_desc', '✅ 当前模型支持视觉功能')
-                    : t(
-                        'not_support_vision_mode_desc',
-                        '⚠️ 当前模型不支持视觉功能，请选择 OpenAI、Anthropic 或 Gemini'
-                      )}
+                  {supportVisionMode
+                    ? t('media_to_docs.support_vision_mode_desc')
+                    : t('media_to_docs.not_support_vision_mode_desc')}
                 </div>
               </div>
               <Switch
-                checked={
-                  enableVision && visionProviders.includes(selectedProvider)
-                }
-                onCheckedChange={setEnableVision}
-                disabled={!visionProviders.includes(selectedProvider)}
+                checked={enableVision && supportVisionMode}
+                onCheckedChange={handleChangeEnableVision}
+                disabled={!supportVisionMode}
               />
             </div>
-            {enableVision && visionProviders.includes(selectedProvider) && (
+            {enableVision && supportVisionMode && (
               <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-                {t(
-                  'support_vision_mode_desc_not',
-                  '💡 提示：视觉模式将自动生成时间轴风格的笔记，包含关键画面描述'
-                )}
+                {t('media_to_docs.support_vision_mode_desc_not')}
               </div>
             )}
           </div>
         )}
+
+        {/* -- Keyframe Strategy -- */}
+        {enableVision && supportVisionMode && keyframeStrategies && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {t('media_to_docs.keyframe_strategy_title')}
+            </Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {keyframeStrategies.map((strategy) => (
+                <Button
+                  key={strategy.value}
+                  title={strategy.hint}
+                  variant={
+                    selectedKeyframeStrategy === strategy.value
+                      ? 'default'
+                      : 'outline'
+                  }
+                  size="sm"
+                  className="text-xs"
+                  onClick={() =>
+                    setSelectedKeyframeStrategy(
+                      strategy.value as KeyframeStrategy
+                    )
+                  }
+                >
+                  {strategy.label}
+                </Button>
+              ))}
+            </div>
+            {selectedKeyframeStrategy === 'keyword' && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  {t('media_to_docs.keywords_title')}
+                </Label>
+                <Input
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder={t('media_to_docs.keywords_placeholder')}
+                  className="w-full mt-2"
+                />
+              </div>
+            )}
+            <Label className="text-xs text-gray-500">
+              {t('media_to_docs.keyframe_strategy_hint')}
+            </Label>
+            <div className="text-xs text-gray-500 mt-1">
+              {
+                keyframeStrategies.find(
+                  (v) => v.value === selectedKeyframeStrategy
+                )?.hint
+              }
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">
+            {t('media_to_docs.force_asr_title')}
+          </Label>
+
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
+            <div className="flex-1">
+              <div className="font-medium text-sm">
+                {t('media_to_docs.enable_force_asr')}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {t('media_to_docs.enable_force_asr_desc')}
+              </div>
+            </div>
+            <Switch checked={forceAsr} onCheckedChange={setForceAsr} />
+          </div>
+          {/* -- Force Keyframe Generation -- */}
+
+          {enableVision && supportVisionMode && keyframeStrategies && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                {t('media_to_docs.force_keyframe_generation_title')}
+              </Label>
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-white mt-2">
+                <div className="flex-1">
+                  <div className="font-medium text-sm">
+                    {t('media_to_docs.enable_force_keyframe_generation')}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {t('media_to_docs.enable_force_keyframe_generation_desc')}
+                  </div>
+                </div>
+                <Switch
+                  checked={forceKeyframeGeneration}
+                  onCheckedChange={setForceKeyframeGeneration}
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* -- Start Button -- */}
         <div className="text-center pt-2">
@@ -252,11 +367,19 @@ export function OptionsSelector({
             size="lg"
             className="w-full"
             onClick={() => {
-              onStart(selectedStyle, selectedProvider, enableVision);
+              onStart({
+                style: selectedStyle,
+                provider: selectedProvider,
+                enableVision,
+                keyframeStrategy: selectedKeyframeStrategy,
+                forceAsr,
+                forceKeyframeGeneration,
+                keywords
+              });
             }}
             disabled={disabled}
           >
-            {t('start_generation_button', '开始生成')}
+            {t('media_to_docs.start_generation_button')}
           </Button>
         </div>
       </div>

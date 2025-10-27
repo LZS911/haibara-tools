@@ -21,6 +21,8 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/store/app';
 import { TimelineView } from '../-components/TimelineView';
 import { parseTimelineContent } from '../-lib/utils';
+import { toast } from 'sonner';
+import { useConfirmationDialog } from '@/routes/-components/ui/use-confirm-dialog';
 
 export const Route = createFileRoute('/media-to-docs/convert-history/')({
   component: HistoryManagement
@@ -34,6 +36,7 @@ function HistoryManagement() {
   const [expandedSummaryId, setExpandedSummaryId] = useState<string | null>(
     null
   );
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   // 获取历史列表
   const {
@@ -53,7 +56,13 @@ function HistoryManagement() {
   );
 
   const handleDelete = async (bvId: string) => {
-    if (!confirm(t('history_management_delete_confirm', { bvId }))) return;
+    const confirmed = await confirm({
+      title: t('media_to_docs.history_management_delete_confirm_title'),
+      description: t('media_to_docs.history_management_delete_confirm_desc', {
+        bvId
+      })
+    });
+    if (!confirmed) return;
 
     deleteMutation.mutate(
       { bvId },
@@ -62,29 +71,39 @@ function HistoryManagement() {
           refetch();
         },
         onError: (error) => {
-          alert(t('history_management_delete_fail', { error: error.message }));
+          toast.error(
+            t('media_to_docs.history_management_delete_fail', {
+              error: error.message
+            })
+          );
         }
       }
     );
   };
 
   const handleClearExpired = async () => {
-    if (!confirm(t('history_management_clear_expired_confirm'))) return;
+    const confirmed = await confirm({
+      title: t('media_to_docs.history_management_clear_expired_confirm_title'),
+      description: t(
+        'media_to_docs.history_management_clear_expired_confirm_desc'
+      )
+    });
+    if (!confirmed) return;
 
     clearExpiredMutation.mutate(
       { maxAgeDays: 7 },
       {
         onSuccess: (data) => {
-          alert(
-            t('history_management_clear_expired_success', {
+          toast.success(
+            t('media_to_docs.history_management_clear_expired_success', {
               count: data.deletedCount
             })
           );
           refetch();
         },
         onError: (error) => {
-          alert(
-            t('history_management_clear_expired_fail', {
+          toast.error(
+            t('media_to_docs.history_management_clear_expired_fail', {
               error: error.message
             })
           );
@@ -95,7 +114,7 @@ function HistoryManagement() {
 
   const handleRegenerate = (item: NonNullable<typeof historyItems>[0]) => {
     if (!item.audioPath) {
-      alert(t('history_management_no_audio_file'));
+      toast.warning(t('media_to_docs.history_management_no_audio_file'));
       return;
     }
     setJobToLoadFromHistory({
@@ -135,10 +154,10 @@ function HistoryManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {t('history_management_title', '历史记录')}
+            {t('media_to_docs.history_management_title')}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            {t('history_management_desc', '查看和管理过去生成的文档记录')}
+            {t('media_to_docs.history_management_desc')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -146,12 +165,12 @@ function HistoryManagement() {
             {isLoading ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                {t('history_management_refreshing', '刷新中')}
+                {t('media_to_docs.history_management_refreshing')}
               </>
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                {t('history_management_refresh', '刷新')}
+                {t('media_to_docs.history_management_refresh')}
               </>
             )}
           </Button>
@@ -163,12 +182,12 @@ function HistoryManagement() {
             {clearExpiredMutation.isPending ? (
               <>
                 <Trash2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('history_management_clearing', '清理中')}
+                {t('media_to_docs.history_management_clearing')}
               </>
             ) : (
               <>
                 <Trash2 className="mr-2 h-4 w-4" />
-                {t('history_management_clear_expired', '清理过期')}
+                {t('media_to_docs.history_management_clear_expired')}
               </>
             )}
           </Button>
@@ -181,7 +200,7 @@ function HistoryManagement() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">
-                {t('history_management_total_count', '总记录数')}
+                {t('media_to_docs.history_management_total_count')}
               </p>
               <p className="mt-1 text-2xl font-semibold text-slate-900">
                 {historyItems?.length || 0}
@@ -195,7 +214,7 @@ function HistoryManagement() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">
-                {t('history_management_transcribed_count', '已转录')}
+                {t('media_to_docs.history_management_transcribed_count')}
               </p>
               <p className="mt-1 text-2xl font-semibold text-green-600">
                 {transcribedCount}
@@ -209,7 +228,7 @@ function HistoryManagement() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">
-                {t('history_management_total_size', '占用空间')}
+                {t('media_to_docs.history_management_total_size')}
               </p>
               <p className="mt-1 text-2xl font-semibold text-purple-600">
                 {formatBytes(totalSize)}
@@ -223,7 +242,7 @@ function HistoryManagement() {
       {/* 历史列表 */}
       <div>
         <h2 className="mb-3 text-sm font-medium text-slate-700">
-          {t('history_management_list_title', '历史列表')}
+          {t('media_to_docs.history_management_list_title')}
         </h2>
 
         {isLoading ? (
@@ -231,7 +250,7 @@ function HistoryManagement() {
             <div className="flex flex-col items-center justify-center text-slate-400">
               <RefreshCw className="h-12 w-12 animate-spin" />
               <p className="mt-4">
-                {t('history_management_loading', '加载中...')}
+                {t('media_to_docs.history_management_loading')}
               </p>
             </div>
           </Card>
@@ -240,17 +259,14 @@ function HistoryManagement() {
             <div className="flex flex-col items-center justify-center text-slate-400">
               <History className="h-12 w-12 opacity-20" />
               <p className="mt-4 text-lg font-medium">
-                {t('history_management_no_data', '暂无历史记录')}
+                {t('media_to_docs.history_management_no_data')}
               </p>
               <p className="mt-2 text-sm">
-                {t(
-                  'history_management_no_data_desc',
-                  '立即开始一次新的文档生成吧。'
-                )}
+                {t('media_to_docs.history_management_no_data_desc')}
               </p>
               <Link to="/media-to-docs">
                 <Button variant="outline" size="sm" className="mt-4">
-                  {t('history_management_go_to_media_to_docs', '前往生成')}
+                  {t('media_to_docs.history_management_go_to_media_to_docs')}
                 </Button>
               </Link>
             </div>
@@ -273,12 +289,12 @@ function HistoryManagement() {
                       </h3>
                       {item.hasTranscript && (
                         <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                          {t('history_management_transcribed', '已转录')}
+                          {t('media_to_docs.history_management_transcribed')}
                         </span>
                       )}
                       {item.summaries && item.summaries.length > 0 && (
                         <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                          {t('history_management_summarized', '有摘要')}
+                          {t('media_to_docs.history_management_summarized')}
                         </span>
                       )}
                     </div>
@@ -302,7 +318,7 @@ function HistoryManagement() {
                         handleRegenerate(item);
                       }}
                     >
-                      {t('history_management_regenerate', '重新生成')}
+                      {t('media_to_docs.history_management_regenerate')}
                     </Button>
                     <Button
                       variant="outline"
@@ -318,12 +334,12 @@ function HistoryManagement() {
                       deleteMutation.variables?.bvId === item.bvId ? (
                         <>
                           <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                          {t('history_management_deleting', '删除中')}
+                          {t('media_to_docs.history_management_deleting')}
                         </>
                       ) : (
                         <>
                           <Trash2 className="mr-1 h-3 w-3" />
-                          {t('history_management_delete', '删除')}
+                          {t('media_to_docs.history_management_delete')}
                         </>
                       )}
                     </Button>
@@ -376,9 +392,7 @@ function HistoryManagement() {
                               </div>
                               <div className="flex items-center gap-1.5 text-slate-600">
                                 <Palette className="h-4 w-4" />
-                                <span>
-                                  {t(`style_${summary.style}`, summary.style)}
-                                </span>
+                                <span>{summary.style}</span>
                               </div>
                               <div className="flex items-center gap-1.5 text-slate-500">
                                 <Clock className="h-4 w-4" />
@@ -424,6 +438,7 @@ function HistoryManagement() {
           </div>
         )}
       </div>
+      {ConfirmationDialog}
     </div>
   );
 }

@@ -8,7 +8,13 @@ import prettier from 'eslint-config-prettier';
 export default [
   {
     // 全局忽略文件
-    ignores: ['src/routeTree.gen.ts', 'node_modules/**']
+    ignores: [
+      'src/routeTree.gen.ts',
+      'node_modules/**',
+      'dist/**',
+      'release/**',
+      'scripts/**'
+    ]
   },
 
   // 基础 ESLint 推荐规则

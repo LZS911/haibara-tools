@@ -110,8 +110,6 @@ OPENAI_MODEL_NAME=gpt-4o
 > - Web 版本会自动读取 `.env` 文件
 > - Electron 客户端支持在设置页面中配置 API Key，无需修改 `.env` 文件
 
-详细配置说明请查看：[LLM 提供商使用指南](docs/llm-providers-guide.md)
-
 ### 运行
 
 #### Web 版本
@@ -132,13 +130,6 @@ pnpm dev:electron
 # 或者分别启动
 pnpm dev              # 终端1: 启动 Web 服务
 pnpm dev:electron-only # 终端2: 启动 Electron 客户端
-```
-
-### 测试 LLM 配置
-
-```bash
-# 测试所有配置的 LLM 提供商
-pnpm tsx scripts/test-llm-providers.ts
 ```
 
 ## 📦 构建与打包
@@ -171,13 +162,6 @@ pnpm dist:linux
 
 打包完成后，安装包位于 `release/` 目录下。
 
-## 🧪 测试
-
-```bash
-# 运行测试
-pnpm test
-```
-
 ## 🛠️ 技术栈
 
 ### 前端
@@ -196,7 +180,6 @@ pnpm test
 - **API**: tRPC (类型安全的 API)
 - **AI**: Vercel AI SDK (统一的 LLM 接口)
 - **类型**: TypeScript (严格模式)
-- **爬虫**: Puppeteer (Bilibili 数据获取)
 
 ## 📁 项目结构
 
@@ -258,10 +241,6 @@ haibara-tools/
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
 
-### 开发规范
-
-请查看项目根目录的 `.cursorrules` 文件，了解代码规范和开发准则。
-
 ## 📝 更新日志
 
 ### v0.0.1 (当前版本)
@@ -293,6 +272,7 @@ haibara-tools/
 - [Tailwind CSS](https://tailwindcss.com/) - CSS 框架
 - [Vite](https://vitejs.dev/) - 现代化构建工具
 - [FFmpeg](https://ffmpeg.org/) - 多媒体处理框架
+- [BilibiliVideoDownload](https://github.com/BilibiliVideoDownload/BilibiliVideoDownload) - Bilibili 视频下载
 
 ---
 

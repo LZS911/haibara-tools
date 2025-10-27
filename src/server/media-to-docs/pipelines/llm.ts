@@ -1,21 +1,11 @@
-import { streamText, type LanguageModel } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { cohere } from '@ai-sdk/cohere';
-import { openrouter } from '@openrouter/ai-sdk-provider';
-import { createGroq } from '@ai-sdk/groq';
+import type { Keyframe, SummaryStyle } from '@/types/media-to-docs';
 import { TRPCError } from '@trpc/server';
+import { streamText } from 'ai';
+import type { LLMProvider } from '../../../types/llm';
+import { VISION_PROVIDERS } from '../../llm/providers';
 import { progressManager } from '../progress-manager';
-import type {
-  LLMProvider,
-  SummaryStyle,
-  Keyframe
-} from '@/routes/media-to-docs/-types';
-import fs from 'fs';
-import { getConfig } from '../../lib/config';
-
-// --- Style Prompts ---
+import { createProvider } from '../../llm/lib';
+import * as fs from 'node:fs';
 
 const stylePrompts: Record<SummaryStyle, string> = {
   note: `你是一位专业的笔记整理专家，擅长从语音转录文本中提炼结构化的学习笔记。
@@ -232,156 +222,8 @@ const stylePrompts: Record<SummaryStyle, string> = {
 请开始分析并生成表格：`
 };
 
-function getSystemPrompt(style: SummaryStyle): string {
+export function getSystemPrompt(style: SummaryStyle): string {
   return stylePrompts[style] || stylePrompts.note;
-}
-
-// --- Provider Configuration ---
-
-interface ProviderConfig {
-  apiKey: string;
-  modelName: string;
-  baseURL?: string;
-}
-
-function getProviderConfig(provider: LLMProvider): ProviderConfig {
-  const providerConfig = getConfig();
-  // Electron mode: read from config.json ONLY
-  switch (provider) {
-    case 'openai':
-      return {
-        apiKey: providerConfig.OPENAI_API_KEY || '',
-        modelName: providerConfig.OPENAI_MODEL_NAME || 'gpt-4o'
-      };
-    case 'deepseek':
-      return {
-        apiKey: providerConfig.DEEPSEEK_API_KEY || '',
-        modelName: providerConfig.DEEPSEEK_MODEL_NAME || 'deepseek-chat',
-        baseURL: 'https://api.deepseek.com'
-      };
-    case 'gemini':
-      return {
-        apiKey: providerConfig.GEMINI_API_KEY || '',
-        modelName: providerConfig.GEMINI_MODEL_NAME || 'gemini-2.0-flash'
-      };
-    case 'anthropic':
-      return {
-        apiKey: providerConfig.ANTHROPIC_API_KEY || '',
-        modelName:
-          providerConfig.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022'
-      };
-    case 'openrouter':
-      return {
-        apiKey: providerConfig.OPENROUTER_API_KEY || '',
-        modelName:
-          providerConfig.OPENROUTER_MODEL_NAME || 'anthropic/claude-3.5-sonnet'
-      };
-    case 'groq':
-      return {
-        apiKey: providerConfig.GROQ_API_KEY || '',
-        modelName: providerConfig.GROQ_MODEL_NAME || 'llama-3.3-70b-versatile'
-      };
-    case 'cohere':
-      return {
-        apiKey: providerConfig.COHERE_API_KEY || '',
-        modelName: providerConfig.COHERE_MODEL_NAME || 'command-r-plus-08-2024'
-      };
-    default:
-      throw new Error(`Unsupported provider: ${provider}`);
-  }
-}
-
-// --- Provider Factory ---
-
-function createProvider(provider: LLMProvider): LanguageModel {
-  const config = getProviderConfig(provider);
-
-  if (!config.apiKey) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: `${provider} API key is not configured. Please set the corresponding environment variable.`
-    });
-  }
-
-  switch (provider) {
-    case 'openai': {
-      const openai = createOpenAI({
-        apiKey: config.apiKey
-      });
-      return openai(config.modelName);
-    }
-
-    case 'deepseek': {
-      const deepseek = createOpenAI({
-        apiKey: config.apiKey,
-        baseURL: config.baseURL
-      });
-      return deepseek(config.modelName);
-    }
-
-    case 'gemini': {
-      const google = createGoogleGenerativeAI({
-        apiKey: config.apiKey
-      });
-      return google(config.modelName);
-    }
-
-    case 'anthropic': {
-      const anthropic = createAnthropic({
-        apiKey: config.apiKey
-      });
-      return anthropic(config.modelName);
-    }
-
-    case 'openrouter': {
-      // OpenRouter 需要通过环境变量设置 API key: OPENROUTER_API_KEY
-      if (!process.env.OPENROUTER_API_KEY) {
-        process.env.OPENROUTER_API_KEY = config.apiKey;
-      }
-      return openrouter(config.modelName);
-    }
-
-    case 'groq': {
-      const groq = createGroq({
-        apiKey: config.apiKey
-      });
-      return groq(config.modelName);
-    }
-
-    case 'cohere': {
-      // Cohere 需要通过环境变量设置 API key: COHERE_API_KEY
-      if (!process.env.COHERE_API_KEY) {
-        process.env.COHERE_API_KEY = config.apiKey;
-      }
-      return cohere(config.modelName);
-    }
-
-    default:
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: `Unsupported LLM provider: ${provider}`
-      });
-  }
-}
-
-// --- Model Availability Check ---
-
-export async function checkModelAvailability(
-  provider: LLMProvider
-): Promise<boolean> {
-  try {
-    const config = getProviderConfig(provider);
-    if (!config.apiKey) {
-      return false;
-    }
-
-    // 尝试创建 provider，如果成功则认为可用
-    createProvider(provider);
-    return true;
-  } catch (error) {
-    console.error(`Error checking model availability for ${provider}:`, error);
-    return false;
-  }
 }
 
 // --- Main Completion Function ---
@@ -576,13 +418,6 @@ function formatTimestamp(seconds: number): string {
 }
 
 /**
- * 检查 provider 是否支持视觉模型
- */
-function supportsVision(provider: LLMProvider): boolean {
-  return ['openai', 'anthropic', 'gemini'].includes(provider);
-}
-
-/**
  * 带图片的多模态补全（时间轴风格）
  */
 export async function getCompletionWithImages(
@@ -605,7 +440,7 @@ export async function getCompletionWithImages(
     });
   }
 
-  if (!supportsVision(provider)) {
+  if (!VISION_PROVIDERS.includes(provider)) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: `Provider ${provider} does not support vision models. Please use openai, anthropic, or gemini.`
