@@ -244,7 +244,9 @@ export const gitRouter = t.router({
   getPRRecords: t.procedure
     .input(z.object({ repositoryId: z.string() }))
     .query(({ input }) => {
-      return storage.getPRRecordsByRepository(input.repositoryId);
+      return storage
+        .getPRRecordsByRepository(input.repositoryId)
+        .sort((a, b) => b.number - a.number);
     }),
 
   getPRRecordsByTimeRange: t.procedure
@@ -256,11 +258,13 @@ export const gitRouter = t.router({
       })
     )
     .query(({ input }) => {
-      return storage.getPRRecordsByTimeRange(
-        input.repositoryIds,
-        input.startTime,
-        input.endTime
-      );
+      return storage
+        .getPRRecordsByTimeRange(
+          input.repositoryIds,
+          input.startTime,
+          input.endTime
+        )
+        .sort((a, b) => b.number - a.number);
     }),
 
   deletePRRecord: t.procedure

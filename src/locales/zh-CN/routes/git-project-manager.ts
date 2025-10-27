@@ -74,6 +74,12 @@ export default {
   pr_title: 'PR 标题',
   pr_title_placeholder: '可选，默认为 Commit Message',
 
+  adding_files: '正在添加文件...',
+  committing_changes: '正在提交变更...',
+  pushing_changes: '正在推送变更...',
+  creating_pr: '正在创建 PR...',
+  syncing_prs: '正在同步 PR 记录...',
+
   // 确认对话框
   confirm_commit_title: '确认提交',
   confirm_commit_desc: '将执行以下 Git 操作:',

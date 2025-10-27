@@ -9,7 +9,6 @@ import { Textarea } from '@/routes/-components/ui/textarea';
 import { Label } from '@/routes/-components/ui/label';
 import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Spinner } from '@/routes/-components/spinner';
 
 interface CommitMessageEditorProps {
   changeDescription: string;
@@ -60,10 +59,7 @@ export function CommitMessageEditor({
           className="w-full"
         >
           {isGenerating ? (
-            <>
-              <Spinner className="mr-2 h-4 w-4" />
-              {t('git_project_manager.generating_commit_message')}
-            </>
+            <>{t('git_project_manager.generating_commit_message')}</>
           ) : (
             <>
               <Sparkles className="mr-2 h-4 w-4" />

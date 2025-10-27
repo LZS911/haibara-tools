@@ -57,6 +57,11 @@ function ProjectDetail() {
   const [prTitle, setPrTitle] = useState(''); // New state for PR title
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
   const [githubToken, setGithubToken] = useState('');
+  const [isAddingFiles, setIsAddingFiles] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
+  const [isCreatingPR, setIsCreatingPR] = useState(false);
+  const [isSyncingPRs, setIsSyncingPRs] = useState(false);
 
   useEffect(() => {
     if (CONSTANT.IS_ELECTRON) {
@@ -238,25 +243,32 @@ function ProjectDetail() {
     if (!confirmed) return;
 
     try {
+      setIsAddingFiles(true);
       // 1. git add .
       await executeGitCommandMutation.mutateAsync({
         command: 'git add .',
         repoPath: repository.localPath
       });
+      setIsAddingFiles(false);
 
+      setIsCommitting(true);
       // 2. git commit
       await executeGitCommandMutation.mutateAsync({
         command: `git commit -m "${commitMessage}"`,
         repoPath: repository.localPath
       });
+      setIsCommitting(false);
 
+      setIsPushing(true);
       // 3. git push
       await executeGitCommandMutation.mutateAsync({
         command: `git push origin ${currentBranch}`,
         repoPath: repository.localPath,
         token: githubToken
       });
+      setIsPushing(false);
 
+      setIsCreatingPR(true);
       // 4. 创建 PR
       await createPullRequestMutation.mutateAsync({
         token: githubToken,
@@ -268,7 +280,9 @@ function ProjectDetail() {
         llmProvider: 'gemini',
         prTitle: prTitle.trim() === '' ? undefined : prTitle // Pass prTitle if not empty
       });
+      setIsCreatingPR(false);
 
+      setIsSyncingPRs(true);
       // 同步 PR 记录
       await syncPRRecordsMutation.mutateAsync({
         token: githubToken,
@@ -276,12 +290,14 @@ function ProjectDetail() {
         owner: repository.githubOwner,
         repo: repository.githubRepo
       });
+      setIsSyncingPRs(false);
 
       toast.success(t('git_project_manager.commit_success'));
 
       // 清空表单
       setChangeDescription('');
       setCommitMessage('');
+      setPrTitle(''); // Clear PR title as well
 
       // 刷新数据
       refetchRepoStatus();
@@ -296,6 +312,12 @@ function ProjectDetail() {
           ? error.message
           : t('git_project_manager.commit_failed')
       );
+    } finally {
+      setIsAddingFiles(false);
+      setIsCommitting(false);
+      setIsPushing(false);
+      setIsCreatingPR(false);
+      setIsSyncingPRs(false);
     }
   };
 
@@ -465,14 +487,24 @@ function ProjectDetail() {
                       !changeDescription.trim() ||
                       !commitMessage.trim() ||
                       !targetBranch ||
-                      executeGitCommandMutation.isPending ||
-                      createPullRequestMutation.isPending
+                      isAddingFiles ||
+                      isCommitting ||
+                      isPushing ||
+                      isCreatingPR ||
+                      isSyncingPRs
                     }
                     className="w-full"
                   >
-                    {executeGitCommandMutation.isPending ||
-                    createPullRequestMutation.isPending ? (
-                      <>{t('git_project_manager.committing')}</>
+                    {isAddingFiles ? (
+                      <>{t('git_project_manager.adding_files')}</>
+                    ) : isCommitting ? (
+                      <>{t('git_project_manager.committing_changes')}</>
+                    ) : isPushing ? (
+                      <>{t('git_project_manager.pushing_changes')}</>
+                    ) : isCreatingPR ? (
+                      <>{t('git_project_manager.creating_pr')}</>
+                    ) : isSyncingPRs ? (
+                      <>{t('git_project_manager.syncing_prs')}</>
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />

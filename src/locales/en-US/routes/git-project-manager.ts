@@ -78,6 +78,12 @@ export default {
   pr_title: 'PR Title',
   pr_title_placeholder: 'Optional, defaults to Commit Message',
 
+  adding_files: 'Adding files...',
+  committing_changes: 'Committing changes...',
+  pushing_changes: 'Pushing changes...',
+  creating_pr: 'Creating PR...',
+  syncing_prs: 'Syncing PR records...',
+
   // Confirmation dialog
   confirm_commit_title: 'Confirm Commit',
   confirm_commit_desc: 'The following Git operations will be executed:',
