@@ -8,8 +8,7 @@ import { trpc } from '@/router';
 import { toast } from 'sonner';
 import { RepoCard } from './-components/RepoCard';
 import { AddRepoDialog } from './-components/AddRepoDialog';
-import { WeeklyReportDialog } from './-components/WeeklyReportDialog';
-import type { GitRepository, PRRecord } from './-types';
+import type { GitRepository } from './-types';
 import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 import { CONSTANT } from '../../data/constant';
 
@@ -22,17 +21,7 @@ function GitProjectManager() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [addRepoDialogOpen, setAddRepoDialogOpen] = useState(false);
-  const [weeklyReportDialogOpen, setWeeklyReportDialogOpen] = useState(false);
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
-  const [queryPRRecordsParams, setQueryPRRecordsParams] = useState<{
-    repositoryIds: string[];
-    startTime: string;
-    endTime: string;
-  }>({
-    repositoryIds: [],
-    startTime: '',
-    endTime: ''
-  });
 
   // 检查是否在 Electron 环境
   useEffect(() => {
@@ -57,16 +46,6 @@ function GitProjectManager() {
   // 删除仓库
   const deleteRepositoryMutation = useMutation(
     trpc.git.deleteLocalRepository.mutationOptions()
-  );
-
-  const { refetch: getPRRecords } = useQuery({
-    ...trpc.git.getPRRecordsByTimeRange.queryOptions(queryPRRecordsParams),
-    enabled: false
-  });
-
-  // 生成周报
-  const generateWeeklyReportMutation = useMutation(
-    trpc.git.generateWeeklyReport.mutationOptions()
   );
 
   const handleAddRepository = async (repoData: {
@@ -133,70 +112,6 @@ function GitProjectManager() {
     });
   };
 
-  const handleLoadPRsForReport = async (
-    repositoryIds: string[],
-    startTime: string,
-    endTime: string
-  ): Promise<PRRecord[]> => {
-    setQueryPRRecordsParams({ repositoryIds, startTime, endTime });
-    try {
-      const result = await getPRRecords();
-      return result.data ?? [];
-    } catch (error) {
-      console.error('Failed to load PRs:', error);
-      throw error;
-    }
-  };
-
-  const handleGenerateWeeklyReport = async (options: {
-    repositoryIds: string[];
-    startTime: string;
-    endTime: string;
-    selectedPRIds: number[];
-  }): Promise<string> => {
-    try {
-      // 获取选中的 PR 记录
-      const allPRs = await getPRRecords();
-
-      const selectedPRs = allPRs.data?.filter((pr) =>
-        options.selectedPRIds.includes(pr.id)
-      );
-
-      // 转换为 LLM 需要的格式
-      const prActivities =
-        selectedPRs?.map((pr) => ({
-          id: pr.id,
-          title: pr.title,
-          html_url: pr.htmlUrl,
-          user: {
-            login: pr.author
-          },
-          created_at: pr.createdAt,
-          closed_at: pr.closedAt || null
-        })) ?? [];
-
-      // 获取 LLM 配置（这里需要从设置中获取）
-      const config = await window.electronAPI?.getConfig();
-      if (
-        !config?.OPENAI_API_KEY &&
-        !config?.DEEPSEEK_API_KEY &&
-        !config?.GEMINI_API_KEY
-      ) {
-        throw new Error(t('git_project_manager.llm_not_configured'));
-      }
-
-      const result = await generateWeeklyReportMutation.mutateAsync({
-        prActivities,
-        llmProvider: 'gemini'
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Failed to generate weekly report:', error);
-      throw error;
-    }
-  };
-
   const handleGoToSettings = () => {
     navigate({ to: '/settings' });
   };
@@ -218,7 +133,9 @@ function GitProjectManager() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setWeeklyReportDialogOpen(true)}
+            onClick={() =>
+              navigate({ to: '/git-project-manager/weekly-report' })
+            }
             variant="outline"
             disabled={repositories.length === 0}
           >
@@ -282,15 +199,6 @@ function GitProjectManager() {
         open={addRepoDialogOpen}
         onOpenChange={setAddRepoDialogOpen}
         onAdd={handleAddRepository}
-      />
-
-      {/* 周报生成对话框 */}
-      <WeeklyReportDialog
-        open={weeklyReportDialogOpen}
-        onOpenChange={setWeeklyReportDialogOpen}
-        repositories={repositories}
-        onGenerateReport={handleGenerateWeeklyReport}
-        onLoadPRs={handleLoadPRsForReport}
       />
 
       {ConfirmationDialog}

@@ -17,6 +17,7 @@ import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-d
 import { Route as VoiceCloningTrainingIndexRouteImport } from './routes/voice-cloning/training/index'
 import { Route as VoiceCloningSynthesisIndexRouteImport } from './routes/voice-cloning/synthesis/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
+import { Route as GitProjectManagerWeeklyReportIndexRouteImport } from './routes/git-project-manager/weekly-report/index'
 import { Route as GitProjectManagerProjectIdRouteImport } from './routes/git-project-manager/project.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -62,6 +63,12 @@ const MediaToDocsConvertHistoryIndexRoute =
     path: '/media-to-docs/convert-history/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const GitProjectManagerWeeklyReportIndexRoute =
+  GitProjectManagerWeeklyReportIndexRouteImport.update({
+    id: '/git-project-manager/weekly-report/',
+    path: '/git-project-manager/weekly-report/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const GitProjectManagerProjectIdRoute =
   GitProjectManagerProjectIdRouteImport.update({
     id: '/git-project-manager/project/$id',
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
@@ -87,6 +95,7 @@ export interface FileRoutesByTo {
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training': typeof VoiceCloningTrainingIndexRoute
@@ -99,6 +108,7 @@ export interface FileRoutesById {
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/git-project-manager/weekly-report/': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis/': typeof VoiceCloningSynthesisIndexRoute
   '/voice-cloning/training/': typeof VoiceCloningTrainingIndexRoute
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/media-to-docs'
     | '/settings'
     | '/git-project-manager/project/$id'
+    | '/git-project-manager/weekly-report'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
     | '/voice-cloning/training'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/media-to-docs'
     | '/settings'
     | '/git-project-manager/project/$id'
+    | '/git-project-manager/weekly-report'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
     | '/voice-cloning/training'
@@ -134,6 +146,7 @@ export interface FileRouteTypes {
     | '/media-to-docs/'
     | '/settings/'
     | '/git-project-manager/project/$id'
+    | '/git-project-manager/weekly-report/'
     | '/media-to-docs/convert-history/'
     | '/voice-cloning/synthesis/'
     | '/voice-cloning/training/'
@@ -146,6 +159,7 @@ export interface RootRouteChildren {
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   GitProjectManagerProjectIdRoute: typeof GitProjectManagerProjectIdRoute
+  GitProjectManagerWeeklyReportIndexRoute: typeof GitProjectManagerWeeklyReportIndexRoute
   MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
   VoiceCloningSynthesisIndexRoute: typeof VoiceCloningSynthesisIndexRoute
   VoiceCloningTrainingIndexRoute: typeof VoiceCloningTrainingIndexRoute
@@ -209,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MediaToDocsConvertHistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/git-project-manager/weekly-report/': {
+      id: '/git-project-manager/weekly-report/'
+      path: '/git-project-manager/weekly-report'
+      fullPath: '/git-project-manager/weekly-report'
+      preLoaderRoute: typeof GitProjectManagerWeeklyReportIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/git-project-manager/project/$id': {
       id: '/git-project-manager/project/$id'
       path: '/git-project-manager/project/$id'
@@ -226,6 +247,8 @@ const rootRouteChildren: RootRouteChildren = {
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   GitProjectManagerProjectIdRoute: GitProjectManagerProjectIdRoute,
+  GitProjectManagerWeeklyReportIndexRoute:
+    GitProjectManagerWeeklyReportIndexRoute,
   MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,
   VoiceCloningSynthesisIndexRoute: VoiceCloningSynthesisIndexRoute,
   VoiceCloningTrainingIndexRoute: VoiceCloningTrainingIndexRoute,

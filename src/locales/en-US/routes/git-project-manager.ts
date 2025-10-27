@@ -118,6 +118,25 @@ export default {
   weekly_report_dialog_title: 'Generate Weekly Report',
   weekly_report_dialog_desc:
     'Select projects and time range to generate intelligent weekly report',
+
+  // Weekly report page
+  weekly_report_title: 'Weekly Report',
+  weekly_report_description:
+    'Select projects and time range to generate intelligent weekly reports based on PR records',
+  back: 'Back',
+  report_configuration: 'Report Configuration',
+  select_repositories_first: 'Please select repositories first',
+  select_time_range_first: 'Please select time range first',
+  loading_repositories: 'Loading repositories...',
+  no_repositories_available: 'No repositories available',
+  search_prs: 'Search PRs',
+  searching: 'Searching...',
+  pr_list: 'PR List',
+  no_prs_found: 'No PR records found',
+  prs_loaded: 'Loaded {{count}} PR record(s)',
+  weekly_report: 'Weekly Report',
+  select_prs_to_generate: 'Please select PRs to generate report',
+  click_generate_report: 'Click generate report button to start',
   select_repositories: 'Select Projects',
   select_repositories_placeholder: 'Select one or more projects',
   time_range: 'Time Range',
