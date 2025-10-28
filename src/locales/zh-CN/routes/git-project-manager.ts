@@ -61,6 +61,8 @@ export default {
   current_branch: '当前分支: {{branch}}',
   select_target_branch: '选择目标分支',
   loading_branches: '加载分支列表...',
+  filter_branches_placeholder: '筛选分支...',
+  no_branch_found: '未找到分支。',
 
   // 提交并创建 PR
   commit_and_create_pr: '提交并创建 PR',
@@ -95,6 +97,7 @@ export default {
   syncing_pr_records: '正在同步...',
   sync_success: '同步成功，共 {{count}} 条记录',
   sync_failed: '同步失败',
+  pr_per_page: 'PR 每页数量',
 
   // PR 卡片
   pr_state_open: '进行中',

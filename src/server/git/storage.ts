@@ -207,9 +207,18 @@ export function batchUpsertPRRecords(records: PRRecord[]): void {
 }
 
 // 获取指定仓库的 PR 记录
-export function getPRRecordsByRepository(repositoryId: string): PRRecord[] {
+export function getPRRecordsByRepository(
+  repositoryId: string,
+  limit?: number
+): PRRecord[] {
   const records = readPRRecords();
-  return records.filter((record) => record.repositoryId === repositoryId);
+  const filteredRecords = records.filter(
+    (record) => record.repositoryId === repositoryId
+  );
+  if (limit) {
+    return filteredRecords.slice(0, limit);
+  }
+  return filteredRecords;
 }
 
 // 删除 PR 记录

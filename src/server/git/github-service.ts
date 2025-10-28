@@ -52,7 +52,8 @@ export class GitHubService {
     owner: string,
     repo: string,
     state: 'open' | 'closed' | 'all' = 'all',
-    since?: string // ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
+    since?: string, // ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
+    per_page: number = 100
   ) {
     const { data } = await this.octokit.rest.pulls.list({
       owner,
@@ -60,17 +61,48 @@ export class GitHubService {
       state,
       sort: 'updated',
       direction: 'desc',
-      since
+      since,
+      per_page
     });
     return data;
   }
 
-  async getRemoteBranches(owner: string, repo: string) {
-    const { data } = await this.octokit.rest.repos.listBranches({
-      owner,
-      repo
-    });
-    return data.map((branch) => branch.name);
+  async getRemoteBranches(owner: string, repo: string, per_page?: number) {
+    let allBranches: string[] = [];
+    let page = 1;
+    const pageSize = per_page || 100; // Use 100 as default page size if per_page is not specified for single page fetch
+
+    if (per_page === undefined) {
+      // If per_page is not provided, fetch all branches
+      while (true) {
+        const { data } = await this.octokit.rest.repos.listBranches({
+          owner,
+          repo,
+          per_page: 100, // Max per_page for GitHub API
+          page
+        });
+
+        if (data.length === 0) {
+          break;
+        }
+
+        allBranches = allBranches.concat(data.map((branch) => branch.name));
+        if (data.length < 100) {
+          break;
+        }
+        page++;
+      }
+    } else {
+      // If per_page is provided, fetch only that many branches
+      const { data } = await this.octokit.rest.repos.listBranches({
+        owner,
+        repo,
+        per_page: pageSize
+      });
+      allBranches = data.map((branch) => branch.name);
+    }
+
+    return allBranches;
   }
 
   async getOpenPullRequest(

@@ -133,7 +133,8 @@ export const gitRouter = t.router({
         owner: z.string(),
         repo: z.string(),
         state: z.enum(['open', 'closed', 'all']).optional(),
-        since: z.string().optional()
+        since: z.string().optional(),
+        perPage: z.number().optional()
       })
     )
     .query(async ({ input }) => {
@@ -142,7 +143,8 @@ export const gitRouter = t.router({
         input.owner,
         input.repo,
         input.state,
-        input.since
+        input.since,
+        input.perPage
       );
     }),
 
@@ -222,10 +224,10 @@ export const gitRouter = t.router({
     }),
 
   getPRRecords: t.procedure
-    .input(z.object({ repositoryId: z.string() }))
+    .input(z.object({ repositoryId: z.string(), limit: z.number().optional() }))
     .query(({ input }) => {
       return storage
-        .getPRRecordsByRepository(input.repositoryId)
+        .getPRRecordsByRepository(input.repositoryId, input.limit)
         .sort((a, b) => b.number - a.number);
     }),
 
@@ -265,7 +267,8 @@ export const gitRouter = t.router({
         repositoryId: z.string(),
         owner: z.string(),
         repo: z.string(),
-        state: z.enum(['open', 'closed', 'all']).optional()
+        state: z.enum(['open', 'closed', 'all']).optional(),
+        perPage: z.number().optional()
       })
     )
     .mutation(async ({ input }) => {
@@ -273,7 +276,9 @@ export const gitRouter = t.router({
       const prs = await github.getRepoPullRequests(
         input.owner,
         input.repo,
-        input.state
+        input.state,
+        undefined,
+        input.perPage
       );
 
       const records: storage.PRRecord[] = prs.map((pr) => ({
@@ -304,11 +309,12 @@ export const gitRouter = t.router({
       z.object({
         token: z.string(),
         owner: z.string(),
-        repo: z.string()
+        repo: z.string(),
+        perPage: z.number().optional()
       })
     )
     .query(async ({ input }) => {
       const github = new GitHubService(input.token);
-      return github.getRemoteBranches(input.owner, input.repo);
+      return github.getRemoteBranches(input.owner, input.repo, input.perPage);
     })
 });

@@ -65,6 +65,8 @@ export default {
   current_branch: 'Current Branch: {{branch}}',
   select_target_branch: 'Select Target Branch',
   loading_branches: 'Loading branches...',
+  filter_branches_placeholder: 'Filter branches...',
+  no_branch_found: 'No branch found.',
 
   // Commit and create PR
   commit_and_create_pr: 'Commit & Create PR',
