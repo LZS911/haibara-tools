@@ -28,6 +28,13 @@ export default {
   add_repo_success: '仓库添加成功',
   add_repo_failed: '添加仓库失败',
   not_a_git_repo: '所选文件夹不是有效的 Git 仓库',
+  // 自动解析
+  auto_detecting_remote: '正在自动解析远程与默认分支…',
+  remote_not_found: '未检测到远程仓库（origin）。',
+  unsupported_remote_host: '无法解析远程仓库 URL 或主机不受支持。',
+  only_github_fully_supported:
+    '当前仅对 GitHub 仓库提供完整支持，请手动填写信息。',
+  default_branch_detect_failed: '无法检测默认分支，已回退为 {{fallback}}',
 
   // 项目详情页
   project_detail_title: '项目详情',
