@@ -248,29 +248,87 @@ function ProjectDetail() {
     // 开始处理 PR，设置标志以避免页面状态被清空
     setIsProcessingPR(true);
     try {
+      // 0. 预检：是否存在需要提交的文件
+      const latestStatus = await getRepoStatus(repository.localPath);
+      const pendingCount = latestStatus.changes?.length ?? 0;
+      if (pendingCount === 0) {
+        toast.error(
+          t('git_project_manager.operation_failed', {
+            error: 'No changes to commit'
+          })
+        );
+        return;
+      }
+
       setIsAddingFiles(true);
       // 1. git add .
-      await executeGitCommandMutation.mutateAsync({
+      const addResult = await executeGitCommandMutation.mutateAsync({
         command: 'git add .',
         repoPath: repository.localPath
       });
+      if (!addResult?.success) {
+        const errMsg =
+          addResult?.error || addResult?.stderr || 'git add failed';
+        toast.error(
+          t('git_project_manager.operation_failed', { error: errMsg })
+        );
+        return;
+      }
       setIsAddingFiles(false);
 
       setIsCommitting(true);
       // 2. git commit
-      await executeGitCommandMutation.mutateAsync({
+      const commitResult = await executeGitCommandMutation.mutateAsync({
         command: `git commit -m "${commitMessage}"`,
         repoPath: repository.localPath
       });
+      if (!commitResult?.success) {
+        const errMsg =
+          commitResult?.error || commitResult?.stderr || 'git commit failed';
+        // 回滚：撤销暂存区的变更，恢复到 commit 前的状态（保留工作区改动）
+        try {
+          await executeGitCommandMutation.mutateAsync({
+            command: 'git reset',
+            repoPath: repository.localPath
+          });
+        } catch (e) {
+          console.warn('Rollback (unstage changes) failed:', e);
+        }
+        toast.error(
+          t('git_project_manager.operation_failed', { error: errMsg })
+        );
+        return;
+      }
       setIsCommitting(false);
 
       setIsPushing(true);
       // 3. git push
-      await executeGitCommandMutation.mutateAsync({
+      const pushResult = await executeGitCommandMutation.mutateAsync({
         command: `git push origin ${currentBranch}`,
         repoPath: repository.localPath,
         token: githubToken
       });
+      if (!pushResult?.success) {
+        const errMsg =
+          pushResult?.error || pushResult?.stderr || 'git push failed';
+        // 回滚：撤销刚刚的本地提交到未提交状态，并清空暂存
+        try {
+          await executeGitCommandMutation.mutateAsync({
+            command: 'git reset --soft HEAD~1',
+            repoPath: repository.localPath
+          });
+          await executeGitCommandMutation.mutateAsync({
+            command: 'git reset',
+            repoPath: repository.localPath
+          });
+        } catch (e) {
+          console.warn('Rollback after push failure failed:', e);
+        }
+        toast.error(
+          t('git_project_manager.operation_failed', { error: errMsg })
+        );
+        return;
+      }
       setIsPushing(false);
 
       setIsCreatingPR(true);
@@ -395,15 +453,7 @@ function ProjectDetail() {
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: '/git-project-manager' })}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('git_project_manager.back_to_list')}
-        </Button>
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
             {repository.name}
@@ -412,6 +462,15 @@ function ProjectDetail() {
             {repository.githubOwner}/{repository.githubRepo}
           </p>
         </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate({ to: '/git-project-manager' })}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t('git_project_manager.back_to_list')}
+        </Button>
       </div>
 
       {/* 标签页 */}

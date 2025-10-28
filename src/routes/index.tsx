@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
-import { Download, Video, Clock, Zap } from 'lucide-react';
+import {
+  Download,
+  Video,
+  Clock,
+  Zap,
+  Mic,
+  AudioLines,
+  GitBranch
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CONSTANT } from '../data/constant';
@@ -37,6 +45,30 @@ function Dashboard() {
       to: '/media-to-docs',
       color: 'bg-purple-500',
       hoverColor: 'hover:bg-purple-600'
+    },
+    {
+      title: t('common.nav_voice_training'),
+      desc: t('home.dashboard_quick_action_voice_training_desc'),
+      icon: Mic,
+      to: '/voice-cloning/training',
+      color: 'bg-blue-500',
+      hoverColor: 'hover:bg-blue-600'
+    },
+    {
+      title: t('common.nav_voice_synthesis'),
+      desc: t('home.dashboard_quick_action_voice_synthesis_desc'),
+      icon: AudioLines,
+      to: '/voice-cloning/synthesis',
+      color: 'bg-pink-500',
+      hoverColor: 'hover:bg-pink-600'
+    },
+    {
+      title: t('common.nav_git_project_manager'),
+      desc: t('home.dashboard_quick_action_git_project_manager_desc'),
+      icon: GitBranch,
+      to: '/git-project-manager',
+      color: 'bg-orange-500',
+      hoverColor: 'hover:bg-orange-600'
     }
   ];
 
