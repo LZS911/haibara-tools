@@ -76,7 +76,9 @@ export function CommitMessageEditor({
             <Textarea
               id="commitMessage"
               value={commitMessage}
-              onChange={(e) => onCommitMessageChange(e.target.value)}
+              onChange={(e) => {
+                onCommitMessageChange(e.target.value);
+              }}
               rows={3}
               className="resize-none font-mono text-sm"
             />

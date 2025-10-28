@@ -89,7 +89,9 @@ function GitProjectManager() {
   const handleDeleteRepository = async (repository: GitRepository) => {
     const confirmed = await confirm({
       title: t('git_project_manager.confirm'),
-      description: `确定要删除仓库 "${repository.name}" 吗？这将同时删除相关的 PR 记录。`,
+      description: t('git_project_manager.delete_repository_confirm', {
+        name: repository.name
+      }),
       confirmText: t('git_project_manager.delete')
     });
 
@@ -97,11 +99,15 @@ function GitProjectManager() {
 
     try {
       await deleteRepositoryMutation.mutateAsync({ id: repository.id });
-      toast.success('仓库删除成功');
+      toast.success(t('git_project_manager.delete_repository_success'));
       refetchRepositories();
     } catch (error) {
       console.error('Failed to delete repository:', error);
-      toast.error(error instanceof Error ? error.message : '删除仓库失败');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('git_project_manager.delete_repository_failed')
+      );
     }
   };
 

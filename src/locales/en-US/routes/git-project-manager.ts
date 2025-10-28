@@ -65,6 +65,8 @@ export default {
   current_branch: 'Current Branch: {{branch}}',
   select_target_branch: 'Select Target Branch',
   loading_branches: 'Loading branches...',
+  filter_branches_placeholder: 'Filter branches...',
+  no_branch_found: 'No branch found.',
 
   // Commit and create PR
   commit_and_create_pr: 'Commit & Create PR',
@@ -166,6 +168,16 @@ export default {
   loading: 'Loading...',
   error: 'Error',
   success: 'Success',
+
+  delete_repository_confirm:
+    'Are you sure you want to delete the repository "{{name}}"? This will also delete related PR records.',
+  delete_repository_success: 'Repository deleted successfully',
+  delete_repository_failed: 'Failed to delete repository',
+
+  // Repository not found
+  repository_not_found: 'Repository not found',
+  repository_not_found_desc:
+    'Please check if the repository exists or return to the list page',
 
   // Error messages
   github_token_not_configured: 'GitHub Token Not Configured',

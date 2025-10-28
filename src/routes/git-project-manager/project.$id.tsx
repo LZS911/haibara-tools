@@ -39,6 +39,7 @@ import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 import { CONSTANT } from '../../data/constant';
 import { Spinner } from '../-components/spinner';
 import { Input } from '../-components/ui/input';
+import { Combobox } from '../-components/ui/combobox';
 
 export const Route = createFileRoute('/git-project-manager/project/$id')({
   component: ProjectDetail,
@@ -63,6 +64,7 @@ function ProjectDetail() {
   const [isCreatingPR, setIsCreatingPR] = useState(false);
   const [isSyncingPRs, setIsSyncingPRs] = useState(false);
   const [isProcessingPR, setIsProcessingPR] = useState(false); // 新增状态，用于追踪 PR 处理流程
+  const [prPerPage, setPrPerPage] = useState(100); // New state for PRs per page
 
   useEffect(() => {
     if (CONSTANT.IS_ELECTRON) {
@@ -128,7 +130,7 @@ function ProjectDetail() {
     isLoading: loadingPRs
   } = useQuery(
     trpc.git.getPRRecords.queryOptions(
-      { repositoryId: id },
+      { repositoryId: id, limit: prPerPage },
       {
         enabled: !!id
       }
@@ -245,7 +247,6 @@ function ProjectDetail() {
 
     // 开始处理 PR，设置标志以避免页面状态被清空
     setIsProcessingPR(true);
-
     try {
       setIsAddingFiles(true);
       // 1. git add .
@@ -292,7 +293,8 @@ function ProjectDetail() {
         token: githubToken,
         repositoryId: repository.id,
         owner: repository.githubOwner,
-        repo: repository.githubRepo
+        repo: repository.githubRepo,
+        perPage: prPerPage
       });
       setIsSyncingPRs(false);
 
@@ -326,7 +328,7 @@ function ProjectDetail() {
     }
   };
 
-  const handleSyncPRRecords = async () => {
+  const handleSyncPRRecords = async (prPageSize: number) => {
     if (!repository) return;
 
     try {
@@ -339,7 +341,8 @@ function ProjectDetail() {
         token: githubToken,
         repositoryId: repository.id,
         owner: repository.githubOwner,
-        repo: repository.githubRepo
+        repo: repository.githubRepo,
+        perPage: prPageSize
       });
 
       toast.success(
@@ -371,15 +374,17 @@ function ProjectDetail() {
   if (!repository) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-slate-900">仓库未找到</h3>
+        <h3 className="text-lg font-medium text-slate-900">
+          {t('git_project_manager.repository_not_found')}
+        </h3>
         <p className="mt-2 text-sm text-slate-500">
-          请检查仓库是否存在或返回列表页面
+          {t('git_project_manager.repository_not_found_desc')}
         </p>
         <Button
           onClick={() => navigate({ to: '/git-project-manager' })}
           className="mt-4"
         >
-          返回列表
+          {t('git_project_manager.back_to_list')}
         </Button>
       </div>
     );
@@ -463,27 +468,28 @@ function ProjectDetail() {
                         branch: currentBranch
                       })}
                     </Label>
-                    <Select
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="target-branch">
+                      {t('git_project_manager.target_branch')}
+                    </Label>
+                    <Combobox
+                      options={
+                        remoteBranchesData
+                          ?.filter((branch) => branch !== currentBranch)
+                          .map((branch) => ({
+                            value: branch,
+                            label: branch
+                          })) || []
+                      }
                       value={targetBranch}
                       onValueChange={setTargetBranch}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            'git_project_manager.select_target_branch'
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {remoteBranchesData
-                          ?.filter((branch) => branch !== currentBranch)
-                          .map((branch) => (
-                            <SelectItem key={branch} value={branch}>
-                              {branch}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={t(
+                        'git_project_manager.select_target_branch'
+                      )}
+                      emptyMessage={t('git_project_manager.no_branch_found')}
+                      className="w-full"
+                    />
                   </div>
 
                   <Button
@@ -524,10 +530,32 @@ function ProjectDetail() {
         </TabsContent>
 
         <TabsContent value="pr-records">
+          <div className="flex items-center justify-end mb-4">
+            <Label htmlFor="pr-per-page" className="mr-2">
+              {t('git_project_manager.pr_per_page')}
+            </Label>
+            <Select
+              value={String(prPerPage)}
+              onValueChange={(value) => {
+                setPrPerPage(Number(value));
+              }}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="100" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <PRList
             prs={prRecords}
             loading={loadingPRs || syncPRRecordsMutation.isPending}
-            onRefresh={handleSyncPRRecords}
+            onRefresh={() => {
+              handleSyncPRRecords(prPerPage);
+            }}
           />
         </TabsContent>
       </Tabs>
