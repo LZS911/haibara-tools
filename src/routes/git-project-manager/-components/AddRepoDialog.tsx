@@ -13,6 +13,7 @@ import { Label } from '@/routes/-components/ui/label';
 import { FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Spinner } from '@/routes/-components/spinner';
+import { executeGitCommand } from '../-lib/git-commands';
 
 interface AddRepoDialogProps {
   open: boolean;
@@ -24,6 +25,12 @@ interface AddRepoDialogProps {
     githubRepo: string;
     defaultBranch: string;
   }) => Promise<void>;
+}
+
+interface ParsedRemoteInfo {
+  host: string;
+  owner: string;
+  repo: string;
 }
 
 export function AddRepoDialog({
@@ -38,6 +45,114 @@ export function AddRepoDialog({
   const [githubRepo, setGithubRepo] = useState('');
   const [defaultBranch, setDefaultBranch] = useState('main');
   const [loading, setLoading] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [detectMessage, setDetectMessage] = useState<string | null>(null);
+
+  const parseGitRemoteUrl = (url: string): ParsedRemoteInfo | null => {
+    // https://github.com/owner/repo(.git)
+    const httpsMatch = url.match(
+      /^https?:\/\/([^/]+)\/([^/]+)\/([^/]+?)(?:\.git)?$/
+    );
+    if (httpsMatch) {
+      return { host: httpsMatch[1], owner: httpsMatch[2], repo: httpsMatch[3] };
+    }
+
+    // ssh://git@github.com/owner/repo(.git)
+    const sshProtoMatch = url.match(
+      /^ssh:\/\/git@([^/]+)\/([^/]+)\/([^/]+?)(?:\.git)?$/
+    );
+    if (sshProtoMatch) {
+      return {
+        host: sshProtoMatch[1],
+        owner: sshProtoMatch[2],
+        repo: sshProtoMatch[3]
+      };
+    }
+
+    // git@github.com:owner/repo(.git)
+    const scpLikeMatch = url.match(/^git@([^:]+):([^/]+)\/([^/]+?)(?:\.git)?$/);
+    if (scpLikeMatch) {
+      return {
+        host: scpLikeMatch[1],
+        owner: scpLikeMatch[2],
+        repo: scpLikeMatch[3]
+      };
+    }
+
+    return null;
+  };
+
+  const detectFromLocalGit = async (path: string) => {
+    if (!window.electronAPI) return;
+    setDetecting(true);
+    setDetectMessage(null);
+    try {
+      // 读取 origin 远程 URL
+      const remoteUrlResult = await executeGitCommand(
+        'git config --get remote.origin.url',
+        path
+      );
+      if (!remoteUrlResult.success || !remoteUrlResult.output?.trim()) {
+        setDetectMessage(t('git_project_manager.remote_not_found'));
+        return;
+      }
+      const remoteUrl = remoteUrlResult.output.trim();
+      const parsed = parseGitRemoteUrl(remoteUrl);
+      if (!parsed) {
+        setDetectMessage(t('git_project_manager.unsupported_remote_host'));
+      } else {
+        if (parsed.host === 'github.com') {
+          setGithubOwner(parsed.owner);
+          setGithubRepo(parsed.repo);
+        } else {
+          // 非 GitHub 主机，给出提示但仍允许手动填写
+          setDetectMessage(
+            t('git_project_manager.only_github_fully_supported')
+          );
+        }
+      }
+
+      // 获取默认分支：symbolic-ref
+      const headRefResult = await window.electronAPI.executeGitCommand(
+        'git symbolic-ref --short refs/remotes/origin/HEAD',
+        path
+      );
+      if (headRefResult.success && headRefResult.output?.trim()) {
+        const ref = headRefResult.output.trim(); // e.g. origin/main
+        const parts = ref.split('/');
+        const branch = parts[parts.length - 1];
+        if (branch) {
+          setDefaultBranch(branch);
+          return;
+        }
+      }
+
+      // 备选：remote show origin
+      const remoteShowResult = await window.electronAPI.executeGitCommand(
+        'git remote show origin',
+        path
+      );
+      if (remoteShowResult.success && remoteShowResult.output) {
+        const match = remoteShowResult.output.match(/HEAD branch:\s*(\S+)/);
+        if (match && match[1]) {
+          setDefaultBranch(match[1]);
+          return;
+        }
+      }
+
+      // 回退
+      setDetectMessage(
+        t('git_project_manager.default_branch_detect_failed', {
+          fallback: 'main'
+        })
+      );
+      if (!defaultBranch) setDefaultBranch('main');
+    } catch (_err) {
+      setDetectMessage(t('git_project_manager.add_repo_failed'));
+    } finally {
+      setDetecting(false);
+    }
+  };
 
   const handleSelectFolder = async () => {
     if (!window.electronAPI) return;
@@ -50,7 +165,17 @@ export function AddRepoDialog({
       if (!name) {
         setName(folderName);
       }
+      // 自动解析远程与默认分支
+      void detectFromLocalGit(path);
     }
+  };
+
+  const handleReset = () => {
+    setName('');
+    setLocalPath('');
+    setGithubOwner('');
+    setGithubRepo('');
+    setDefaultBranch('main');
   };
 
   const handleAdd = async () => {
@@ -68,11 +193,7 @@ export function AddRepoDialog({
         defaultBranch
       });
       // 重置表单
-      setName('');
-      setLocalPath('');
-      setGithubOwner('');
-      setGithubRepo('');
-      setDefaultBranch('main');
+      handleReset();
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to add repository:', error);
@@ -81,8 +202,21 @@ export function AddRepoDialog({
     }
   };
 
+  const closeDialog = () => {
+    handleReset();
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleReset();
+        }
+        onOpenChange(open);
+      }}
+    >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
@@ -123,6 +257,13 @@ export function AddRepoDialog({
                 <FolderOpen className="h-4 w-4" />
               </Button>
             </div>
+            {detecting ? (
+              <p className="text-xs text-slate-500">
+                {t('git_project_manager.auto_detecting_remote')}
+              </p>
+            ) : detectMessage ? (
+              <p className="text-xs text-amber-600">{detectMessage}</p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="githubOwner">
@@ -159,11 +300,7 @@ export function AddRepoDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={closeDialog} disabled={loading}>
             {t('git_project_manager.cancel')}
           </Button>
           <Button

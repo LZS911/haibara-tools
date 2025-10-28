@@ -31,6 +31,14 @@ export default {
   add_repo_success: 'Repository added successfully',
   add_repo_failed: 'Failed to add repository',
   not_a_git_repo: 'Selected folder is not a valid Git repository',
+  // Auto detection
+  auto_detecting_remote: 'Auto-detecting remote and default branch…',
+  remote_not_found: 'No remote (origin) detected.',
+  unsupported_remote_host: 'Unable to parse remote URL or unsupported host.',
+  only_github_fully_supported:
+    'Only GitHub repositories are fully supported at the moment. Please fill in fields manually.',
+  default_branch_detect_failed:
+    'Failed to detect default branch, falling back to {{fallback}}',
 
   // Project detail page
   project_detail_title: 'Project Details',
