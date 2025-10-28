@@ -83,7 +83,6 @@ export function AddRepoDialog({
   };
 
   const detectFromLocalGit = async (path: string) => {
-    if (!window.electronAPI) return;
     setDetecting(true);
     setDetectMessage(null);
     try {
@@ -113,7 +112,7 @@ export function AddRepoDialog({
       }
 
       // 获取默认分支：symbolic-ref
-      const headRefResult = await window.electronAPI.executeGitCommand(
+      const headRefResult = await executeGitCommand(
         'git symbolic-ref --short refs/remotes/origin/HEAD',
         path
       );
@@ -128,7 +127,7 @@ export function AddRepoDialog({
       }
 
       // 备选：remote show origin
-      const remoteShowResult = await window.electronAPI.executeGitCommand(
+      const remoteShowResult = await executeGitCommand(
         'git remote show origin',
         path
       );
@@ -165,8 +164,7 @@ export function AddRepoDialog({
       if (!name) {
         setName(folderName);
       }
-      // 自动解析远程与默认分支
-      void detectFromLocalGit(path);
+      detectFromLocalGit(path);
     }
   };
 

@@ -55,22 +55,6 @@ export const gitRouter = t.router({
       return gitAssistant.generateCommitMessage(input.changeDescription);
     }),
 
-  generatePRDescription: t.procedure
-    .input(
-      z.object({
-        changeDescription: z.string(),
-        commitMessage: z.string(),
-        llmProvider: LLMProviderSchema
-      })
-    )
-    .mutation(async ({ input }) => {
-      const gitAssistant = new GitAssistantService(input.llmProvider);
-      return gitAssistant.generatePRDescription(
-        input.changeDescription,
-        input.commitMessage
-      );
-    }),
-
   createPullRequest: t.procedure
     .input(
       z.object({

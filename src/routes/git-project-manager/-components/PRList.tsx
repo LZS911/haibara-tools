@@ -9,7 +9,7 @@ import { RefreshCw, GitPullRequest } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PRCard } from './PRCard';
 import type { PRRecord } from '../-types';
-import { Spinner } from '@/routes/-components/spinner';
+import { ScrollArea } from '../../-components/ui/scroll-area';
 
 interface PRListProps {
   prs: PRRecord[];
@@ -68,15 +68,12 @@ export function PRList({
           </CardTitle>
           <Button
             onClick={onRefresh}
-            disabled={loading}
             variant="outline"
+            disabled={loading}
             size="sm"
           >
             {loading ? (
-              <>
-                <Spinner className="mr-2 h-4 w-4" />
-                {t('git_project_manager.syncing_pr_records')}
-              </>
+              <>{t('git_project_manager.syncing_pr_records')}</>
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -86,17 +83,19 @@ export function PRList({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {prs.map((pr) => (
-          <PRCard
-            key={`${pr.repositoryId}-${pr.id}`}
-            pr={pr}
-            selectable={selectable}
-            selected={selectedPRIds.includes(pr.id)}
-            onSelect={(selected) => handlePRSelect(pr.id, selected)}
-          />
-        ))}
-      </CardContent>
+      <ScrollArea className="h-[60vh]">
+        <CardContent className="space-y-3">
+          {prs.map((pr) => (
+            <PRCard
+              key={`${pr.repositoryId}-${pr.id}`}
+              pr={pr}
+              selectable={selectable}
+              selected={selectedPRIds.includes(pr.id)}
+              onSelect={(selected) => handlePRSelect(pr.id, selected)}
+            />
+          ))}
+        </CardContent>
+      </ScrollArea>
     </Card>
   );
 }
