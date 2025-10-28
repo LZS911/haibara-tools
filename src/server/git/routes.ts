@@ -63,17 +63,12 @@ export const gitRouter = t.router({
         repo: z.string(),
         head: z.string(),
         base: z.string(),
-        changeDescription: z.string(), // Added for LLM
-        llmProvider: LLMProviderSchema, // Added for LLM
-        prTitle: z.string().optional() // Optional PR title
+        changeDescription: z.string(),
+        prTitle: z.string()
       })
     )
     .mutation(async ({ input }) => {
-      const gitAssistant = new GitAssistantService(input.llmProvider);
-      const commitMessage = await gitAssistant.generateCommitMessage(
-        input.changeDescription
-      );
-      const prTitle = input.prTitle || commitMessage; // Use custom title if provided, else use commit message
+      const prTitle = input.prTitle;
 
       const github = new GitHubService(input.token);
 
@@ -86,7 +81,6 @@ export const gitRouter = t.router({
       );
 
       if (existingPR) {
-        // If PR exists, update its description
         const updatedBody = existingPR.body
           ? `${existingPR.body}\n\n---\n\n${input.changeDescription}`
           : input.changeDescription;

@@ -80,6 +80,10 @@ export default {
   please_generate_commit_message: '请先生成 Commit Message',
   please_select_target_branch: '请选择目标分支',
 
+  // LLM 提供商选择
+  select_llm_provider_title: '选择 LLM 提供商',
+  select_llm_provider_placeholder: '请选择一个可用的 LLM 提供商',
+
   pr_title: 'PR 标题',
   pr_title_placeholder: '可选，默认为 Commit Message',
 
@@ -157,6 +161,7 @@ export default {
   copy_report: '复制周报',
   export_report: '导出为 Markdown',
   copy_success: '已复制到剪贴板',
+  please_select_llm_provider: '请选择一个 LLM 提供商',
 
   // 通用
   cancel: '取消',
