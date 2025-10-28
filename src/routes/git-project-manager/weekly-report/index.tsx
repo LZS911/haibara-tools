@@ -33,6 +33,7 @@ import type { PRRecord } from '../-types';
 import { PRCard } from '../-components/PRCard';
 import { toast } from 'sonner';
 import { CONSTANT } from '../../../data/constant';
+import type { LLMProvider } from '@/types/llm';
 
 export const Route = createFileRoute('/git-project-manager/weekly-report/')({
   component: WeeklyReportPage,
@@ -45,9 +46,7 @@ function WeeklyReportPage() {
 
   // 状态管理
   const [selectedRepoIds, setSelectedRepoIds] = useState<string[]>([]);
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'custom'>(
-    'week'
-  );
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'custom'>();
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [prs, setPRs] = useState<PRRecord[]>([]);
@@ -56,6 +55,10 @@ function WeeklyReportPage() {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportContent, setReportContent] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<LLMProvider>();
+
+  const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
+  const { data: llmProviders } = llmProvidersQuery;
 
   // 当时间范围类型改变时初始化时间
   const handleTimeRangeChange = (value: 'week' | 'month' | 'custom') => {
@@ -150,6 +153,11 @@ function WeeklyReportPage() {
       return;
     }
 
+    if (!selectedProvider) {
+      toast.error(t('git_project_manager.please_select_llm_provider'));
+      return;
+    }
+
     setGeneratingReport(true);
     try {
       // 获取选中的 PR 记录
@@ -179,7 +187,7 @@ function WeeklyReportPage() {
 
       const report = await generateWeeklyReportMutation.mutateAsync({
         prActivities,
-        llmProvider: 'gemini'
+        llmProvider: selectedProvider
       });
 
       setReportContent(report);
@@ -239,7 +247,16 @@ function WeeklyReportPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题和返回按钮 */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t('git_project_manager.weekly_report_title')}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('git_project_manager.weekly_report_description')}
+          </p>
+        </div>
+
         <Button
           variant="ghost"
           size="sm"
@@ -249,14 +266,6 @@ function WeeklyReportPage() {
           <ArrowLeft className="h-4 w-4" />
           {t('git_project_manager.back')}
         </Button>
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {t('git_project_manager.weekly_report_title')}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {t('git_project_manager.weekly_report_description')}
-          </p>
-        </div>
       </div>
 
       {/* 配置区域 */}
@@ -267,6 +276,38 @@ function WeeklyReportPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* LLM 提供商选择 */}
+          <div className="space-y-2">
+            <Label className="text-base font-medium">
+              {t('git_project_manager.select_llm_provider_title')}
+            </Label>
+            <div className="w-64">
+              <Select
+                value={selectedProvider}
+                onValueChange={(value) =>
+                  setSelectedProvider(value as LLMProvider)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t(
+                      'git_project_manager.select_llm_provider_placeholder'
+                    )}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {llmProviders
+                    ?.filter((p) => p.isConfigured)
+                    .map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* 项目选择 */}
           <div className="space-y-3">
             <Label className="text-base font-medium">

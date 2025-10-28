@@ -40,6 +40,7 @@ import { CONSTANT } from '../../data/constant';
 import { Spinner } from '../-components/spinner';
 import { Input } from '../-components/ui/input';
 import { Combobox } from '../-components/ui/combobox';
+import type { LLMProvider } from '@/types/llm';
 
 export const Route = createFileRoute('/git-project-manager/project/$id')({
   component: ProjectDetail,
@@ -65,6 +66,10 @@ function ProjectDetail() {
   const [isSyncingPRs, setIsSyncingPRs] = useState(false);
   const [isProcessingPR, setIsProcessingPR] = useState(false); // 新增状态，用于追踪 PR 处理流程
   const [prPerPage, setPrPerPage] = useState(100); // New state for PRs per page
+  const [selectedProvider, setSelectedProvider] = useState<LLMProvider>();
+
+  const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
+  const { data: llmProviders } = llmProvidersQuery;
 
   useEffect(() => {
     if (CONSTANT.IS_ELECTRON) {
@@ -183,10 +188,15 @@ function ProjectDetail() {
       return;
     }
 
+    if (!selectedProvider) {
+      toast.error(t('git_project_manager.please_select_llm_provider'));
+      return;
+    }
+
     try {
       const result = await generateCommitMessageMutation.mutateAsync({
         changeDescription,
-        llmProvider: 'gemini'
+        llmProvider: selectedProvider
       });
 
       setCommitMessage(result);
@@ -340,8 +350,7 @@ function ProjectDetail() {
         head: currentBranch,
         base: targetBranch,
         changeDescription,
-        llmProvider: 'gemini',
-        prTitle: prTitle.trim() === '' ? undefined : prTitle // Pass prTitle if not empty
+        prTitle: prTitle || commitMessage // Pass prTitle if not empty
       });
       setIsCreatingPR(false);
 
@@ -490,6 +499,42 @@ function ProjectDetail() {
 
           {(fileChanges.length > 0 || isProcessingPR) && (
             <>
+              {/* LLM 提供商选择（不需要 Vision 模式） */}
+              <Card className="border-slate-200 bg-white">
+                <CardHeader>
+                  <CardTitle className="text-base font-medium text-slate-900">
+                    {t('git_project_manager.select_llm_provider_title')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Label htmlFor="llm-provider">
+                    {t('git_project_manager.select_llm_provider_title')}
+                  </Label>
+                  <Select
+                    value={selectedProvider}
+                    onValueChange={(value) =>
+                      setSelectedProvider(value as LLMProvider)
+                    }
+                  >
+                    <SelectTrigger id="llm-provider" className="w-full">
+                      <SelectValue
+                        placeholder={t(
+                          'git_project_manager.select_llm_provider_placeholder'
+                        )}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {llmProviders
+                        ?.filter((p) => p.isConfigured)
+                        .map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
               {/* 提交信息编辑器 */}
               <CommitMessageEditor
                 changeDescription={changeDescription}
