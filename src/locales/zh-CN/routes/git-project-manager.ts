@@ -162,6 +162,16 @@ export default {
   error: '错误',
   success: '成功',
 
+  // 删除仓库
+  delete_repository_confirm:
+    '确定要删除仓库 "{{name}}" 吗？这将同时删除相关的 PR 记录。',
+  delete_repository_success: '仓库删除成功',
+  delete_repository_failed: '删除仓库失败',
+
+  // 仓库未找到
+  repository_not_found: '仓库未找到',
+  repository_not_found_desc: '请检查仓库是否存在或返回列表页面',
+
   // 错误信息
   github_token_not_configured: 'GitHub Token 未配置',
   github_token_not_configured_desc:

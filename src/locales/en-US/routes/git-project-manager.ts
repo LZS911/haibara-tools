@@ -169,6 +169,16 @@ export default {
   error: 'Error',
   success: 'Success',
 
+  delete_repository_confirm:
+    'Are you sure you want to delete the repository "{{name}}"? This will also delete related PR records.',
+  delete_repository_success: 'Repository deleted successfully',
+  delete_repository_failed: 'Failed to delete repository',
+
+  // Repository not found
+  repository_not_found: 'Repository not found',
+  repository_not_found_desc:
+    'Please check if the repository exists or return to the list page',
+
   // Error messages
   github_token_not_configured: 'GitHub Token Not Configured',
   github_token_not_configured_desc:

@@ -374,15 +374,17 @@ function ProjectDetail() {
   if (!repository) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-slate-900">仓库未找到</h3>
+        <h3 className="text-lg font-medium text-slate-900">
+          {t('git_project_manager.repository_not_found')}
+        </h3>
         <p className="mt-2 text-sm text-slate-500">
-          请检查仓库是否存在或返回列表页面
+          {t('git_project_manager.repository_not_found_desc')}
         </p>
         <Button
           onClick={() => navigate({ to: '/git-project-manager' })}
           className="mt-4"
         >
-          返回列表
+          {t('git_project_manager.back_to_list')}
         </Button>
       </div>
     );
