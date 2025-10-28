@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card } from '@/routes/-components/ui/card';
 import { Button } from '@/routes/-components/ui/button';
-import { Download, Video, Clock, Zap, Mic, AudioLines, GitBranch } from 'lucide-react';
+import {
+  Download,
+  Video,
+  Clock,
+  Zap,
+  Mic,
+  AudioLines,
+  GitBranch
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CONSTANT } from '../data/constant';
