@@ -6,6 +6,7 @@ export default {
   result_title: '优化结果',
   result_desc: '查看优化后的提示词与说明',
   optimizing: '正在优化…',
+  generating: '正在生成',
   templates_hint: '已为当前类型加载 {{count}} 个模板（内部使用）',
   error_title: '出错了',
   validation_error: '校验失败',
