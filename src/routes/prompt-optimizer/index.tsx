@@ -31,7 +31,10 @@ import type { LLMProvider } from '@/types/llm';
 import { useClipboard, useSubmitHotkey, useScrollToRef } from '../-lib/hooks';
 
 export const Route = createFileRoute('/prompt-optimizer/')({
-  component: PromptOptimizerPage
+  component: PromptOptimizerPage,
+  staticData: {
+    keepAlive: true
+  }
 });
 
 function PromptOptimizerPage() {

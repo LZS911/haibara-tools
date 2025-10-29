@@ -6,6 +6,7 @@ export default {
   result_title: 'Optimization Result',
   result_desc: 'See optimized prompt and explanation',
   optimizing: 'Optimizing…',
+  generating: 'Generating',
   templates_hint: '{{count}} templates loaded for current type (internal)',
   error_title: 'Error',
   validation_error: 'Validation Error',

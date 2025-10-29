@@ -1,4 +1,4 @@
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 import { createProvider } from '../llm/lib';
 import { TemplateEngine } from './template-engine';
 import {
@@ -10,6 +10,50 @@ import {
   PromptTypeSchema
 } from '@/types/prompt-optimizer';
 import { listTemplatesByCategory, selectTemplate } from './templates';
+import { LRUCache } from 'lru-cache';
+import { TRPCError } from '@trpc/server';
+
+// --- 缓存配置 ---
+
+const cache = new LRUCache<string, OptimizationResponse>({
+  max: 50, // 最多缓存 50 个结果
+  ttl: 1000 * 60 * 30, // 30 分钟过期
+  ttlAutopurge: true
+});
+
+// --- 运行时统计 ---
+
+export const stats = {
+  totalRequests: 0,
+  cacheHits: 0,
+  cacheMisses: 0,
+  streamRequests: 0,
+  errors: 0,
+  avgLatency: 0,
+  lastResetTime: new Date().toISOString()
+};
+
+/**
+ * 重置统计信息
+ */
+export function resetStats(): void {
+  stats.totalRequests = 0;
+  stats.cacheHits = 0;
+  stats.cacheMisses = 0;
+  stats.streamRequests = 0;
+  stats.errors = 0;
+  stats.avgLatency = 0;
+  stats.lastResetTime = new Date().toISOString();
+}
+
+/**
+ * 生成缓存键
+ */
+function generateCacheKey(input: OptimizationRequest): string {
+  // 排除 provider 以提高缓存命中率（不同 provider 可能产生相似结果）
+  const { provider, ...rest } = input;
+  return JSON.stringify(rest);
+}
 
 // --- Optimize Service ---
 
@@ -90,37 +134,69 @@ function parseFlexibleJson(text: string): unknown | null {
   return null;
 }
 
+/**
+ * 优化提示词（带缓存）
+ */
 export async function optimizePrompt(
   input: OptimizationRequest
 ): Promise<OptimizationResponse> {
-  const provider = createProvider(input.provider);
+  const startTime = Date.now();
+  stats.totalRequests++;
 
-  const isImagePrompt = !!input.imageTool;
-  const hasContext = !!input.context && input.context.trim().length > 0;
-  const template = selectTemplate({
-    promptType: input.promptType,
-    optimizationLevel: input.optimizationLevel,
-    hasContext,
-    isImagePrompt
-  });
+  try {
+    // 1. 检查缓存
+    const cacheKey = generateCacheKey(input);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      stats.cacheHits++;
+      return cached;
+    }
+    stats.cacheMisses++;
 
-  const variables = {
-    originalPrompt: input.originalPrompt,
-    promptType: input.promptType,
-    optimizationLevel: input.optimizationLevel,
-    languageStyle: input.languageStyle,
-    outputFormat: input.outputFormat,
-    language: input.language || 'zh-CN',
-    context: input.context || '',
-    imageTool: input.imageTool || '',
-    artisticStyle: input.artisticStyle || '',
-    composition: input.composition || '',
-    additionalRequirements: input.additionalRequirements || ''
-  } as unknown as Record<string, string>;
+    // 2. 选择模板
+    const isImagePrompt = !!input.imageTool;
+    const hasContext = !!input.context && input.context.trim().length > 0;
+    const template = selectTemplate({
+      promptType: input.promptType,
+      optimizationLevel: input.optimizationLevel,
+      hasContext,
+      isImagePrompt
+    });
 
-  const compiled = TemplateEngine.compile(template, variables, input.language);
+    // 3. 准备变量
+    const variables = {
+      originalPrompt: input.originalPrompt,
+      promptType: input.promptType,
+      optimizationLevel: input.optimizationLevel,
+      languageStyle: input.languageStyle,
+      outputFormat: input.outputFormat,
+      language: input.language || 'zh-CN',
+      context: input.context || '',
+      imageTool: input.imageTool || '',
+      artisticStyle: input.artisticStyle || '',
+      composition: input.composition || '',
+      additionalRequirements: input.additionalRequirements || ''
+    } as unknown as Record<string, string>;
 
-  const jsonInstruction = `\n\n严格按以下 JSON 结构返回（不要添加额外文本）：\n{
+    // 4. 验证模板变量（警告但不阻塞）
+    const validation = TemplateEngine.validateVariables(template, variables);
+    if (!validation.valid) {
+      console.warn(
+        `[Prompt Optimizer] Missing variables: ${validation.missing.join(', ')}`
+      );
+    }
+
+    // 5. 编译模板
+    const compiled = TemplateEngine.compile(
+      template,
+      variables,
+      input.language
+    );
+
+    // 6. 调用 LLM
+    const provider = createProvider(input.provider);
+
+    const jsonInstruction = `\n\n严格按以下 JSON 结构返回（不要添加额外文本）：\n{
   "optimizedPrompt": string,
   "optimizationExplanation": string,
   "improvements": string[],
@@ -128,13 +204,149 @@ export async function optimizePrompt(
   "metadata": { "provider": string, "timestamp": string, "tokenUsage": number }
 }`;
 
-  const fullPrompt = `SYSTEM:\n${compiled.system}\n\nUSER:\n${compiled.user}${jsonInstruction}`;
+    const fullPrompt = `SYSTEM:\n${compiled.system}\n\nUSER:\n${compiled.user}${jsonInstruction}`;
 
-  const { text } = await generateText({
-    model: provider,
-    prompt: fullPrompt
-  });
+    const { text } = await generateText({
+      model: provider,
+      prompt: fullPrompt
+    });
 
+    // 7. 解析响应
+    const result = parseAndNormalizeResponse(text, input);
+
+    // 8. 缓存结果
+    cache.set(cacheKey, result);
+
+    // 9. 更新统计
+    const latency = Date.now() - startTime;
+    stats.avgLatency =
+      (stats.avgLatency * (stats.totalRequests - 1) + latency) /
+      stats.totalRequests;
+
+    return result;
+  } catch (error) {
+    stats.errors++;
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message:
+        input.language === 'english'
+          ? `Optimization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          : `优化失败：${error instanceof Error ? error.message : '未知错误'}`,
+      cause: error
+    });
+  }
+}
+
+/**
+ * 流式优化提示词
+ */
+export async function* optimizePromptStream(
+  input: OptimizationRequest
+): AsyncGenerator<{
+  type: 'chunk' | 'complete';
+  content: string;
+  data?: OptimizationResponse;
+}> {
+  const startTime = Date.now();
+  stats.totalRequests++;
+  stats.streamRequests++;
+
+  try {
+    // 1. 选择模板
+    const isImagePrompt = !!input.imageTool;
+    const hasContext = !!input.context && input.context.trim().length > 0;
+    const template = selectTemplate({
+      promptType: input.promptType,
+      optimizationLevel: input.optimizationLevel,
+      hasContext,
+      isImagePrompt
+    });
+
+    // 2. 准备变量
+    const variables = {
+      originalPrompt: input.originalPrompt,
+      promptType: input.promptType,
+      optimizationLevel: input.optimizationLevel,
+      languageStyle: input.languageStyle,
+      outputFormat: input.outputFormat,
+      language: input.language || 'zh-CN',
+      context: input.context || '',
+      imageTool: input.imageTool || '',
+      artisticStyle: input.artisticStyle || '',
+      composition: input.composition || '',
+      additionalRequirements: input.additionalRequirements || ''
+    } as unknown as Record<string, string>;
+
+    // 3. 验证模板变量
+    const validation = TemplateEngine.validateVariables(template, variables);
+    if (!validation.valid) {
+      console.warn(
+        `[Prompt Optimizer Stream] Missing variables: ${validation.missing.join(', ')}`
+      );
+    }
+
+    // 4. 编译模板
+    const compiled = TemplateEngine.compile(
+      template,
+      variables,
+      input.language
+    );
+
+    // 5. 调用 LLM 流式接口
+    const provider = createProvider(input.provider);
+    const jsonInstruction = `\n\n严格按以下 JSON 结构返回（不要添加额外文本）：\n{
+  "optimizedPrompt": string,
+  "optimizationExplanation": string,
+  "improvements": string[],
+  "techniques": string[],
+  "metadata": { "provider": string, "timestamp": string, "tokenUsage": number }
+}`;
+
+    const fullPrompt = `SYSTEM:\n${compiled.system}\n\nUSER:\n${compiled.user}${jsonInstruction}`;
+
+    const stream = streamText({
+      model: provider,
+      prompt: fullPrompt
+    });
+
+    // 6. 流式输出
+    let buffer = '';
+    for await (const chunk of stream.textStream) {
+      buffer += chunk;
+      yield { type: 'chunk', content: chunk };
+    }
+
+    // 7. 解析完整响应
+    const result = parseAndNormalizeResponse(buffer, input);
+
+    // 8. 更新统计
+    const latency = Date.now() - startTime;
+    stats.avgLatency =
+      (stats.avgLatency * (stats.totalRequests - 1) + latency) /
+      stats.totalRequests;
+
+    // 9. 返回最终结果
+    yield { type: 'complete', content: '', data: result };
+  } catch (error) {
+    stats.errors++;
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message:
+        input.language === 'english'
+          ? `Stream optimization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          : `流式优化失败：${error instanceof Error ? error.message : '未知错误'}`,
+      cause: error
+    });
+  }
+}
+
+/**
+ * 解析并规范化响应
+ */
+function parseAndNormalizeResponse(
+  text: string,
+  input: OptimizationRequest
+): OptimizationResponse {
   const fallback = (): OptimizationResponse => ({
     optimizedPrompt: text.trim(),
     optimizationExplanation:
