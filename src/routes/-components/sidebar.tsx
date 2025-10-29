@@ -8,7 +8,8 @@ import {
   Download,
   Mic,
   AudioLines,
-  GitBranch
+  GitBranch,
+  Brain
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
@@ -97,6 +98,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       label: t('common.nav_git_project_manager'),
       icon: GitBranch,
       electronOnly: true,
+      category: 'tools'
+    },
+    {
+      path: '/prompt-optimizer',
+      label: t('common.nav_prompt_optimizer'),
+      icon: Brain,
       category: 'tools'
     },
     {

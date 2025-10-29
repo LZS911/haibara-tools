@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as PromptOptimizerIndexRouteImport } from './routes/prompt-optimizer/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
 import { Route as GitProjectManagerIndexRouteImport } from './routes/git-project-manager/index'
 import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromptOptimizerIndexRoute = PromptOptimizerIndexRouteImport.update({
+  id: '/prompt-optimizer/',
+  path: '/prompt-optimizer/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MediaToDocsIndexRoute = MediaToDocsIndexRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
   '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
+  '/prompt-optimizer': typeof PromptOptimizerIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
   '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
+  '/prompt-optimizer': typeof PromptOptimizerIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/bilibili-downloader/': typeof BilibiliDownloaderIndexRoute
   '/git-project-manager/': typeof GitProjectManagerIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
+  '/prompt-optimizer/': typeof PromptOptimizerIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
   '/git-project-manager/weekly-report/': typeof GitProjectManagerWeeklyReportIndexRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/bilibili-downloader'
     | '/git-project-manager'
     | '/media-to-docs'
+    | '/prompt-optimizer'
     | '/settings'
     | '/git-project-manager/project/$id'
     | '/git-project-manager/weekly-report'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/bilibili-downloader'
     | '/git-project-manager'
     | '/media-to-docs'
+    | '/prompt-optimizer'
     | '/settings'
     | '/git-project-manager/project/$id'
     | '/git-project-manager/weekly-report'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/bilibili-downloader/'
     | '/git-project-manager/'
     | '/media-to-docs/'
+    | '/prompt-optimizer/'
     | '/settings/'
     | '/git-project-manager/project/$id'
     | '/git-project-manager/weekly-report/'
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   BilibiliDownloaderIndexRoute: typeof BilibiliDownloaderIndexRoute
   GitProjectManagerIndexRoute: typeof GitProjectManagerIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
+  PromptOptimizerIndexRoute: typeof PromptOptimizerIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   GitProjectManagerProjectIdRoute: typeof GitProjectManagerProjectIdRoute
   GitProjectManagerWeeklyReportIndexRoute: typeof GitProjectManagerWeeklyReportIndexRoute
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prompt-optimizer/': {
+      id: '/prompt-optimizer/'
+      path: '/prompt-optimizer'
+      fullPath: '/prompt-optimizer'
+      preLoaderRoute: typeof PromptOptimizerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/media-to-docs/': {
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   BilibiliDownloaderIndexRoute: BilibiliDownloaderIndexRoute,
   GitProjectManagerIndexRoute: GitProjectManagerIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
+  PromptOptimizerIndexRoute: PromptOptimizerIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   GitProjectManagerProjectIdRoute: GitProjectManagerProjectIdRoute,
   GitProjectManagerWeeklyReportIndexRoute:
