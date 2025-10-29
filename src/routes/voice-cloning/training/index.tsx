@@ -53,7 +53,7 @@ function VoiceTrainingPage() {
   const queryClient = useQueryClient();
 
   // 下载状态
-  const [bvIdOrUrl, setBvIdOrUrl] = useState('BV1dg41187wd');
+  const [bvIdOrUrl, setBvIdOrUrl] = useState('');
   const [selectedSpeakerId, setSelectedSpeakerId] = useState<string>('');
   const [jobId, setJobId] = useState<string>('');
   const [isDownloading, setIsDownloading] = useState(false);

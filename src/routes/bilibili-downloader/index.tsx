@@ -39,7 +39,7 @@ export const Route = createFileRoute('/bilibili-downloader/')({
 
 function BilibiliDownloader() {
   const { t } = useTranslation();
-  const [bvInput, setBvInput] = useState('BV11T4EzyEdF');
+  const [bvInput, setBvInput] = useState('');
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [loginStatus, setLoginStatus] = useState(LoginStatus.visitor);
   const [selectedQuality, setSelectedQuality] = useState<number | undefined>(
