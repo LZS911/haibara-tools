@@ -34,12 +34,12 @@ export const Route = createFileRoute('/media-to-docs/')({
   component: AiConvert,
   staticData: { keepAlive: true }
 });
-
+//BV11T4EzyEdF
 function AiConvert() {
   const { t } = useTranslation();
   const { setIsTaskRunning, jobToLoadFromHistory, setJobToLoadFromHistory } =
     useAppStore();
-  const [bvId, setBvId] = useState('BV11T4EzyEdF');
+  const [bvId, setBvId] = useState('');
   const [currentStep, setCurrentStep] = useState<AiConvertStep>('input-bv-id');
   const [jobId, setJobId] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
