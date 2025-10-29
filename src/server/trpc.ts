@@ -15,13 +15,15 @@ import { bilibiliRouter } from './bilibili';
 import { llmRouter } from './llm';
 import { voiceCloningRouter } from './voice-cloning';
 import { gitRouter } from './git/routes';
+import { promptOptimizerRouter } from './prompt-optimizer';
 
 export const appRouter = t.router({
   mediaToDoc: mediaToDocsRouter,
   bilibili: bilibiliRouter,
   llm: llmRouter,
   voiceCloning: voiceCloningRouter,
-  git: gitRouter
+  git: gitRouter,
+  promptOptimizer: promptOptimizerRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({
