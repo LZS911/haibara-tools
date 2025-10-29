@@ -35,7 +35,7 @@ export const Route = createFileRoute('/prompt-optimizer/')({
 });
 
 function PromptOptimizerPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const resultRef = useRef<HTMLDivElement | null>(null);
   const scrollToResult = useScrollToRef(resultRef);
   const { copy } = useClipboard();

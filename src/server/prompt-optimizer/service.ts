@@ -198,7 +198,7 @@ export async function optimizePrompt(
 export function listTemplates(category?: PromptType): PromptTemplate[] {
   if (category) {
     // 验证 category 合法性
-    const _ = PromptTypeSchema.parse(category);
+    PromptTypeSchema.parse(category);
   }
   return listTemplatesByCategory(category);
 }
