@@ -64,7 +64,7 @@ export async function getRepoStatus(repoPath: string): Promise<{
   const lines = (result.output || '').trim().split('\n').filter(Boolean);
   const changes = lines.map((line) => {
     const status = line.substring(0, 2).trim();
-    const filePath = line.substring(3);
+    const filePath = line.substring(2).trim();
 
     let changeStatus: 'added' | 'modified' | 'deleted' | 'renamed' = 'modified';
     if (status === 'A' || status === '??') {
