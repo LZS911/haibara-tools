@@ -118,6 +118,18 @@ export const OptimizationHistorySchema = z.object({
 });
 export type OptimizationHistory = z.infer<typeof OptimizationHistorySchema>;
 
+// 优化记录 Schema（用于历史记录和收藏）
+export const OptimizationRecordSchema = z.object({
+  id: z.string(),
+  timestamp: z.number(),
+  originalPrompt: z.string(),
+  optimizedPrompt: z.string(),
+  request: OptimizationRequestSchema,
+  response: OptimizationResponseSchema,
+  isFavorite: z.boolean()
+});
+export type OptimizationRecord = z.infer<typeof OptimizationRecordSchema>;
+
 // 模板系统 Schema
 export const TemplateVariableSchema = z.object({
   name: z.string(),

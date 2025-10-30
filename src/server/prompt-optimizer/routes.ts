@@ -8,7 +8,8 @@ import {
   type OptimizationResponse,
   PromptTemplateSchema,
   PromptTypeSchema,
-  AllOptimizationOptionsSchema
+  AllOptimizationOptionsSchema,
+  OptimizationRecordSchema
 } from '@/types/prompt-optimizer';
 import {
   listTemplates,
@@ -18,6 +19,15 @@ import {
   resetStats
 } from './service';
 import { getAllOptions } from './options';
+import {
+  saveOptimization,
+  listHistory,
+  getHistoryItem,
+  deleteHistoryItem,
+  toggleFavorite,
+  listFavorites,
+  clearHistory
+} from './storage';
 
 const t = initTRPC.context<TRPCContext>().create();
 
@@ -32,7 +42,18 @@ export const promptOptimizerRouter = t.router({
     .input(OptimizationRequestSchema)
     .output(OptimizationResponseSchema)
     .mutation(async ({ input }) => {
-      return optimizePrompt(input);
+      const result = await optimizePrompt(input);
+      // Save to history after successful optimization
+      try {
+        await saveOptimization(input, result);
+      } catch (error) {
+        console.error(
+          '[Prompt Optimizer] Failed to save optimization to history:',
+          error
+        );
+        // Don't fail the request if history save fails
+      }
+      return result;
     }),
 
   optimizeStream: t.procedure
@@ -89,5 +110,47 @@ export const promptOptimizerRouter = t.router({
   resetStats: t.procedure.mutation(() => {
     resetStats();
     return { success: true };
-  })
+  }),
+
+  // History and Favorites routes
+  getHistory: t.procedure
+    .output(z.array(OptimizationRecordSchema))
+    .query(async () => {
+      return listHistory();
+    }),
+
+  getHistoryItem: t.procedure
+    .input(z.object({ id: z.string() }))
+    .output(OptimizationRecordSchema.nullable())
+    .query(async ({ input }) => {
+      return getHistoryItem(input.id);
+    }),
+
+  deleteHistoryItem: t.procedure
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ success: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const success = await deleteHistoryItem(input.id);
+      return { success };
+    }),
+
+  toggleFavorite: t.procedure
+    .input(z.object({ id: z.string() }))
+    .output(OptimizationRecordSchema.nullable())
+    .mutation(async ({ input }) => {
+      return toggleFavorite(input.id);
+    }),
+
+  getFavorites: t.procedure
+    .output(z.array(OptimizationRecordSchema))
+    .query(async () => {
+      return listFavorites();
+    }),
+
+  clearHistory: t.procedure
+    .output(z.object({ deletedCount: z.number() }))
+    .mutation(async () => {
+      const deletedCount = await clearHistory();
+      return { deletedCount };
+    })
 });
