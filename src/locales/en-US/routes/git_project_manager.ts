@@ -77,7 +77,9 @@ export default {
   no_branch_found: 'No branch found.',
 
   // Commit and create PR
+  create_github_pr: 'Create GitHub PR',
   commit_and_create_pr: 'Commit & Create PR',
+  commit_and_push: 'Commit & Push',
   committing: 'Committing...',
   commit_success: 'Commit successful',
   commit_failed: 'Commit failed',
@@ -95,10 +97,16 @@ export default {
   syncing_prs: 'Syncing PR records...',
 
   // Confirmation dialog
-  confirm_commit_title: 'Confirm Commit',
-  confirm_commit_desc: 'The following Git operations will be executed:',
+  confirm_commit_title: 'Confirm Commit & Create PR',
+  confirm_commit_push_title: 'Confirm Commit & Push',
+  confirm_commit_desc:
+    'This will commit, push, and create a pull request. The following Git operations will be executed:',
+  confirm_commit_push_desc:
+    'This will commit and push the changes. The following Git operations will be executed:',
   confirm_commit_steps:
     '1. git add .\n2. git commit -m "{{message}}"\n3. git push origin {{branch}}\n4. Create Pull Request',
+  confirm_commit_push_steps:
+    '1. git add .\n2. git commit -m "{{message}}"\n3. git push origin {{branch}}',
   confirm_commit_warning:
     'Please ensure you have reviewed the file changes and are ready to push to the remote repository',
 
