@@ -39,6 +39,7 @@ import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 import { CONSTANT } from '../../data/constant';
 import { Spinner } from '../-components/spinner';
 import { Input } from '../-components/ui/input';
+import { Switch } from '../-components/ui/switch';
 import { Combobox } from '../-components/ui/combobox';
 import type { LLMProvider } from '@/types/llm';
 
@@ -66,6 +67,7 @@ function ProjectDetail() {
   const [isSyncingPRs, setIsSyncingPRs] = useState(false);
   const [isProcessingPR, setIsProcessingPR] = useState(false); // 新增状态，用于追踪 PR 处理流程
   const [prPerPage, setPrPerPage] = useState(100); // New state for PRs per page
+  const [createPR, setCreatePR] = useState(true); // Add state for controlling PR creation
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>();
 
   const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
@@ -235,15 +237,24 @@ function ProjectDetail() {
     }
 
     const confirmed = await confirm({
-      title: t('git_project_manager.confirm_commit_title'),
-      description: t('git_project_manager.confirm_commit_desc'),
+      title: createPR
+        ? t('git_project_manager.confirm_commit_title')
+        : t('git_project_manager.confirm_commit_push_title'),
+      description: createPR
+        ? t('git_project_manager.confirm_commit_desc')
+        : t('git_project_manager.confirm_commit_push_desc'),
       content: (
         <div className="space-y-2">
           <pre className="text-xs bg-slate-50 p-2 rounded whitespace-pre-wrap">
-            {t('git_project_manager.confirm_commit_steps', {
-              message: commitMessage,
-              branch: currentBranch
-            })}
+            {createPR
+              ? t('git_project_manager.confirm_commit_steps', {
+                  message: commitMessage,
+                  branch: currentBranch
+                })
+              : t('git_project_manager.confirm_commit_push_steps', {
+                  message: commitMessage,
+                  branch: currentBranch
+                })}
           </pre>
           <p className="text-xs text-slate-600">
             {t('git_project_manager.confirm_commit_warning')}
@@ -341,29 +352,31 @@ function ProjectDetail() {
       }
       setIsPushing(false);
 
-      setIsCreatingPR(true);
-      // 4. 创建 PR
-      await createPullRequestMutation.mutateAsync({
-        token: githubToken,
-        owner: repository.githubOwner,
-        repo: repository.githubRepo,
-        head: currentBranch,
-        base: targetBranch,
-        changeDescription,
-        prTitle: prTitle || commitMessage // Pass prTitle if not empty
-      });
-      setIsCreatingPR(false);
+      if (createPR) {
+        setIsCreatingPR(true);
+        // 4. 创建 PR
+        await createPullRequestMutation.mutateAsync({
+          token: githubToken,
+          owner: repository.githubOwner,
+          repo: repository.githubRepo,
+          head: currentBranch,
+          base: targetBranch,
+          changeDescription,
+          prTitle: prTitle || commitMessage // Pass prTitle if not empty
+        });
+        setIsCreatingPR(false);
 
-      setIsSyncingPRs(true);
-      // 同步 PR 记录
-      await syncPRRecordsMutation.mutateAsync({
-        token: githubToken,
-        repositoryId: repository.id,
-        owner: repository.githubOwner,
-        repo: repository.githubRepo,
-        perPage: prPerPage
-      });
-      setIsSyncingPRs(false);
+        setIsSyncingPRs(true);
+        // 同步 PR 记录
+        await syncPRRecordsMutation.mutateAsync({
+          token: githubToken,
+          repositoryId: repository.id,
+          owner: repository.githubOwner,
+          repo: repository.githubRepo,
+          perPage: prPerPage
+        });
+        setIsSyncingPRs(false);
+      }
 
       toast.success(t('git_project_manager.commit_success'));
 
@@ -374,10 +387,11 @@ function ProjectDetail() {
 
       // 刷新数据
       refetchRepoStatus();
-      refetchPRRecords();
-
-      // 切换到 PR 记录标签页
-      setActiveTab('pr-records');
+      if (createPR) {
+        refetchPRRecords();
+        // 切换到 PR 记录标签页
+        setActiveTab('pr-records');
+      }
     } catch (error) {
       console.error('Failed to commit and create PR:', error);
       toast.error(
@@ -596,6 +610,17 @@ function ProjectDetail() {
                     />
                   </div>
 
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="create-pr-switch"
+                      checked={createPR}
+                      onCheckedChange={setCreatePR}
+                    />
+                    <Label htmlFor="create-pr-switch">
+                      {t('git_project_manager.create_github_pr')}
+                    </Label>
+                  </div>
+
                   <Button
                     onClick={handleCommitAndCreatePR}
                     disabled={
@@ -623,7 +648,9 @@ function ProjectDetail() {
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        {t('git_project_manager.commit_and_create_pr')}
+                        {createPR
+                          ? t('git_project_manager.commit_and_create_pr')
+                          : t('git_project_manager.commit_and_push')}
                       </>
                     )}
                   </Button>

@@ -72,7 +72,9 @@ export default {
   no_branch_found: '未找到分支。',
 
   // 提交并创建 PR
+  create_github_pr: '创建 GitHub PR',
   commit_and_create_pr: '提交并创建 PR',
+  commit_and_push: '提交并推送',
   committing: '正在提交...',
   commit_success: '提交成功',
   commit_failed: '提交失败',
@@ -94,10 +96,14 @@ export default {
   syncing_prs: '正在同步 PR 记录...',
 
   // 确认对话框
-  confirm_commit_title: '确认提交',
-  confirm_commit_desc: '将执行以下 Git 操作:',
+  confirm_commit_title: '确认提交并创建 PR',
+  confirm_commit_push_title: '确认提交并推送',
+  confirm_commit_desc: '将执行提交、推送和创建 PR 的操作，具体 Git 命令如下:',
+  confirm_commit_push_desc: '将执行提交和推送操作，具体 Git 命令如下:',
   confirm_commit_steps:
     '1. git add .\n2. git commit -m "{{message}}"\n3. git push origin {{branch}}\n4. 创建 Pull Request',
+  confirm_commit_push_steps:
+    '1. git add .\n2. git commit -m "{{message}}"\n3. git push origin {{branch}}',
   confirm_commit_warning: '请确保您已检查文件变更并准备好推送到远程仓库',
 
   // PR 记录列表
