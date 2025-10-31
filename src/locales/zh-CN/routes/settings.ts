@@ -23,6 +23,7 @@ export default {
   bilibili_sessdata_tip: '登录后可下载更高清晰度的视频',
   bilibili_title: '视频下载服务',
   config_location: '配置文件位置',
+  model_name: '模型ID',
   default_model: '默认: {{model}}',
   desc: '配置 API Keys 和应用设置',
   load_fail: '加载配置失败',
@@ -43,5 +44,7 @@ export default {
   tab_git: 'Git',
   github_token_title: 'GitHub 个人访问令牌',
   github_token_desc: '配置您的 GitHub 个人访问令牌 (PAT) 以启用 Git 集成功能。',
-  github_token_placeholder: '输入您的 GitHub PAT'
+  github_token_placeholder: '输入您的 GitHub PAT',
+  base_url: 'Base URL',
+  base_url_placeholder: '输入 Base URL'
 };

@@ -165,7 +165,7 @@ export function OptionsSelector({
                 className="text-xs"
                 onClick={() => setSelectedStyle(style.id as SummaryStyle)}
               >
-                {t(style.id, style.name)}
+                {style.name}
               </Button>
             ))}
           </div>

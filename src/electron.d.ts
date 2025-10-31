@@ -15,6 +15,10 @@ export interface AppConfig {
   GROQ_MODEL_NAME?: string;
   COHERE_API_KEY?: string;
   COHERE_MODEL_NAME?: string;
+  DOUBAO_API_KEY?: string;
+  DOUBAO_MODEL_NAME?: string;
+  DOUBAO_BASE_URL?: string;
+  DEEPSEEK_BASE_URL?: string;
   VOLC_APP_ID?: string;
   VOLC_ACCESS_TOKEN?: string;
   BILIBILI_SESSDATA?: string;
