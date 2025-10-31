@@ -45,5 +45,7 @@ export default {
   github_token_title: 'GitHub Personal Access Token',
   github_token_desc:
     'Configure your GitHub Personal Access Token (PAT) to enable Git integration features.',
-  github_token_placeholder: 'Enter your GitHub PAT'
+  github_token_placeholder: 'Enter your GitHub PAT',
+  base_url: 'Base URL',
+  base_url_placeholder: 'Enter Base URL'
 };

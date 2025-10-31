@@ -7,7 +7,9 @@ export const LLM_PROVIDERS: {
   description?: string;
   apiKeyField: keyof AppConfig;
   modelNameField: keyof AppConfig;
+  baseURLField?: keyof AppConfig;
   defaultModel?: string;
+  defaultBaseURL?: string;
 }[] = [
   {
     id: 'openai',
@@ -23,7 +25,9 @@ export const LLM_PROVIDERS: {
     description: '中文优化，性价比高',
     apiKeyField: 'DEEPSEEK_API_KEY',
     modelNameField: 'DEEPSEEK_MODEL_NAME',
-    defaultModel: 'deepseek-chat'
+    baseURLField: 'DEEPSEEK_BASE_URL',
+    defaultModel: 'deepseek-chat',
+    defaultBaseURL: 'https://api.deepseek.com'
   },
   {
     id: 'gemini',
@@ -56,11 +60,22 @@ export const LLM_PROVIDERS: {
     apiKeyField: 'COHERE_API_KEY',
     modelNameField: 'COHERE_MODEL_NAME',
     defaultModel: 'command-r-plus'
+  },
+  {
+    id: 'doubao',
+    name: 'Doubao',
+    description: '字节跳动推出的豆包大模型',
+    apiKeyField: 'DOUBAO_API_KEY',
+    modelNameField: 'DOUBAO_MODEL_NAME',
+    baseURLField: 'DOUBAO_BASE_URL',
+    defaultModel: 'doubao-seed-1-6-lite-251015',
+    defaultBaseURL: 'https://ark.cn-beijing.volces.com/api/v3/'
   }
 ];
 
 export const VISION_PROVIDERS: LLMProvider[] = [
   'openai',
   'anthropic',
-  'gemini'
+  'gemini',
+  'doubao'
 ];

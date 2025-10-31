@@ -59,6 +59,15 @@ function getProviderConfig(provider: LLMProvider): ProviderConfig {
         apiKey: providerConfig.COHERE_API_KEY || '',
         modelName: providerConfig.COHERE_MODEL_NAME || 'command-r-plus-08-2024'
       };
+    case 'doubao':
+      return {
+        apiKey: providerConfig.DOUBAO_API_KEY || '',
+        baseURL:
+          providerConfig.DOUBAO_BASE_URL ||
+          'https://ark.cn-beijing.volces.com/api/v3/',
+        modelName:
+          providerConfig.DOUBAO_MODEL_NAME || 'doubao-seed-1-6-lite-251015'
+      };
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }
@@ -129,6 +138,14 @@ export function createProvider(provider: LLMProvider): LanguageModel {
       return cohere(config.modelName);
     }
 
+    case 'doubao': {
+      const doubao = createOpenAI({
+        apiKey: config.apiKey,
+        baseURL: config.baseURL
+      });
+      return doubao(config.modelName);
+    }
+
     default:
       throw new TRPCError({
         code: 'BAD_REQUEST',
@@ -144,6 +161,7 @@ export async function checkModelAvailability(
 ): Promise<boolean> {
   try {
     const config = getProviderConfig(provider);
+    console.log(config);
     if (!config.apiKey) {
       return false;
     }
