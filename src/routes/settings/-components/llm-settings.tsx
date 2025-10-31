@@ -159,6 +159,9 @@ export function LlmSettings({ config, handleInputChange }: LlmSettingsProps) {
                       modelSuggestionsQuery.data.length > 0 ? (
                         <Select
                           value={config[provider.modelNameField] as string}
+                          onValueChange={(value) =>
+                            handleInputChange(provider.modelNameField, value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue
