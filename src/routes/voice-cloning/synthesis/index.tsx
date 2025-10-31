@@ -74,7 +74,6 @@ function VoiceSynthesisPage() {
   const synthesizeMutation = useMutation({
     ...trpc.voiceCloning.synthesizeSpeech.mutationOptions(),
     onSuccess: (data) => {
-      console.log(data);
       if (data.success) {
         setAudioUrl(data.audioUrl);
         setAudioPath(data.audioPath);

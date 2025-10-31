@@ -76,7 +76,6 @@ export const bilibiliRouter = t.router({
 
         // 检查登录状态
         const loginStatus = await checkLogin(settings.SESSDATA);
-        console.log('loginStatus', loginStatus);
         return {
           success: true,
           videoInfo: videoInfo as VideoData,

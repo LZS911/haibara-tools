@@ -56,7 +56,6 @@ function AiConvert() {
 
   useEffect(() => {
     if (jobToLoadFromHistory) {
-      console.log('Loading job from history:', jobToLoadFromHistory);
       // 从历史记录加载任务
       setBvId(jobToLoadFromHistory.bvId);
       setAudioPath(jobToLoadFromHistory.audioPath);
