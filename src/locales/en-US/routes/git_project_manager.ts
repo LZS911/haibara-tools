@@ -45,6 +45,7 @@ export default {
   back_to_list: 'Back to List',
 
   // Tab labels
+  tab_workflow: 'Workflow',
   tab_changes: 'Changes & Commit',
   tab_pr_records: 'PR Records',
 
@@ -173,6 +174,31 @@ export default {
   copy_report: 'Copy Report',
   export_report: 'Export as Markdown',
   copy_success: 'Copied to clipboard',
+  please_select_llm_provider: 'Please select an LLM provider',
+
+  // Workflow
+  workflow_requirement_title: 'Requirements & Branch',
+  requirement_label: 'Requirement',
+  requirement_placeholder:
+    'Enter the feature or fix requirement. You may include a GitHub issue link (e.g., https://github.com/owner/repo/issues/123 or #123).',
+  select_provider: 'Select Provider',
+  base_branch: 'Base Branch',
+  select_base_branch: 'Select Base Branch',
+  suggested_branch: 'Suggested Branch Name',
+  suggest_branch: 'Suggest Branch',
+  generating: 'Generating...',
+  create_branch: 'Create Branch',
+  creating_branch: 'Creating branch...',
+  branch_suggested: 'Branch name suggested',
+  branch_created: 'Branch created: {{branch}}',
+  please_input_requirement: 'Please enter requirement',
+  working_tree_not_clean:
+    'Working tree has uncommitted changes. Please commit or clean up first.',
+  please_generate_branch_name: 'Please generate branch name first',
+  optimize_prompt: 'Optimize Prompt',
+  optimizing: 'Optimizing...',
+  optimized: 'Optimized',
+  go_to_changes: 'Go to Changes & Commit',
 
   // Common
   cancel: 'Cancel',

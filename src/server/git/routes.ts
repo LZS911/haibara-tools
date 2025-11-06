@@ -1,6 +1,8 @@
 import { GitHubService } from './github-service';
 import { z } from 'zod';
 import { GitAssistantService } from '../llm/git-assistant';
+import { createProvider } from '../llm/lib';
+import { generateText } from 'ai';
 import { LLMProviderSchema, PRActivitySchema } from '../../types/llm';
 import { initTRPC } from '@trpc/server';
 import * as storage from './storage';
@@ -299,5 +301,101 @@ export const gitRouter = t.router({
     .query(async ({ input }) => {
       const github = new GitHubService(input.token);
       return github.getRemoteBranches(input.owner, input.repo, input.perPage);
+    }),
+
+  // Suggest a git branch name using LLM (reuses existing provider factory)
+  suggestBranchName: t.procedure
+    .input(
+      z.object({
+        provider: LLMProviderSchema,
+        requirement: z.string().min(3),
+        // Optional hint fields for better branch prefixing (no new helpers introduced)
+        preferredPrefix: z.enum(['feature', 'fix', 'chore']).optional()
+      })
+    )
+    .mutation(async ({ input }) => {
+      const llm = createProvider(input.provider);
+      const prefixHint =
+        input.preferredPrefix ?? inferPrefix(input.requirement);
+
+      const prompt = `You are an expert software maintainer. Generate a git branch name for the following requirement.
+
+Strict rules:
+- Output ONLY the branch name, nothing else.
+- Use the pattern: <prefix>/<kebab-case-slug>
+- prefix must be one of: feature, fix, chore. Prefer: ${prefixHint}
+- kebab-case only: [a-z0-9-], max 48 chars for slug part
+- No spaces, no underscores, no emoji, no punctuation except '-'
+- If an issue number is present, include it at end like '-#123' without spaces (keep '#')
+
+Requirement:
+${input.requirement}
+`;
+
+      const { text } = await generateText({ model: llm, prompt });
+      const raw = (text || '').trim();
+      const sanitized = sanitizeBranchName(raw);
+      if (!sanitized) {
+        // Fallback simple slug
+        const fallbackSlug =
+          input.requirement
+            .toLowerCase()
+            .replace(/https?:\/\/\S+/g, '')
+            .replace(/[^a-z0-9\s#-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .slice(0, 48) || 'update';
+        return `${prefixHint}/${fallbackSlug}`;
+      }
+      return sanitized;
     })
 });
+
+// --- Local helpers (no new exported utilities) ---
+function inferPrefix(text: string): 'feature' | 'fix' | 'chore' {
+  const t = text.toLowerCase();
+  if (/(bug|fix|error|fail|broken|issue)/.test(t)) return 'fix';
+  if (/(refactor|infra|build|chore|deps|dependency|ci)/.test(t)) return 'chore';
+  return 'feature';
+}
+
+function sanitizeBranchName(name: string): string | null {
+  let trimmed = name.trim();
+  // If model returned backticks or extra lines, take first line
+  trimmed = trimmed.split(/\r?\n/)[0];
+  // Remove leading/trailing quotes or code fences
+  trimmed = trimmed.replace(/^`+|`+$/g, '').replace(/^"+|"+$/g, '');
+
+  // Ensure prefix/slug format
+  const match = trimmed.match(/^(feature|fix|chore)\/[A-Za-z0-9#\\-]+$/);
+  let candidate = trimmed;
+  if (!match) {
+    // Try to coerce: find prefix then slug
+    const prefixMatch =
+      trimmed.match(/\b(feature|fix|chore)\b/i)?.[0]?.toLowerCase() ||
+      'feature';
+    const rest = trimmed.replace(/\b(feature|fix|chore)\b\/?/i, '');
+    const slug =
+      rest
+        .toLowerCase()
+        .replace(/[^a-z0-9#\-\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .slice(0, 48) || 'update';
+    candidate = `${prefixMatch}/${slug}`;
+  }
+
+  // Final cleanup: only allow [a-z0-9-_/ and #]
+  candidate = candidate
+    .toLowerCase()
+    .replace(/[^a-z0-9#\-\\/]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/\\-+|\\-\\/g, '/');
+
+  // Truncate if excessively long
+  if (candidate.length > 64) candidate = candidate.slice(0, 64);
+
+  return /^(feature|fix|chore)\/[a-z0-9#\\-]+$/.test(candidate)
+    ? candidate
+    : null;
+}

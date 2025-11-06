@@ -41,6 +41,7 @@ export default {
   back_to_list: '返回列表',
 
   // Tab 标签
+  tab_workflow: '工作流',
   tab_changes: '变更与提交',
   tab_pr_records: 'PR 记录',
 
@@ -169,6 +170,30 @@ export default {
   copy_success: '已复制到剪贴板',
   please_select_llm_provider: '请选择一个 LLM 提供商',
 
+  // 工作流
+  workflow_requirement_title: '需求与分支',
+  requirement_label: '需求描述',
+  requirement_placeholder:
+    '请输入功能或修复需求，可包含 GitHub issue 链接（例如 https://github.com/owner/repo/issues/123 或 #123）',
+  select_provider: '选择模型提供商',
+  base_branch: '基础分支',
+  select_base_branch: '选择基础分支',
+  suggested_branch: '建议的分支名',
+  suggest_branch: '生成分支名',
+  generating: '生成中...',
+  create_branch: '创建分支',
+  creating_branch: '正在创建分支...',
+  branch_suggested: '已生成分支名',
+  branch_created: '已创建分支：{{branch}}',
+  please_input_requirement: '请输入需求描述',
+  working_tree_not_clean: '工作区存在未提交变更，请先提交或清理后重试',
+  please_generate_branch_name: '请先生成分支名',
+  please_select_base_branch: '请选择基础分支',
+  optimize_prompt: '优化提示词',
+  optimizing: '正在优化...',
+  optimized: '优化完成',
+  go_to_changes: '前往变更与提交',
+  workflow_optimize_prompt_title: '优化提示词',
   // 通用
   cancel: '取消',
   confirm: '确认',
