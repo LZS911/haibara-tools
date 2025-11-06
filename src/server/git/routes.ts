@@ -80,7 +80,12 @@ export const gitRouter = t.router({
         input.base
       );
 
-      if (existingPR) {
+      if (
+        existingPR &&
+        existingPR.head?.ref === input.head &&
+        existingPR.base?.ref === input.base &&
+        existingPR.head?.repo?.full_name === `${input.owner}/${input.repo}`
+      ) {
         const updatedBody = existingPR.body
           ? `${existingPR.body}\n\n---\n\n${input.changeDescription}`
           : input.changeDescription;
