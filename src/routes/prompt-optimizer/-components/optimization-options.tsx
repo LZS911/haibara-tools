@@ -88,7 +88,7 @@ export function OptimizationOptions({
       <div className="space-y-1">
         <OptionLabel
           label={t('prompt_optimizer.prompt_type')}
-          description={t('prompt_optimizer.tooltips.prompt_type')}
+          description={t('prompt_optimizer.prompt_type_tooltips')}
         />
         <Select
           value={value.promptType}
@@ -113,7 +113,7 @@ export function OptimizationOptions({
       <div className="space-y-1">
         <OptionLabel
           label={t('prompt_optimizer.optimization_level')}
-          description={t('prompt_optimizer.tooltips.optimization_level')}
+          description={t('prompt_optimizer.optimization_level_tooltips')}
         />
         <Select
           value={value.optimizationLevel}
@@ -138,7 +138,7 @@ export function OptimizationOptions({
       <div className="space-y-1">
         <OptionLabel
           label={t('prompt_optimizer.language_style')}
-          description={t('prompt_optimizer.tooltips.language_style')}
+          description={t('prompt_optimizer.language_style_tooltips')}
         />
         <Select
           value={value.languageStyle}
@@ -163,7 +163,7 @@ export function OptimizationOptions({
       <div className="space-y-1">
         <OptionLabel
           label={t('prompt_optimizer.output_format')}
-          description={t('prompt_optimizer.tooltips.output_format')}
+          description={t('prompt_optimizer.output_format_tooltips')}
         />
         <Select
           value={value.outputFormat}

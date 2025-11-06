@@ -4,7 +4,7 @@ import {
   getCurrentBranch
 } from './-lib/git-commands';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/routes/-components/ui/button';
 import {
   Tabs,
@@ -42,6 +42,10 @@ import { Input } from '../-components/ui/input';
 import { Switch } from '../-components/ui/switch';
 import { Combobox } from '../-components/ui/combobox';
 import type { LLMProvider } from '@/types/llm';
+import { Textarea } from '../-components/ui/textarea';
+import { ProviderSelector } from '@/routes/prompt-optimizer/-components/provider-selector';
+import { OptimizationResult } from '@/routes/prompt-optimizer/-components/optimization-result';
+import type { OptimizationResponse } from '@/types/prompt-optimizer';
 
 export const Route = createFileRoute('/git-project-manager/project/$id')({
   component: ProjectDetail,
@@ -52,7 +56,7 @@ function ProjectDetail() {
   const { id } = Route.useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('changes');
+  const [activeTab, setActiveTab] = useState('workflow');
   const [changeDescription, setChangeDescription] = useState('');
   const [commitMessage, setCommitMessage] = useState('');
   const [targetBranch, setTargetBranch] = useState('');
@@ -70,6 +74,18 @@ function ProjectDetail() {
   const [createPR, setCreatePR] = useState(true); // Add state for controlling PR creation
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>();
 
+  // --- Workflow states ---
+  const [requirement, setRequirement] = useState('');
+  const [baseBranch, setBaseBranch] = useState('');
+  const [suggestedBranch, setSuggestedBranch] = useState('');
+  const [isSuggestingBranch, setIsSuggestingBranch] = useState(false);
+  const [isCreatingBranch, setIsCreatingBranch] = useState(false);
+  const [promptOptimizationResult, setPromptOptimizationResult] = useState<
+    OptimizationResponse | undefined
+  >(undefined);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const requirementStorageKey = useMemo(() => `gitpm:requirement:${id}`, [id]);
+
   const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
   const { data: llmProviders } = llmProvidersQuery;
 
@@ -80,6 +96,16 @@ function ProjectDetail() {
       });
     }
   }, []);
+
+  // Restore persisted requirement per repo
+  useEffect(() => {
+    const saved = localStorage.getItem(requirementStorageKey);
+    if (saved) setRequirement(saved);
+  }, [requirementStorageKey]);
+  // Persist requirement
+  useEffect(() => {
+    if (requirement) localStorage.setItem(requirementStorageKey, requirement);
+  }, [requirement, requirementStorageKey]);
 
   // 检查是否在 Electron 环境
   useEffect(() => {
@@ -128,6 +154,16 @@ function ProjectDetail() {
           !!repository?.githubOwner && !!repository?.githubRepo && !!githubToken
       }
     )
+  );
+
+  // Suggest Branch Name
+  const suggestBranchNameMutation = useMutation(
+    trpc.git.suggestBranchName.mutationOptions()
+  );
+
+  // Optimize Prompt
+  const optimizePromptMutation = useMutation(
+    trpc.promptOptimizer.optimize.mutationOptions()
   );
 
   // 获取 PR 记录
@@ -181,8 +217,122 @@ function ProjectDetail() {
       if (!targetBranch) {
         setTargetBranch(repository?.defaultBranch || 'main');
       }
+      if (!baseBranch) {
+        setBaseBranch(repository?.defaultBranch || 'main');
+      }
     }
-  }, [currentBranchData, repository, targetBranch]);
+  }, [baseBranch, currentBranchData, repository, targetBranch]);
+
+  const handleSuggestBranch = async () => {
+    if (!requirement.trim()) {
+      toast.error(t('git_project_manager.please_input_requirement'));
+      return;
+    }
+    if (!selectedProvider) {
+      toast.error(t('git_project_manager.please_select_llm_provider'));
+      return;
+    }
+    setIsSuggestingBranch(true);
+    try {
+      const result = await suggestBranchNameMutation.mutateAsync({
+        provider: selectedProvider,
+        requirement
+      });
+      setSuggestedBranch(result);
+      toast.success(t('git_project_manager.branch_suggested'));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(t('git_project_manager.operation_failed', { error: msg }));
+    } finally {
+      setIsSuggestingBranch(false);
+    }
+  };
+
+  const handleCreateBranch = async () => {
+    if (!repository) return;
+    if (!baseBranch) {
+      toast.error(t('git_project_manager.please_select_base_branch'));
+      return;
+    }
+    const newBranch = suggestedBranch.trim();
+    if (!newBranch) {
+      toast.error(t('git_project_manager.please_generate_branch_name'));
+      return;
+    }
+
+    // Prevent checkout if there are staged/unstaged changes
+    const status = await getRepoStatus(repository.localPath);
+    if ((status.changes?.length ?? 0) > 0) {
+      toast.error(t('git_project_manager.working_tree_not_clean'));
+      return;
+    }
+
+    setIsCreatingBranch(true);
+    try {
+      // checkout base
+      const step1 = await executeGitCommandMutation.mutateAsync({
+        command: `git checkout ${baseBranch}`,
+        repoPath: repository.localPath
+      });
+      if (!step1?.success) throw new Error(step1?.stderr || 'checkout failed');
+
+      const step2 = await executeGitCommandMutation.mutateAsync({
+        command: `git fetch`,
+        repoPath: repository.localPath
+      });
+      if (!step2?.success) throw new Error(step2?.stderr || 'fetch failed');
+
+      const step3 = await executeGitCommandMutation.mutateAsync({
+        command: `git pull`,
+        repoPath: repository.localPath
+      });
+      if (!step3?.success) throw new Error(step3?.stderr || 'pull failed');
+
+      const step4 = await executeGitCommandMutation.mutateAsync({
+        command: `git checkout -b ${newBranch}`,
+        repoPath: repository.localPath
+      });
+      if (!step4?.success)
+        throw new Error(step4?.stderr || 'branch create failed');
+
+      setCurrentBranch(newBranch);
+      toast.success(
+        t('git_project_manager.branch_created', { branch: newBranch })
+      );
+      setActiveTab('changes');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(t('git_project_manager.operation_failed', { error: msg }));
+    } finally {
+      setIsCreatingBranch(false);
+    }
+  };
+
+  const handleOptimizePrompt = async () => {
+    if (!requirement.trim()) {
+      toast.error(t('git_project_manager.please_input_requirement'));
+      return;
+    }
+    setIsOptimizing(true);
+    try {
+      const res = await optimizePromptMutation.mutateAsync({
+        originalPrompt: requirement,
+        promptType: 'creative',
+        optimizationLevel: 'standard',
+        languageStyle: 'professional',
+        outputFormat: 'text',
+        provider: selectedProvider || 'openai',
+        language: 'chinese'
+      });
+      setPromptOptimizationResult(res);
+      toast.success(t('git_project_manager.optimized'));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(t('git_project_manager.operation_failed', { error: msg }));
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
 
   const handleGenerateCommitMessage = async () => {
     if (!changeDescription.trim()) {
@@ -355,13 +505,21 @@ function ProjectDetail() {
       if (createPR) {
         setIsCreatingPR(true);
         // 4. 创建 PR
+        const issueRef = extractIssueReference(
+          requirement,
+          repository.githubOwner,
+          repository.githubRepo
+        );
+        const prBody = issueRef
+          ? `${changeDescription}\n\nFixes ${issueRef}`
+          : changeDescription;
         await createPullRequestMutation.mutateAsync({
           token: githubToken,
           owner: repository.githubOwner,
           repo: repository.githubRepo,
           head: currentBranch,
           base: targetBranch,
-          changeDescription,
+          changeDescription: prBody,
           prTitle: prTitle || commitMessage // Pass prTitle if not empty
         });
         setIsCreatingPR(false);
@@ -499,6 +657,9 @@ function ProjectDetail() {
       {/* 标签页 */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="workflow">
+            {t('git_project_manager.tab_workflow')}
+          </TabsTrigger>
           <TabsTrigger value="changes">
             {t('git_project_manager.tab_changes')}
           </TabsTrigger>
@@ -506,6 +667,136 @@ function ProjectDetail() {
             {t('git_project_manager.tab_pr_records')}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="workflow" className="space-y-6">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-slate-900">
+                {t('git_project_manager.workflow_requirement_title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="requirement">
+                  {t('git_project_manager.requirement_label')}
+                </Label>
+                <Textarea
+                  id="requirement"
+                  rows={8}
+                  placeholder={t('git_project_manager.requirement_placeholder')}
+                  value={requirement}
+                  onChange={(e) => setRequirement(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('git_project_manager.select_provider')}</Label>
+                  <ProviderSelector
+                    value={selectedProvider || 'openai'}
+                    onChange={(p) => setSelectedProvider(p)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('git_project_manager.base_branch')}</Label>
+                  <Combobox
+                    options={
+                      remoteBranchesData?.map((branch) => ({
+                        value: branch,
+                        label: branch
+                      })) || []
+                    }
+                    value={baseBranch}
+                    onValueChange={setBaseBranch}
+                    placeholder={t('git_project_manager.select_base_branch')}
+                    emptyMessage={t('git_project_manager.no_branch_found')}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div className="space-y-2">
+                  <Label>{t('git_project_manager.suggested_branch')}</Label>
+                  <Input
+                    value={suggestedBranch}
+                    onChange={(e) => setSuggestedBranch(e.target.value)}
+                    placeholder="feature/short-description-or-#123"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSuggestBranch}
+                    disabled={isSuggestingBranch}
+                  >
+                    {isSuggestingBranch
+                      ? t('git_project_manager.generating')
+                      : t('git_project_manager.suggest_branch')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCreateBranch}
+                    disabled={
+                      !suggestedBranch || !baseBranch || isCreatingBranch
+                    }
+                  >
+                    {isCreatingBranch
+                      ? t('git_project_manager.creating_branch')
+                      : t('git_project_manager.create_branch')}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-slate-900">
+                {t('git_project_manager.workflow_optimize_prompt_title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Button onClick={handleOptimizePrompt} disabled={isOptimizing}>
+                  {isOptimizing
+                    ? t('git_project_manager.optimizing')
+                    : t('git_project_manager.optimize_prompt')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveTab('changes')}
+                >
+                  {t('git_project_manager.go_to_changes')}
+                </Button>
+              </div>
+              {promptOptimizationResult && (
+                <OptimizationResult
+                  value={{
+                    optimizedPrompt: promptOptimizationResult.optimizedPrompt,
+                    optimizationExplanation:
+                      promptOptimizationResult.optimizationExplanation,
+                    improvements: promptOptimizationResult.improvements,
+                    techniques: promptOptimizationResult.techniques,
+                    metadata: promptOptimizationResult.metadata
+                  }}
+                  onCopyOptimized={() =>
+                    navigator.clipboard.writeText(
+                      promptOptimizationResult.optimizedPrompt
+                    )
+                  }
+                  onCopyExplanation={() =>
+                    navigator.clipboard.writeText(
+                      promptOptimizationResult.optimizationExplanation
+                    )
+                  }
+                  onCopyAll={() =>
+                    navigator.clipboard.writeText(
+                      `${promptOptimizationResult.optimizedPrompt}\n\n${promptOptimizationResult.optimizationExplanation}`
+                    )
+                  }
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="changes" className="space-y-6">
           {/* 文件变更列表 */}
@@ -694,4 +985,23 @@ function ProjectDetail() {
       {ConfirmationDialog}
     </div>
   );
+}
+
+// Extract an issue reference from requirement text.
+// Supports: full GitHub URL, owner/repo#123, or #123 (fallback to current repo)
+function extractIssueReference(
+  text: string,
+  defaultOwner?: string,
+  defaultRepo?: string
+): string | undefined {
+  const urlMatch = text.match(
+    /https?:\/\/github\.com\/(\w[\w-]*)\/(\w[\w-]*)\/issues\/(\d+)/i
+  );
+  if (urlMatch) return urlMatch[0];
+  const fullRef = text.match(/(\w[\w-]*)\/(\w[\w-]*)#(\d+)/);
+  if (fullRef) return `${fullRef[1]}/${fullRef[2]}#${fullRef[3]}`;
+  const shortRef = text.match(/#(\d+)/);
+  if (shortRef && defaultOwner && defaultRepo)
+    return `${defaultOwner}/${defaultRepo}#${shortRef[1]}`;
+  return undefined;
 }

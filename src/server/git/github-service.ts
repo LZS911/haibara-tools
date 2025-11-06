@@ -111,14 +111,27 @@ export class GitHubService {
     head: string,
     base: string
   ) {
+    // List open PRs and strictly match by head/base refs and head repo full_name
     const { data } = await this.octokit.rest.pulls.list({
       owner,
       repo,
       state: 'open',
-      head,
-      base
+      per_page: 100
     });
-    return data.length > 0 ? data[0] : null;
+    const fullName = `${owner}/${repo}`;
+    const matches = data.filter(
+      (pr) =>
+        pr.state === 'open' &&
+        pr.head?.ref === head &&
+        pr.base?.ref === base &&
+        pr.head?.repo?.full_name === fullName
+    );
+    if (matches.length === 0) return null;
+    matches.sort(
+      (a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+    return matches[0];
   }
 
   async updatePullRequest(

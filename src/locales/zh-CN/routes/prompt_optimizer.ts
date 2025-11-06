@@ -22,9 +22,16 @@ export default {
   provider_placeholder: '选择提供商',
 
   prompt_type: '提示词类型',
+  prompt_type_tooltips:
+    '选择提示词类型，如创意写作、分析推理、代码生成、问答、翻译、内容摘要、头脑风暴或其他。',
   optimization_level: '优化级别',
+  optimization_level_tooltips: '选择优化级别，如轻度优化、标准优化或深度优化。',
   language_style: '语言风格',
+  language_style_tooltips:
+    '选择语言风格，如专业风格、休闲风格、技术风格或创意风格。',
   output_format: '输出格式',
+  output_format_tooltips:
+    '选择输出格式，如纯文本、结构化数据（JSON/XML）或 Markdown。',
   language: '语言',
   provider: 'LLM 提供商',
 
