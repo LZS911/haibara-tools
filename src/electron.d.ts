@@ -19,6 +19,8 @@ export interface AppConfig {
   DOUBAO_MODEL_NAME?: string;
   DOUBAO_BASE_URL?: string;
   DEEPSEEK_BASE_URL?: string;
+  OLLAMA_BASE_URL?: string;
+  OLLAMA_MODEL_NAME?: string;
   VOLC_APP_ID?: string;
   VOLC_ACCESS_TOKEN?: string;
   BILIBILI_SESSDATA?: string;

@@ -13,7 +13,7 @@ export const llmRouter = t.router({
     const config = await getConfig();
     const providersWithStatus = LLM_PROVIDERS.map((provider) => ({
       ...provider,
-      isConfigured: !!config[provider.apiKeyField]
+      isConfigured: provider.apiKeyField ? !!config[provider.apiKeyField] : true
     }));
     return providersWithStatus;
   }),

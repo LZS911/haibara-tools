@@ -81,6 +81,7 @@
     "nanoid": "^5.1.6",
     "next-themes": "^0.4.6",
     "octokit": "^5.0.4",
+    "ollama-ai-provider-v2": "^1.5.2",
     "openai": "^5.22.1",
     "protobufjs": "^7.5.4",
     "react": "^19.0.0",

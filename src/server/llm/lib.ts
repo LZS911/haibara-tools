@@ -7,12 +7,14 @@ import { openrouter } from '@openrouter/ai-sdk-provider';
 import { createGroq } from '@ai-sdk/groq';
 import { TRPCError } from '@trpc/server';
 import { getConfig } from '../lib/config';
+import { ollama } from 'ollama-ai-provider-v2';
+
 import type { LLMProvider } from '@/types/llm';
 
 // --- Provider Configuration ---
 
 interface ProviderConfig {
-  apiKey: string;
+  apiKey?: string;
   modelName: string;
   baseURL?: string;
 }
@@ -68,6 +70,11 @@ function getProviderConfig(provider: LLMProvider): ProviderConfig {
         modelName:
           providerConfig.DOUBAO_MODEL_NAME || 'doubao-seed-1-6-lite-251015'
       };
+    case 'ollama':
+      return {
+        modelName: providerConfig.OLLAMA_MODEL_NAME || 'llama3',
+        baseURL: providerConfig.OLLAMA_BASE_URL || 'http://127.0.0.1:11434/v1'
+      };
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }
@@ -78,7 +85,7 @@ function getProviderConfig(provider: LLMProvider): ProviderConfig {
 export function createProvider(provider: LLMProvider): LanguageModel {
   const config = getProviderConfig(provider);
 
-  if (!config.apiKey) {
+  if (provider !== 'ollama' && !config.apiKey) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: `${provider} API key is not configured. Please set the corresponding environment variable.`
@@ -146,6 +153,10 @@ export function createProvider(provider: LLMProvider): LanguageModel {
       return doubao(config.modelName);
     }
 
+    case 'ollama': {
+      return ollama(config.modelName);
+    }
+
     default:
       throw new TRPCError({
         code: 'BAD_REQUEST',
@@ -162,7 +173,7 @@ export async function checkModelAvailability(
   try {
     const config = getProviderConfig(provider);
     console.log(config);
-    if (!config.apiKey) {
+    if (provider !== 'ollama' && !config.apiKey) {
       return false;
     }
 
