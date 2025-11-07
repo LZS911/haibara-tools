@@ -5,7 +5,7 @@ export const LLM_PROVIDERS: {
   id: LLMProvider;
   name: string;
   description?: string;
-  apiKeyField: keyof AppConfig;
+  apiKeyField?: keyof AppConfig;
   modelNameField: keyof AppConfig;
   baseURLField?: keyof AppConfig;
   defaultModel?: string;
@@ -70,6 +70,15 @@ export const LLM_PROVIDERS: {
     baseURLField: 'DOUBAO_BASE_URL',
     defaultModel: 'doubao-seed-1-6-lite-251015',
     defaultBaseURL: 'https://ark.cn-beijing.volces.com/api/v3/'
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama',
+    description: '本地运行大语言模型',
+    modelNameField: 'OLLAMA_MODEL_NAME',
+    baseURLField: 'OLLAMA_BASE_URL',
+    defaultModel: 'llama3',
+    defaultBaseURL: 'http://127.0.0.1:11434/v1'
   }
 ];
 

@@ -104,26 +104,28 @@ export function LlmSettings({ config, handleInputChange }: LlmSettingsProps) {
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <Label
-                        htmlFor={provider.apiKeyField}
-                        className="mb-2 block text-sm font-medium text-slate-700"
-                      >
-                        API Key
-                      </Label>
-                      <Input
-                        id={provider.apiKeyField}
-                        type="password"
-                        placeholder={t('settings.api_key_placeholder')}
-                        value={config[provider.apiKeyField] as string}
-                        onChange={(e) =>
-                          handleInputChange(
-                            provider.apiKeyField,
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
+                    {provider.apiKeyField && (
+                      <div>
+                        <Label
+                          htmlFor={provider.apiKeyField}
+                          className="mb-2 block text-sm font-medium text-slate-700"
+                        >
+                          API Key
+                        </Label>
+                        <Input
+                          id={provider.apiKeyField}
+                          type="password"
+                          placeholder={t('settings.api_key_placeholder')}
+                          value={config[provider.apiKeyField] as string}
+                          onChange={(e) =>
+                            handleInputChange(
+                              provider.apiKeyField!,
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    )}
 
                     {provider.baseURLField && (
                       <div>

@@ -8,7 +8,8 @@ export const LLMProviderSchema = z.enum([
   'openrouter',
   'groq',
   'cohere',
-  'doubao'
+  'doubao',
+  'ollama'
 ]);
 export type LLMProvider = z.infer<typeof LLMProviderSchema>;
 

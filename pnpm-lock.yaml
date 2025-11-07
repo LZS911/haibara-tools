@@ -140,6 +140,9 @@ importers:
       octokit:
         specifier: ^5.0.4
         version: 5.0.4
+      ollama-ai-provider-v2:
+        specifier: ^1.5.2
+        version: 1.5.2(zod@4.0.8)
       openai:
         specifier: ^5.22.1
         version: 5.22.1(ws@8.18.3)(zod@4.0.8)
@@ -3835,6 +3838,12 @@ packages:
   octokit@5.0.4:
     resolution: {integrity: sha512-4n/mMoLQs2npBE+aTG5o4H+hZhFKu8aDqZFP/nmUNRUYrTpXpaqvX1ppK5eiCtQ+uP/8jI6vbdfCB2udlBgccA==}
     engines: {node: '>= 20'}
+
+  ollama-ai-provider-v2@1.5.2:
+    resolution: {integrity: sha512-G7ta7r0oWuwSakxP9fLXwrrYc3Emw+LuDGdLHvqwLmxXR8cadVezrKVpwD57rHMrkihvgOKoHoi7SS73uqCTDQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^4.0.16
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -8897,6 +8906,12 @@ snapshots:
       '@octokit/request-error': 7.0.1
       '@octokit/types': 15.0.1
       '@octokit/webhooks': 14.1.3
+
+  ollama-ai-provider-v2@1.5.2(zod@4.0.8):
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.11(zod@4.0.8)
+      zod: 4.0.8
 
   on-finished@2.4.1:
     dependencies:
