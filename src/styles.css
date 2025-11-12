@@ -18,10 +18,51 @@ code {
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* 桌面应用紧凑间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+
+  /* 组件高度系统 */
+  --height-sm: 28px;
+  --height-md: 32px;
+  --height-lg: 36px;
+
+  /* 圆角系统 - 更紧凑的桌面风格 */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+
+  /* 组件级变量 - 按钮 */
+  --button-height-sm: 28px;
+  --button-height-default: 32px;
+  --button-height-lg: 36px;
+  --button-padding-x-sm: 10px;
+  --button-padding-x: 12px;
+  --button-padding-x-lg: 16px;
+  --button-padding-y-sm: 4px;
+  --button-padding-y: 6px;
+  --button-padding-y-lg: 8px;
+
+  /* 组件级变量 - 输入框 */
+  --input-height: 32px;
+  --input-height-sm: 28px;
+  --input-padding-x: 10px;
+  --input-padding-y: 6px;
+
+  /* 组件级变量 - 卡片 */
+  --card-padding: 16px;
+  --card-gap: 16px;
+
+  /* 组件级变量 - 对话框 */
+  --dialog-padding: 16px;
+  --dialog-gap: 12px;
+
+  /* Tailwind 颜色映射 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -56,38 +97,41 @@ code {
 }
 
 :root {
-  --radius: 0.5rem; /* 减小圆角，更原生 */
-  --background: oklch(0.98 0 0); /* 更柔和的背景 */
-  --foreground: oklch(0.15 0 0);
+  /* 圆角基础值 - 桌面应用风格 */
+  --radius: 0.375rem; /* 6px - 更紧凑的桌面风格 */
+
+  /* 浅色主题色彩系统 - 桌面专业风格 */
+  --background: oklch(0.99 0 0); /* 更纯净的白色背景 */
+  --foreground: oklch(0.1 0 0); /* 更深的文字，提升对比度 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
+  --card-foreground: oklch(0.1 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.15 0 0); /* 更深的主色 */
-  --primary-foreground: oklch(0.98 0 0);
+  --popover-foreground: oklch(0.1 0 0);
+  --primary: oklch(0.1 0 0); /* 更深的主色 */
+  --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.95 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.1 0 0);
+  --muted: oklch(0.94 0 0); /* 更浅的次要背景 */
   --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.15 0 0);
+  --accent: oklch(0.96 0 0); /* 微妙的交互色 */
+  --accent-foreground: oklch(0.1 0 0);
   --destructive: oklch(0.5 0.2 25);
-  --border: oklch(0.9 0 0); /* 更明显的边框 */
-  --input: oklch(0.98 0 0);
-  --ring: oklch(0.7 0 0);
+  --border: oklch(0.88 0 0); /* 更明显的边框 */
+  --input: oklch(92.8% 0.006 264.531);
+  --ring: oklch(0.65 0 0); /* 微调焦点环颜色 */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.15 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.1 0 0);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  --sidebar-accent-foreground: oklch(0.1 0 0);
+  --sidebar-border: oklch(0.88 0 0);
+  --sidebar-ring: oklch(0.65 0 0);
 }
 
 .dark {
@@ -144,6 +188,33 @@ code {
     font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: 'opsz' 32;
     letter-spacing: -0.011em;
+    font-size: 13px; /* 桌面应用标准字号 */
+    line-height: 1.5;
+  }
+
+  /* 标题字号系统 */
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
   }
 }
 
@@ -227,9 +298,9 @@ select:focus {
   @apply outline-none ring-2 ring-slate-300/50 border-slate-300;
 }
 
-/* 焦点样式 */
+/* 焦点样式 - 桌面应用风格 */
 :focus-visible {
-  @apply outline-none ring-2 ring-slate-300/50 ring-offset-2;
+  @apply outline-none ring-2 ring-slate-400/50 ring-offset-1;
 }
 
 /* 原生工具栏样式 */

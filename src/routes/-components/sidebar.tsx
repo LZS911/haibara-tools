@@ -135,22 +135,22 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         key={item.path}
         to={item.path}
         className={cn(
-          'flex items-center rounded-lg text-sm font-medium transition-all',
+          'flex items-center rounded text-sm font-medium transition-all duration-150',
 
           isActive
             ? 'bg-slate-900 text-white shadow-sm'
-            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
 
           isTaskRunning && 'cursor-not-allowed opacity-50 pointer-events-none',
 
-          isCollapsed ? 'justify-center h-10 w-10' : 'gap-3 px-3 py-2'
+          isCollapsed ? 'justify-center h-8 w-8' : 'gap-2.5 px-2.5 py-1.5'
         )}
       >
         <Icon
           className={cn(
             'flex-shrink-0 transition-all',
 
-            isCollapsed ? 'h-5 w-5' : 'h-4 w-4'
+            isCollapsed ? 'h-4 w-4' : 'h-4 w-4'
           )}
         />
 
@@ -174,8 +174,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         isCollapsed ? 'w-16 p-1' : 'w-52'
       )}
       style={{
-        top: CONSTANT.IS_ELECTRON ? '44px' : '0',
-        height: CONSTANT.IS_ELECTRON ? 'calc(100vh - 44px)' : '100vh'
+        top: CONSTANT.IS_ELECTRON ? '40px' : '0',
+        height: CONSTANT.IS_ELECTRON ? 'calc(100vh - 40px)' : '100vh'
       }}
     >
       <nav className="relative flex h-full flex-col p-2">
@@ -197,13 +197,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         </div>
 
         {/* 工具区域 */}
-        <div className="mb-4">
+        <div className="mb-3">
           {!isCollapsed && (
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
               {t('components.sidebar_tools')}
             </p>
           )}
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {filteredNavItems
               .filter((item) => item.category === 'tools')
               .map(renderNavLink)}
@@ -211,13 +211,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         </div>
 
         {/* 管理区域 */}
-        <div className="mb-4">
+        <div className="mb-3">
           {!isCollapsed && (
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
               {t('components.sidebar_manage', '管理')}
             </p>
           )}
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {filteredNavItems
               .filter((item) => item.category === 'manage')
               .map(renderNavLink)}
@@ -226,13 +226,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
         {/* 系统设置区域 */}
         {filteredNavItems.some((item) => item.category === 'system') && (
-          <div className="mb-4">
+          <div className="mb-3">
             {!isCollapsed && (
-              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 {t('components.sidebar_system', '系统')}
               </p>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {filteredNavItems
                 .filter((item) => item.category === 'system')
                 .map(renderNavLink)}
@@ -241,13 +241,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         )}
 
         {/* 底部信息 */}
-        <div className="mt-auto space-y-2 border-t border-slate-200 pt-3">
+        <div className="mt-auto space-y-1.5 border-t border-slate-200 pt-2.5">
           {CONSTANT.IS_ELECTRON && (
             <div
               className={cn(
-                'flex items-center rounded-lg py-1 text-sm text-slate-500',
+                'flex items-center rounded py-1 text-sm text-slate-500',
                 {
-                  'px-3': !isCollapsed
+                  'px-2.5': !isCollapsed
                 }
               )}
             >
@@ -262,13 +262,14 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
               </div>
               <Button
                 variant="ghost"
+                size="icon-sm"
                 onClick={handleCheckForUpdate}
                 disabled={isCheckingForUpdate}
-                className="h-8 w-8 flex-shrink-0 cursor-pointer"
+                className="flex-shrink-0 cursor-pointer"
                 title={t('components.check_for_updates')}
               >
                 <CloudUpload
-                  className={cn('h-4 w-4 cursor-pointer!', {
+                  className={cn('h-3.5 w-3.5 cursor-pointer!', {
                     'animate-spin': isCheckingForUpdate
                   })}
                 />
@@ -284,12 +285,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           >
             <div
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700',
+                'flex items-center gap-2.5 rounded px-2.5 py-1.5 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700',
                 isCollapsed && 'justify-center'
               )}
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-slate-100">
-                <img src="/icon.svg" alt="Logo" className="h-5 w-5" />
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-slate-100">
+                <img src="/icon.svg" alt="Logo" className="h-4 w-4" />
               </div>
               <div
                 className={cn('flex-1 transition-opacity duration-200', {

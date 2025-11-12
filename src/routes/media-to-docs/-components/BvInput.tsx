@@ -13,13 +13,12 @@ export function BvInput({ value, onChange, onStart, disabled }: BvInputProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex w-full max-w-lg mx-auto items-center space-x-2">
+    <div className="flex w-full items-center space-x-2">
       <Input
         type="text"
         placeholder={t('media_to_docs.bv_input_placeholder')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="text-base"
         disabled={disabled}
       />
       <Button onClick={onStart} disabled={disabled || !value}>

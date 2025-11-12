@@ -4,7 +4,7 @@ import {
   getCurrentBranch
 } from './-lib/git-commands';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/routes/-components/ui/button';
 import {
   Tabs,
@@ -84,7 +84,6 @@ function ProjectDetail() {
     OptimizationResponse | undefined
   >(undefined);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const requirementStorageKey = useMemo(() => `gitpm:requirement:${id}`, [id]);
 
   const llmProvidersQuery = useQuery(trpc.llm.getProviders.queryOptions());
   const { data: llmProviders } = llmProvidersQuery;
@@ -96,16 +95,6 @@ function ProjectDetail() {
       });
     }
   }, []);
-
-  // Restore persisted requirement per repo
-  useEffect(() => {
-    const saved = localStorage.getItem(requirementStorageKey);
-    if (saved) setRequirement(saved);
-  }, [requirementStorageKey]);
-  // Persist requirement
-  useEffect(() => {
-    if (requirement) localStorage.setItem(requirementStorageKey, requirement);
-  }, [requirement, requirementStorageKey]);
 
   // 检查是否在 Electron 环境
   useEffect(() => {
