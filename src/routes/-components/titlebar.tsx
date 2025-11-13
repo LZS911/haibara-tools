@@ -21,7 +21,7 @@ export function Titlebar() {
 
   return (
     <div
-      className="toolbar-native flex h-11 items-center justify-between px-4"
+      className="toolbar-native flex h-10 items-center justify-between px-4"
       style={
         {
           WebkitAppRegion: 'drag',
@@ -33,12 +33,12 @@ export function Titlebar() {
       {CONSTANT.IS_MAC && <div className="h-full w-16" />}
 
       <div className="flex items-center gap-2">
-        <img src="/icon.svg" alt="Haibara Tools" className="h-5 w-5" />
-        <span className="text-[13px] font-medium text-slate-700">
+        <img src="/icon.svg" alt="Haibara Tools" className="h-4 w-4" />
+        <span className="text-xs font-medium text-slate-700">
           {t('common.app_title')}
         </span>
         {appVersion && (
-          <span className="text-[11px] text-slate-400">v{appVersion}</span>
+          <span className="text-[10px] text-slate-400">v{appVersion}</span>
         )}
       </div>
 
