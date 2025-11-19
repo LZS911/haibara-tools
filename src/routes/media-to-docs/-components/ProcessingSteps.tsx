@@ -67,7 +67,7 @@ export function ProcessingSteps({
       </div>
 
       {/* 进度条 */}
-      <div className="w-full max-w-sm">
+      <div className="w-full">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 transition-all duration-500 ease-in-out"

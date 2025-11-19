@@ -3,12 +3,12 @@ import WebSocket from 'ws';
 import { gzip, gunzip } from 'zlib';
 import { promisify } from 'util';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import { randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import { progressManager } from '../progress-manager';
 import { getConfig } from '../../lib/config';
+import { nanoid } from 'nanoid';
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -153,7 +153,7 @@ const RequestBuilder = {
     }
     return {
       'X-Api-Resource-Id': 'volc.bigasr.sauc.duration',
-      'X-Api-Request-Id': randomUUID(),
+      'X-Api-Request-Id': nanoid(),
       'X-Api-Access-Key': VOLC_ACCESS_TOKEN,
       'X-Api-App-Key': VOLC_APP_ID
     };
@@ -164,7 +164,7 @@ const RequestBuilder = {
     header.messageTypeSpecificFlags = MessageTypeSpecificFlags.POS_SEQUENCE;
 
     const payload = {
-      user: { uid: 'demo_uid' },
+      user: { uid: nanoid() },
       audio: { format: 'pcm', codec: 'raw', rate: 16000, bits: 16, channel: 1 },
       request: {
         model_name: 'bigmodel',
@@ -374,20 +374,49 @@ class AsrWsClient {
             );
             ws.send(fullRequest);
 
-            // 4. Start streaming audio
+            // 4. Start streaming audio with pipelined preparation
             console.log('Sending audio segments...');
             const segments = this.splitAudio(waveData, segmentSize);
             let lastProgressUpdate = 0;
 
-            for (let i = 0; i < segments.length; i++) {
-              const isLast = i === segments.length - 1;
-              const audioRequest = await RequestBuilder.newAudioOnlyRequest(
+            // 准备第一个片段的请求（提前准备）
+            let nextRequestPromise: Promise<Buffer> | null = null;
+            if (segments.length > 0) {
+              const isLast = segments.length === 1;
+              nextRequestPromise = RequestBuilder.newAudioOnlyRequest(
                 this.seq,
-                segments[i],
+                segments[0],
                 isLast
               );
+            }
+
+            for (let i = 0; i < segments.length; i++) {
+              const isLast = i === segments.length - 1;
+
+              // 等待当前片段的请求准备完成（如果是第一个，已经准备好了）
+              const audioRequest = nextRequestPromise
+                ? await nextRequestPromise
+                : await RequestBuilder.newAudioOnlyRequest(
+                    this.seq,
+                    segments[i],
+                    isLast
+                  );
+
+              // 发送当前片段
               ws.send(audioRequest);
               if (!isLast) this.seq++;
+
+              // 并行准备下一个片段（如果还有下一个）
+              if (i < segments.length - 1) {
+                const nextIsLast = i + 1 === segments.length - 1;
+                nextRequestPromise = RequestBuilder.newAudioOnlyRequest(
+                  this.seq,
+                  segments[i + 1],
+                  nextIsLast
+                );
+              } else {
+                nextRequestPromise = null;
+              }
 
               // 更新 ASR 进度（节流）
               if (jobId) {
@@ -404,7 +433,10 @@ class AsrWsClient {
                 }
               }
 
-              await new Promise((r) => setTimeout(r, this.segmentDuration));
+              // 最后一个片段发送后不等待，其他片段等待200ms
+              if (!isLast) {
+                await new Promise((r) => setTimeout(r, this.segmentDuration));
+              }
             }
             console.log('All audio segments sent.');
           };
