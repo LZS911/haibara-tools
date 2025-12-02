@@ -1,6 +1,8 @@
 import { app, dialog, ipcMain, shell } from 'electron';
 import type { AppUpdater } from 'electron-updater';
 import { exec } from 'node:child_process';
+import path from 'node:path';
+import fs from 'node:fs';
 import type { AppConfig } from '../../src/electron.d';
 
 interface RegisterIpcHandlersOptions {
@@ -119,9 +121,68 @@ export function registerIpcHandlers({
     'execute-git-command',
     async (_event, command: string, repoPath: string, token?: string) => {
       return new Promise((resolve) => {
+        // 构建包含 Node.js 路径的 PATH 环境变量
+        // 这对于 husky hooks 能够找到 npm 命令很重要
+        const nodePath = process.execPath; // Node.js 可执行文件的路径
+        const nodeBinDir = path.dirname(nodePath); // Node.js bin 目录
+
+        // 获取当前 PATH 或使用默认值
+        const currentPath = process.env.PATH || '';
+
+        // 常见的 Node.js 安装路径（macOS）
+        const commonNodePaths = [
+          nodeBinDir, // 当前 Node.js 的 bin 目录
+          '/usr/local/bin', // Homebrew 和其他安装的默认路径
+          '/opt/homebrew/bin', // Apple Silicon Mac 的 Homebrew 路径
+          '/usr/bin', // 系统默认路径
+          '/bin' // 系统默认路径
+        ];
+
+        // 如果使用 nvm，尝试查找当前激活的 Node.js 版本
+        const nvmPath =
+          process.env.NVM_DIR || path.join(process.env.HOME || '', '.nvm');
+        try {
+          const nvmVersionsPath = path.join(nvmPath, 'versions', 'node');
+          if (fs.existsSync(nvmVersionsPath)) {
+            // 查找最新的版本目录
+            const versions = fs
+              .readdirSync(nvmVersionsPath)
+              .filter((v: string) => /^v\d+\.\d+\.\d+/.test(v))
+              .sort()
+              .reverse();
+            if (versions.length > 0) {
+              commonNodePaths.push(
+                path.join(nvmVersionsPath, versions[0], 'bin')
+              );
+            }
+          }
+        } catch (e) {
+          // 忽略 nvm 路径查找错误
+        }
+
+        // 合并所有路径，去重
+        const pathSet = new Set<string>();
+        // 先添加当前 PATH 中的路径
+        currentPath.split(path.delimiter).forEach((p) => {
+          if (p) pathSet.add(p);
+        });
+        // 再添加 Node.js 相关路径
+        commonNodePaths.forEach((p) => {
+          if (p) pathSet.add(p);
+        });
+
+        const enhancedPath = Array.from(pathSet).join(path.delimiter);
+
         exec(
           command,
-          { cwd: repoPath, env: { ...process.env, GITHUB_TOKEN: token || '' } },
+          {
+            cwd: repoPath,
+            env: {
+              ...process.env,
+              PATH: enhancedPath,
+              GITHUB_TOKEN: token || ''
+            }
+          },
           (error, stdout, stderr) => {
             if (error) {
               console.error(
