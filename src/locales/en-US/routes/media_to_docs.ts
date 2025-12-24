@@ -2,6 +2,12 @@ export default {
   ai_convert_desc:
     'Enter a Bilibili video BV ID, and AI will generate summaries, articles, notes, and other document formats for you.',
   ai_convert_title: 'AI Media to Docs',
+  asr_engine_title: 'ASR Engine',
+  asr_engine_volcano: 'Volcano Engine',
+  asr_engine_whisper: 'Local Whisper',
+  asr_engine_volcano_desc: 'Online ASR service, requires API key configuration',
+  asr_engine_whisper_desc:
+    'Local model, no internet required, will auto-download on first use',
   bv_input_placeholder: 'e.g., BV11T4EzyEdF',
   collapse: 'Collapse',
   completed_desc: '',

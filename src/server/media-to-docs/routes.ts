@@ -4,6 +4,7 @@ import { initTRPC } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
 import type { TRPCContext } from '../types';
 import { transcribeAudioFile } from './pipelines/asr';
+import { transcribeAudioFileWithWhisper } from './pipelines/asr-whisper';
 import * as fs from 'fs';
 import fsp from 'fs/promises';
 import {
@@ -28,11 +29,12 @@ import {
   SummaryStyleSchema,
   type ProgressUpdate,
   type Keyframe,
-  KeyframeStrategySchema
+  KeyframeStrategySchema,
+  AsrEngineSchema
 } from '@/types/media-to-docs';
 import { extractKeyframes } from './pipelines/keyframe';
 import { LLM_PROVIDERS, VISION_PROVIDERS } from '../llm/providers';
-import { KEYFRAME_STRATEGIES, STYLES } from './data';
+import { KEYFRAME_STRATEGIES, STYLES, ASR_ENGINES } from './data';
 import { LLMProviderSchema } from '@/types/llm';
 import { getCompletionWithImages, getCompletion } from './pipelines/llm';
 
@@ -186,7 +188,8 @@ export const mediaToDocsRouter = t.router({
         ),
         keywords: z.string().optional(),
         forceAsr: z.boolean().optional().default(false),
-        forceKeyframeGeneration: z.boolean().optional().default(false)
+        forceKeyframeGeneration: z.boolean().optional().default(false),
+        asrEngine: AsrEngineSchema
       })
     )
     .mutation(async ({ input }) => {
@@ -199,7 +202,8 @@ export const mediaToDocsRouter = t.router({
         keyframeStrategy,
         keywords,
         forceAsr,
-        forceKeyframeGeneration
+        forceKeyframeGeneration,
+        asrEngine
       } = input;
       const jobId = input.jobId || nanoid();
 
@@ -211,9 +215,17 @@ export const mediaToDocsRouter = t.router({
 
         const outputDir = path.dirname(audioPath);
 
-        // Check for cached transcript
-        const transcriptPath = path.join(outputDir, 'transcript.txt');
-        const utterancesPath = path.join(outputDir, 'utterances.json');
+        // Check for cached transcript (引擎特定缓存)
+        const cachePrefix = asrEngine === 'whisper' ? 'whisper' : '';
+        const transcriptFileName = cachePrefix
+          ? `transcript-${cachePrefix}.txt`
+          : 'transcript.txt';
+        const utterancesFileName = cachePrefix
+          ? `utterances-${cachePrefix}.json`
+          : 'utterances.json';
+
+        const transcriptPath = path.join(outputDir, transcriptFileName);
+        const utterancesPath = path.join(outputDir, utterancesFileName);
         let fullText: string;
         let utterances: Array<{
           text: string;
@@ -222,7 +234,9 @@ export const mediaToDocsRouter = t.router({
         }> = [];
 
         if (fs.existsSync(transcriptPath) && !forceAsr) {
-          console.log('Found cached transcript, skipping ASR.');
+          console.log(
+            `Found cached transcript for ${asrEngine}, skipping ASR.`
+          );
           progressManager.updateTranscriptionProgress(
             jobId,
             100,
@@ -237,12 +251,20 @@ export const mediaToDocsRouter = t.router({
           }
         } else {
           if (forceAsr) {
-            console.log('Force ASR is enabled, running ASR...');
+            console.log(`Force ASR is enabled, running ${asrEngine} ASR...`);
           } else {
-            console.log('No cached transcript found, running ASR...');
+            console.log(
+              `No cached transcript found, running ${asrEngine} ASR...`
+            );
           }
           progressManager.updateTranscriptionProgress(jobId, 0, '开始语音识别');
-          const asrResult = await transcribeAudioFile(audioPath, jobId);
+
+          // 根据选择的引擎调用不同的 ASR 方法
+          const asrResult =
+            asrEngine === 'whisper'
+              ? await transcribeAudioFileWithWhisper(audioPath, jobId)
+              : await transcribeAudioFile(audioPath, jobId);
+
           fullText = asrResult.fullText;
           utterances = asrResult.utterances;
           progressManager.updateTranscriptionProgress(
@@ -422,7 +444,8 @@ export const mediaToDocsRouter = t.router({
       styles: STYLES,
       providers: LLM_PROVIDERS,
       providerStatuses,
-      keyframeStrategies: KEYFRAME_STRATEGIES
+      keyframeStrategies: KEYFRAME_STRATEGIES,
+      asrEngines: ASR_ENGINES
     };
   }),
   // 缓存管理 API
