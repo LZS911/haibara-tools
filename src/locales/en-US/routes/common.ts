@@ -4,6 +4,8 @@ export default {
   nav_voice_training: 'Voice Training',
   nav_voice_synthesis: 'Voice Synthesis',
   nav_git_project_manager: 'Git Project Manager',
+  nav_prompt_optimizer: 'Prompt Optimizer',
+  nav_docs_manager: 'Document Manager',
   app_title: 'Haibara Tools',
   cancel: 'Cancel',
   confirm: 'Confirm',

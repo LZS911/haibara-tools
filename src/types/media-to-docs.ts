@@ -57,3 +57,7 @@ export const KeyframeStrategySchema = z.enum([
 ]);
 
 export type KeyframeStrategy = z.infer<typeof KeyframeStrategySchema>;
+
+export const AsrEngineSchema = z.enum(['volcano', 'whisper']);
+
+export type AsrEngine = z.infer<typeof AsrEngineSchema>;

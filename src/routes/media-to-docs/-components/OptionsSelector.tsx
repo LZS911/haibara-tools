@@ -6,7 +6,11 @@ import { cn } from '@/routes/-lib/utils';
 import { trpc } from '@/router';
 import { CheckCircle, XCircle, Loader, ChevronsUpDown } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { SummaryStyle, KeyframeStrategy } from '@/types/media-to-docs';
+import type {
+  SummaryStyle,
+  KeyframeStrategy,
+  AsrEngine
+} from '@/types/media-to-docs';
 import { Switch } from '@/routes/-components/ui/switch';
 import type { LLMProvider } from '@/types/llm';
 import { Input } from '@/routes/-components/ui/input';
@@ -23,6 +27,7 @@ interface OptionsSelectorProps {
     forceAsr: boolean;
     forceKeyframeGeneration: boolean;
     keywords: string;
+    asrEngine: AsrEngine;
   }) => void;
   disabled?: boolean;
   hasVideo?: boolean;
@@ -49,6 +54,8 @@ export function OptionsSelector({
   const [keywords, setKeywords] = useState<string>('');
   const [forceAsr, setForceAsr] = useState(false);
   const [forceKeyframeGeneration, setForceKeyframeGeneration] = useState(false);
+  const [selectedAsrEngine, setSelectedAsrEngine] =
+    useState<AsrEngine>('whisper');
 
   useEffect(() => {
     if (optionsData) {
@@ -131,8 +138,13 @@ export function OptionsSelector({
     );
   }
 
-  const { styles, providers, providerStatuses, keyframeStrategies } =
-    optionsData;
+  const {
+    styles,
+    providers,
+    providerStatuses,
+    keyframeStrategies,
+    asrEngines
+  } = optionsData;
 
   const visibleProviders = isProvidersExpanded
     ? providers
@@ -151,6 +163,35 @@ export function OptionsSelector({
   return (
     <Card className="bg-transparent shadow-none p-4">
       <div className="space-y-4">
+        {/* -- ASR Engine -- */}
+        {asrEngines && asrEngines.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {t('media_to_docs.asr_engine_title')}
+            </Label>
+            <div className="space-y-2 mt-2">
+              {asrEngines.map((engine) => (
+                <div
+                  key={engine.id}
+                  className={cn(
+                    'flex items-center gap-2 p-2 border rounded-md transition-all cursor-pointer',
+                    selectedAsrEngine === engine.id &&
+                      'border-blue-500 bg-blue-50'
+                  )}
+                  onClick={() => setSelectedAsrEngine(engine.id)}
+                >
+                  <div className="flex-grow">
+                    <div className="text-sm font-medium">{engine.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {engine.description}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* -- Content Style -- */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
@@ -374,7 +415,8 @@ export function OptionsSelector({
                 keyframeStrategy: selectedKeyframeStrategy,
                 forceAsr,
                 forceKeyframeGeneration,
-                keywords
+                keywords,
+                asrEngine: selectedAsrEngine
               });
             }}
             disabled={disabled}

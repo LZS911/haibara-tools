@@ -2,6 +2,11 @@ export default {
   ai_convert_desc:
     '输入B站视频BV号，AI为你生成内容纪要、文章、笔记等多种格式的文档',
   ai_convert_title: 'AI 视频转文档',
+  asr_engine_title: 'ASR 引擎',
+  asr_engine_volcano: '火山引擎',
+  asr_engine_whisper: '本地 Whisper',
+  asr_engine_volcano_desc: '在线 ASR 服务，需要配置 API 密钥',
+  asr_engine_whisper_desc: '本地模型，无需联网，首次使用会自动下载模型',
   bv_input_placeholder: '例如：BV1xx411c7mD',
   collapse: '收起',
   completed_desc: '你的文档已生成，快来查看吧！',

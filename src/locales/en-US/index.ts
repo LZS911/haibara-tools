@@ -7,6 +7,7 @@ import components from './routes/components';
 import voice_cloning from './routes/voice_cloning';
 import git_project_manager from './routes/git_project_manager';
 import prompt_optimizer from './routes/prompt_optimizer';
+import docs_manager from './routes/docs_manager';
 
 export default {
   translation: {
@@ -18,6 +19,7 @@ export default {
     components,
     voice_cloning,
     git_project_manager,
-    prompt_optimizer
+    prompt_optimizer,
+    docs_manager
   }
 };

@@ -1,4 +1,8 @@
-import type { KeyframeStrategy, SummaryStyle } from '@/types/media-to-docs';
+import type {
+  KeyframeStrategy,
+  SummaryStyle,
+  AsrEngine
+} from '@/types/media-to-docs';
 
 export const STYLES: { id: SummaryStyle; name: string }[] = [
   { id: 'note', name: '结构笔记' },
@@ -7,6 +11,23 @@ export const STYLES: { id: SummaryStyle; name: string }[] = [
   { id: 'mindmap', name: '思维导图' },
   { id: 'social-media-post', name: '社交媒体帖子' },
   { id: 'table', name: '信息表格' }
+];
+
+export const ASR_ENGINES: {
+  id: AsrEngine;
+  name: string;
+  description: string;
+}[] = [
+  {
+    id: 'whisper',
+    name: 'Whisper',
+    description: '本地模型，无需联网，首次使用会自动下载模型'
+  },
+  {
+    id: 'volcano',
+    name: '火山引擎',
+    description: '在线 ASR 服务，需要配置 API 密钥'
+  }
 ];
 
 export const KEYFRAME_STRATEGIES: {

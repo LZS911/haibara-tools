@@ -26,7 +26,8 @@ import type {
   AiConvertStep,
   SummaryStyle,
   KeyframeStrategy,
-  Keyframe
+  Keyframe,
+  AsrEngine
 } from '@/types/media-to-docs';
 import type { LLMProvider } from '@/types/llm';
 
@@ -128,6 +129,7 @@ function AiConvert() {
     forceAsr: boolean;
     forceKeyframeGeneration: boolean;
     keywords?: string;
+    asrEngine: AsrEngine;
   }) => {
     if (!audioPath) return;
 
@@ -138,7 +140,8 @@ function AiConvert() {
       keyframeStrategy,
       forceAsr,
       forceKeyframeGeneration,
-      keywords
+      keywords,
+      asrEngine
     } = params;
 
     setSelectedStyle(style);
@@ -161,7 +164,8 @@ function AiConvert() {
         jobId: currentJobId,
         keywords,
         forceAsr,
-        forceKeyframeGeneration
+        forceKeyframeGeneration,
+        asrEngine
       },
       {
         onSuccess: (data) => {
