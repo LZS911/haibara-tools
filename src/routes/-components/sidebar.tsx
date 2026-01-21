@@ -9,7 +9,8 @@ import {
   Mic,
   AudioLines,
   GitBranch,
-  Brain
+  Brain,
+  FileText
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTranslation } from 'react-i18next';
@@ -104,6 +105,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       path: '/prompt-optimizer',
       label: t('common.nav_prompt_optimizer'),
       icon: Brain,
+      category: 'tools'
+    },
+    {
+      path: '/docs-manager',
+      label: t('common.nav_docs_manager'),
+      icon: FileText,
       category: 'tools'
     },
     {

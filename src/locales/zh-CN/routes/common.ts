@@ -5,6 +5,7 @@ export default {
   nav_voice_synthesis: '语音合成',
   nav_git_project_manager: 'Git 项目管理',
   nav_prompt_optimizer: '提示词优化',
+  nav_docs_manager: '文档管理',
   app_title: 'Haibara Tools',
   cancel: '取消',
   confirm: '确认',

@@ -17,6 +17,7 @@ import { LlmSettings } from './-components/llm-settings';
 import { MediaToDocsSettings } from './-components/media-to-docs-settings';
 import { BilibiliSettings } from './-components/bilibili-settings';
 import { GitSettings } from './-components/git-settings';
+import { DocsSettings } from './-components/docs-settings';
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
@@ -223,7 +224,7 @@ function Settings() {
 
       {/* Tabs 区域 */}
       <Tabs defaultValue="llm" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="llm">{t('settings.tab_llm')}</TabsTrigger>
           <TabsTrigger value="media-to-docs">
             {t('settings.tab_media_to_docs')}
@@ -232,6 +233,7 @@ function Settings() {
             {t('settings.tab_bilibili')}
           </TabsTrigger>
           <TabsTrigger value="git">{t('settings.tab_git')}</TabsTrigger>
+          <TabsTrigger value="docs">{t('docs_manager.title')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="llm">
@@ -254,6 +256,10 @@ function Settings() {
 
         <TabsContent value="git">
           <GitSettings config={config} handleInputChange={handleInputChange} />
+        </TabsContent>
+
+        <TabsContent value="docs">
+          <DocsSettings />
         </TabsContent>
       </Tabs>
     </div>

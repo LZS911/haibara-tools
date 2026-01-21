@@ -14,12 +14,15 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as PromptOptimizerIndexRouteImport } from './routes/prompt-optimizer/index'
 import { Route as MediaToDocsIndexRouteImport } from './routes/media-to-docs/index'
 import { Route as GitProjectManagerIndexRouteImport } from './routes/git-project-manager/index'
+import { Route as DocsManagerIndexRouteImport } from './routes/docs-manager/index'
 import { Route as BilibiliDownloaderIndexRouteImport } from './routes/bilibili-downloader/index'
 import { Route as VoiceCloningTrainingIndexRouteImport } from './routes/voice-cloning/training/index'
 import { Route as VoiceCloningSynthesisIndexRouteImport } from './routes/voice-cloning/synthesis/index'
 import { Route as MediaToDocsConvertHistoryIndexRouteImport } from './routes/media-to-docs/convert-history/index'
 import { Route as GitProjectManagerWeeklyReportIndexRouteImport } from './routes/git-project-manager/weekly-report/index'
+import { Route as DocsManagerTemplatesIndexRouteImport } from './routes/docs-manager/templates/index'
 import { Route as GitProjectManagerProjectIdRouteImport } from './routes/git-project-manager/project.$id'
+import { Route as DocsManagerEditorDocIdRouteImport } from './routes/docs-manager/editor.$docId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -44,6 +47,11 @@ const MediaToDocsIndexRoute = MediaToDocsIndexRouteImport.update({
 const GitProjectManagerIndexRoute = GitProjectManagerIndexRouteImport.update({
   id: '/git-project-manager/',
   path: '/git-project-manager/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsManagerIndexRoute = DocsManagerIndexRouteImport.update({
+  id: '/docs-manager/',
+  path: '/docs-manager/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BilibiliDownloaderIndexRoute = BilibiliDownloaderIndexRouteImport.update({
@@ -75,21 +83,35 @@ const GitProjectManagerWeeklyReportIndexRoute =
     path: '/git-project-manager/weekly-report/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DocsManagerTemplatesIndexRoute =
+  DocsManagerTemplatesIndexRouteImport.update({
+    id: '/docs-manager/templates/',
+    path: '/docs-manager/templates/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const GitProjectManagerProjectIdRoute =
   GitProjectManagerProjectIdRouteImport.update({
     id: '/git-project-manager/project/$id',
     path: '/git-project-manager/project/$id',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DocsManagerEditorDocIdRoute = DocsManagerEditorDocIdRouteImport.update({
+  id: '/docs-manager/editor/$docId',
+  path: '/docs-manager/editor/$docId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
+  '/docs-manager': typeof DocsManagerIndexRoute
   '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/prompt-optimizer': typeof PromptOptimizerIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/docs-manager/editor/$docId': typeof DocsManagerEditorDocIdRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/docs-manager/templates': typeof DocsManagerTemplatesIndexRoute
   '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
@@ -98,11 +120,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bilibili-downloader': typeof BilibiliDownloaderIndexRoute
+  '/docs-manager': typeof DocsManagerIndexRoute
   '/git-project-manager': typeof GitProjectManagerIndexRoute
   '/media-to-docs': typeof MediaToDocsIndexRoute
   '/prompt-optimizer': typeof PromptOptimizerIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/docs-manager/editor/$docId': typeof DocsManagerEditorDocIdRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/docs-manager/templates': typeof DocsManagerTemplatesIndexRoute
   '/git-project-manager/weekly-report': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis': typeof VoiceCloningSynthesisIndexRoute
@@ -112,11 +137,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bilibili-downloader/': typeof BilibiliDownloaderIndexRoute
+  '/docs-manager/': typeof DocsManagerIndexRoute
   '/git-project-manager/': typeof GitProjectManagerIndexRoute
   '/media-to-docs/': typeof MediaToDocsIndexRoute
   '/prompt-optimizer/': typeof PromptOptimizerIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/docs-manager/editor/$docId': typeof DocsManagerEditorDocIdRoute
   '/git-project-manager/project/$id': typeof GitProjectManagerProjectIdRoute
+  '/docs-manager/templates/': typeof DocsManagerTemplatesIndexRoute
   '/git-project-manager/weekly-report/': typeof GitProjectManagerWeeklyReportIndexRoute
   '/media-to-docs/convert-history/': typeof MediaToDocsConvertHistoryIndexRoute
   '/voice-cloning/synthesis/': typeof VoiceCloningSynthesisIndexRoute
@@ -127,11 +155,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bilibili-downloader'
+    | '/docs-manager'
     | '/git-project-manager'
     | '/media-to-docs'
     | '/prompt-optimizer'
     | '/settings'
+    | '/docs-manager/editor/$docId'
     | '/git-project-manager/project/$id'
+    | '/docs-manager/templates'
     | '/git-project-manager/weekly-report'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
@@ -140,11 +171,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bilibili-downloader'
+    | '/docs-manager'
     | '/git-project-manager'
     | '/media-to-docs'
     | '/prompt-optimizer'
     | '/settings'
+    | '/docs-manager/editor/$docId'
     | '/git-project-manager/project/$id'
+    | '/docs-manager/templates'
     | '/git-project-manager/weekly-report'
     | '/media-to-docs/convert-history'
     | '/voice-cloning/synthesis'
@@ -153,11 +187,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bilibili-downloader/'
+    | '/docs-manager/'
     | '/git-project-manager/'
     | '/media-to-docs/'
     | '/prompt-optimizer/'
     | '/settings/'
+    | '/docs-manager/editor/$docId'
     | '/git-project-manager/project/$id'
+    | '/docs-manager/templates/'
     | '/git-project-manager/weekly-report/'
     | '/media-to-docs/convert-history/'
     | '/voice-cloning/synthesis/'
@@ -167,11 +204,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BilibiliDownloaderIndexRoute: typeof BilibiliDownloaderIndexRoute
+  DocsManagerIndexRoute: typeof DocsManagerIndexRoute
   GitProjectManagerIndexRoute: typeof GitProjectManagerIndexRoute
   MediaToDocsIndexRoute: typeof MediaToDocsIndexRoute
   PromptOptimizerIndexRoute: typeof PromptOptimizerIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  DocsManagerEditorDocIdRoute: typeof DocsManagerEditorDocIdRoute
   GitProjectManagerProjectIdRoute: typeof GitProjectManagerProjectIdRoute
+  DocsManagerTemplatesIndexRoute: typeof DocsManagerTemplatesIndexRoute
   GitProjectManagerWeeklyReportIndexRoute: typeof GitProjectManagerWeeklyReportIndexRoute
   MediaToDocsConvertHistoryIndexRoute: typeof MediaToDocsConvertHistoryIndexRoute
   VoiceCloningSynthesisIndexRoute: typeof VoiceCloningSynthesisIndexRoute
@@ -215,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GitProjectManagerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs-manager/': {
+      id: '/docs-manager/'
+      path: '/docs-manager'
+      fullPath: '/docs-manager'
+      preLoaderRoute: typeof DocsManagerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bilibili-downloader/': {
       id: '/bilibili-downloader/'
       path: '/bilibili-downloader'
@@ -250,11 +297,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GitProjectManagerWeeklyReportIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs-manager/templates/': {
+      id: '/docs-manager/templates/'
+      path: '/docs-manager/templates'
+      fullPath: '/docs-manager/templates'
+      preLoaderRoute: typeof DocsManagerTemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/git-project-manager/project/$id': {
       id: '/git-project-manager/project/$id'
       path: '/git-project-manager/project/$id'
       fullPath: '/git-project-manager/project/$id'
       preLoaderRoute: typeof GitProjectManagerProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs-manager/editor/$docId': {
+      id: '/docs-manager/editor/$docId'
+      path: '/docs-manager/editor/$docId'
+      fullPath: '/docs-manager/editor/$docId'
+      preLoaderRoute: typeof DocsManagerEditorDocIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -263,11 +324,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BilibiliDownloaderIndexRoute: BilibiliDownloaderIndexRoute,
+  DocsManagerIndexRoute: DocsManagerIndexRoute,
   GitProjectManagerIndexRoute: GitProjectManagerIndexRoute,
   MediaToDocsIndexRoute: MediaToDocsIndexRoute,
   PromptOptimizerIndexRoute: PromptOptimizerIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  DocsManagerEditorDocIdRoute: DocsManagerEditorDocIdRoute,
   GitProjectManagerProjectIdRoute: GitProjectManagerProjectIdRoute,
+  DocsManagerTemplatesIndexRoute: DocsManagerTemplatesIndexRoute,
   GitProjectManagerWeeklyReportIndexRoute:
     GitProjectManagerWeeklyReportIndexRoute,
   MediaToDocsConvertHistoryIndexRoute: MediaToDocsConvertHistoryIndexRoute,

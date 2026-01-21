@@ -16,6 +16,7 @@ import { llmRouter } from './llm';
 import { voiceCloningRouter } from './voice-cloning';
 import { gitRouter } from './git/routes';
 import { promptOptimizerRouter } from './prompt-optimizer';
+import { docsRouter } from './docs-manager';
 
 export const appRouter = t.router({
   mediaToDoc: mediaToDocsRouter,
@@ -23,7 +24,8 @@ export const appRouter = t.router({
   llm: llmRouter,
   voiceCloning: voiceCloningRouter,
   git: gitRouter,
-  promptOptimizer: promptOptimizerRouter
+  promptOptimizer: promptOptimizerRouter,
+  docs: docsRouter
 });
 
 export const trpcMiddleWare = createExpressMiddleware({
