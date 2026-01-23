@@ -2,6 +2,7 @@ onlyBuiltDependencies:
   - '@ffmpeg-installer/darwin-arm64'
   - '@ffprobe-installer/darwin-arm64'
   - '@tailwindcss/oxide'
+  - better-sqlite3
   - electron
   - electron-winstaller
   - esbuild

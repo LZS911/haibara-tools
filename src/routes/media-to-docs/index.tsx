@@ -32,8 +32,7 @@ import type {
 import type { LLMProvider } from '@/types/llm';
 
 export const Route = createFileRoute('/media-to-docs/')({
-  component: AiConvert,
-  staticData: { keepAlive: true }
+  component: AiConvert
 });
 //BV11T4EzyEdF
 function AiConvert() {

@@ -43,8 +43,7 @@ import {
 import { SpeakerStatusItem } from './-components/SpeakerStatusItem';
 
 export const Route = createFileRoute('/voice-cloning/training/')({
-  component: VoiceTrainingPage,
-  staticData: { keepAlive: true }
+  component: VoiceTrainingPage
 });
 
 function VoiceTrainingPage() {

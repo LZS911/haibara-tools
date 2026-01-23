@@ -10,13 +10,13 @@ export const createTRPContext = ({
 
 const t = initTRPC.context<TRPCContext>().create();
 
-import { mediaToDocsRouter } from './media-to-docs';
-import { bilibiliRouter } from './bilibili';
-import { llmRouter } from './llm';
-import { voiceCloningRouter } from './voice-cloning';
-import { gitRouter } from './git/routes';
-import { promptOptimizerRouter } from './prompt-optimizer';
-import { docsRouter } from './docs-manager';
+import { mediaToDocsRouter } from './routers/media-to-docs';
+import { bilibiliRouter } from './routers/bilibili';
+import { llmRouter } from './routers/llm';
+import { voiceCloningRouter } from './routers/voice-cloning';
+import { gitRouter } from './routers/git/routes';
+import { promptOptimizerRouter } from './routers/prompt-optimizer';
+import { docsRouter } from './routers/docs-manager';
 
 export const appRouter = t.router({
   mediaToDoc: mediaToDocsRouter,

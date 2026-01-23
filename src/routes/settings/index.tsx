@@ -20,8 +20,7 @@ import { GitSettings } from './-components/git-settings';
 import { DocsSettings } from './-components/docs-settings';
 
 export const Route = createFileRoute('/settings/')({
-  component: Settings,
-  staticData: { keepAlive: true }
+  component: Settings
 });
 
 function Settings() {

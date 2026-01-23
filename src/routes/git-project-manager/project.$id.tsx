@@ -48,8 +48,7 @@ import { OptimizationResult } from '@/routes/prompt-optimizer/-components/optimi
 import type { OptimizationResponse } from '@/types/prompt-optimizer';
 
 export const Route = createFileRoute('/git-project-manager/project/$id')({
-  component: ProjectDetail,
-  staticData: { keepAlive: true }
+  component: ProjectDetail
 });
 
 function ProjectDetail() {

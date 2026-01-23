@@ -4,8 +4,8 @@ import url from 'node:url';
 import * as fs from 'node:fs';
 import express from 'express';
 import { trpcMiddleWare } from './trpc';
-import { getMediaRoot } from './media-to-docs/cache';
-import { getTtsRoot, getVoiceCloningRoot } from './voice-cloning/data';
+import { getMediaRoot } from './routers/media-to-docs/cache';
+import { getTtsRoot, getVoiceCloningRoot } from './routers/voice-cloning/data';
 
 const PORT =
   typeof process.env.PORT !== 'undefined'
