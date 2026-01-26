@@ -33,8 +33,7 @@ import { LoginStatus, QualityEnum } from '@/types/bilibili';
 import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 
 export const Route = createFileRoute('/bilibili-downloader/')({
-  component: BilibiliDownloader,
-  staticData: { keepAlive: true }
+  component: BilibiliDownloader
 });
 
 function BilibiliDownloader() {

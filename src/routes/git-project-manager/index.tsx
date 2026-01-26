@@ -13,8 +13,7 @@ import { useConfirmationDialog } from '../-components/ui/use-confirm-dialog';
 import { CONSTANT } from '../../data/constant';
 
 export const Route = createFileRoute('/git-project-manager/')({
-  component: GitProjectManager,
-  staticData: { keepAlive: true }
+  component: GitProjectManager
 });
 
 function GitProjectManager() {

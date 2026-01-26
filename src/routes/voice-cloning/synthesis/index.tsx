@@ -30,7 +30,6 @@ import { format } from 'date-fns';
 
 export const Route = createFileRoute('/voice-cloning/synthesis/')({
   component: VoiceSynthesisPage,
-  staticData: { keepAlive: true },
   validateSearch: (search: Record<string, unknown>) => {
     return {
       speakerId: (search.speakerId as string) || undefined

@@ -36,8 +36,7 @@ import { CONSTANT } from '../../../data/constant';
 import type { LLMProvider } from '@/types/llm';
 
 export const Route = createFileRoute('/git-project-manager/weekly-report/')({
-  component: WeeklyReportPage,
-  staticData: { keepAlive: true }
+  component: WeeklyReportPage
 });
 
 function WeeklyReportPage() {
